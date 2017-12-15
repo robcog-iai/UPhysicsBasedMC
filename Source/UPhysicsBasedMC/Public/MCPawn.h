@@ -4,31 +4,30 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Character.h"
+#include "GameFramework/Pawn.h"
 #include "Animation/SkeletalMeshActor.h"
 #include "MotionControllerComponent.h"
 #include "PIDController3D.h"
 #include "MCEnums.h"
-#include "MCCharacter.generated.h"
-
+#include "MCPawn.generated.h"
 
 UCLASS()
-class UPHYSICSBASEDMC_API AMCCharacter : public ACharacter
+class UPHYSICSBASEDMC_API AMCPawn : public APawn
 {
 	GENERATED_BODY()
-	
+
 public:
-    // Sets default values for this character's properties
-	AMCCharacter();
-	
+	// Sets default values for this pawn's properties
+	AMCPawn();
+
 protected:
-	// Called when the games starts or when spawned
+	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-	
-public:
+
+public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-	
+
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	
@@ -45,13 +44,13 @@ private:
 	// Visualize MC arrows
 	UPROPERTY(EditAnywhere, Category = "Physics Based Motion Controller|Hands")
 	bool bTargetArrowsVisible;
-	
+
 	// VR Camera and root component
-	USceneComponent* VRCameraRoot;	
+	USceneComponent* VRCameraRoot;
 	UCameraComponent* VRCamera;
 
 	// Left/Right Motion Controllers and root component
-	USceneComponent* MCRoot;	
+	USceneComponent* MCRoot;
 	UMotionControllerComponent* MCLeft;
 	UMotionControllerComponent* MCRight;
 
@@ -72,8 +71,8 @@ private:
 
 	// Use the hands current rotation as initial rotation
 	UPROPERTY(EditAnywhere, Category = "Physics Based Motion Controller|Control")
-	bool bUseHandsCurrentRotationAsInitial;	
-	
+	bool bUseHandsCurrentRotationAsInitial;
+
 	// Location / Rotation interaction type (movement type of the hand)
 	UPROPERTY(EditAnywhere, Category = "Physics Based Motion Controller|Control")
 	EMCLocationControlType LocationControlType;
@@ -89,7 +88,7 @@ private:
 	USkeletalMeshComponent* RightSkeletalMeshComponent;
 
 	// Control function pointer variable type
-	typedef void(AMCCharacter::*ControlFunctionPtrType)(float);
+	typedef void(AMCPawn::*ControlFunctionPtrType)(float);
 
 	// Function pointer for the Location / Rotation interaction type
 	ControlFunctionPtrType LocationControlFunctionPtr;
@@ -102,3 +101,4 @@ private:
 	// Rotation interaction function types
 	void RotationControl_VelBased(float InDeltaTime);
 };
+
