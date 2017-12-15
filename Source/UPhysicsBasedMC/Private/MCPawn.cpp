@@ -59,10 +59,15 @@ AMCPawn::AMCPawn()
 	RightLocationPIDController.I = 0.0f;
 	RightLocationPIDController.D = 50.0f;
 	RightLocationPIDController.MaxOutAbs = 35000.f;
+
+	// Init PIDs -- update function will be optimized if I and/or D are 0.f
+	LeftLocationPIDController.Init();
+	RightLocationPIDController.Init();
+
 	// Rotation gain
 	RotationGain = 12000.f; //TODO switch to PID, and use as P
 
-							// Default interaction type
+	// Default interaction type
 	LocationControlType = EMCLocationControlType::Acceleration;
 	RotationControlType = EMCRotationControlType::Velocity;
 
@@ -84,6 +89,7 @@ void AMCPawn::BeginPlay()
 	IHeadMountedDisplay* HMD = (IHeadMountedDisplay*)(GEngine->XRSystem->GetHMDDevice());
 	if (HMD && HMD->IsHMDEnabled())
 	{
+		//GEngine->XRSystem->ResetOrientationAndPosition();
 		GEngine->XRSystem->SetTrackingOrigin(EHMDTrackingOrigin::Floor);
 	}
 
@@ -178,9 +184,9 @@ void AMCPawn::LocationControl_AccBased(float InDeltaTime)
 {
 	// Calculate location outputs
 	const FVector LeftCurrError = MCLeft->GetComponentLocation() - LeftSkeletalMeshComponent->GetComponentLocation();
-	const FVector LeftLocOutput = LeftLocationPIDController.UpdateAsPD(LeftCurrError, InDeltaTime);
+	const FVector LeftLocOutput = LeftLocationPIDController.Update(LeftCurrError, InDeltaTime);
 	const FVector RightCurrError = MCRight->GetComponentLocation() - RightSkeletalMeshComponent->GetComponentLocation();
-	const FVector RightLocOutput = RightLocationPIDController.UpdateAsPD(RightCurrError, InDeltaTime);
+	const FVector RightLocOutput = RightLocationPIDController.Update(RightCurrError, InDeltaTime);
 
 	// Apply outputs
 	LeftSkeletalMeshComponent->AddForceToAllBodiesBelow(LeftLocOutput, NAME_None, true, true);
@@ -192,9 +198,9 @@ void AMCPawn::LocationControl_VelBased(float InDeltaTime)
 {
 	// Calculate location outputs
 	const FVector LeftCurrError = MCLeft->GetComponentLocation() - LeftSkeletalMeshComponent->GetComponentLocation();
-	const FVector LeftLocOutput = LeftLocationPIDController.UpdateAsPD(LeftCurrError, InDeltaTime);
+	const FVector LeftLocOutput = LeftLocationPIDController.Update(LeftCurrError, InDeltaTime);
 	const FVector RightCurrError = MCRight->GetComponentLocation() - RightSkeletalMeshComponent->GetComponentLocation();
-	const FVector RightLocOutput = RightLocationPIDController.UpdateAsPD(RightCurrError, InDeltaTime);
+	const FVector RightLocOutput = RightLocationPIDController.Update(RightCurrError, InDeltaTime);
 
 	// Apply outputs
 	LeftSkeletalMeshComponent->SetAllPhysicsLinearVelocity(LeftLocOutput);
