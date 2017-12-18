@@ -9,6 +9,7 @@
 #include "MotionControllerComponent.h"
 #include "PIDController3D.h"
 #include "MCEnums.h"
+#include "MCFinger.h"
 #include "MCCharacter.generated.h"
 
 
