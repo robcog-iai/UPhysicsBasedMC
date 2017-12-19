@@ -9,6 +9,7 @@
 #include "MotionControllerComponent.h"
 #include "PIDController3D.h"
 #include "MCEnums.h"
+#include "MCHandMovement.h"
 #include "MCPawn.generated.h"
 
 UCLASS()
@@ -59,6 +60,10 @@ private:
 	UArrowComponent* MCRightTargetArrow;
 
 	/* Control */
+	// Hand movements control
+	UPROPERTY(EditAnywhere, Category = "Physics Based Motion Controller|Control")
+	FMCHandMovement HandsMovementControl;
+
 	// Left/Right hand location PID controller
 	UPROPERTY(EditAnywhere, Category = "Physics Based Motion Controller|Control")
 	FPIDController3D LeftLocationPIDController;

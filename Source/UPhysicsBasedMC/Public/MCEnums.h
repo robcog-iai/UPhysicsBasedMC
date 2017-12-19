@@ -10,6 +10,7 @@
 UENUM(BlueprintType)
 enum class EMCLocationControlType : uint8
 {
+	NONE					UMETA(DisplayName = "NONE"),
 	Force					UMETA(DisplayName = "ForceBased"),
 	Acceleration			UMETA(DisplayName = "AccelerationBased"),
 	Velocity	     		UMETA(DisplayName = "VelocityBased"),
@@ -20,6 +21,7 @@ enum class EMCLocationControlType : uint8
 UENUM(BlueprintType)
 enum class EMCRotationControlType : uint8
 {
+	NONE					UMETA(DisplayName = "NONE"),
 	Torque					UMETA(DisplayName = "TorqueBased"),
 	Acceleration			UMETA(DisplayName = "AccelerationBased"),
 	Velocity	     		UMETA(DisplayName = "VelocityBased"),

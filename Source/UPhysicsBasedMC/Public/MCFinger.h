@@ -12,7 +12,7 @@
 *
 */
 USTRUCT()
-struct FMCFinger
+struct UPHYSICSBASEDMC_API FMCFinger
 {
 	GENERATED_USTRUCT_BODY()
 

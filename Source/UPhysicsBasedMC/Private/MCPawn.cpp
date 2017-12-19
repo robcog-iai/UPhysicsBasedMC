@@ -74,12 +74,22 @@ AMCPawn::AMCPawn()
 	// Left / Right hand offset
 	LeftHandRotationOffset = FQuat::Identity;
 	RightHandRotationOffset = FQuat::Identity;
+
+	// TODO test
+	HandsMovementControl.LeftLocationPIDController.P = 13.5f;
+	HandsMovementControl.RightLocationPIDController.P = 213.5f;
 }
 
 // Called when the game starts or when spawned
 void AMCPawn::BeginPlay()
 {
 	Super::BeginPlay();
+
+	// TODO test
+	// Hands movement
+	HandsMovementControl.SetLocationPIDs(2.f);
+	HandsMovementControl.SetRotationPIDs(5.f);
+	HandsMovementControl.Init(MCLeft, MCRight, LeftSkeletalMeshComponent, RightSkeletalMeshComponent);
 
 	// Set target arrow visibility at runtime
 	MCLeftTargetArrow->SetHiddenInGame(!bTargetArrowsVisible);
@@ -175,7 +185,6 @@ bool AMCPawn::CheckHandsAndInitControllers()
 	}
 
 	// Hands, skeletal meshes, and controllers are set, tick can be enabled
-	UE_LOG(LogTemp, Warning, TEXT("Character line: %s "), *FString::FromInt(__LINE__));
 	return true;
 }
 
