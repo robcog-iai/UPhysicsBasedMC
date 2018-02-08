@@ -1,13 +1,10 @@
-// Copyright 2017, Institute for Artificial Intelligence - University of Bremen
+// Copyright 2018, Institute for Artificial Intelligence - University of Bremen
 // Author: Andrei Haidu (http://haidu.eu)
 
 #include "MCPawn.h"
-#include "Components/ArrowComponent.h"
-#include "Camera/CameraComponent.h"
-#include "Engine.h" //Gengine
-#include "HeadMountedDisplay.h"
 #include "IHeadMountedDisplay.h"
 #include "IXRTrackingSystem.h"
+#include "XRMotionControllerBase.h"
 
 // Sets default values
 AMCPawn::AMCPawn()
@@ -17,67 +14,36 @@ AMCPawn::AMCPawn()
 	// Possess player automatically
 	AutoPossessPlayer = EAutoReceiveInput::Player0;
 
-	// Set flag default values
-	bTargetArrowsVisible = true;
-	bUseHandsCurrentRotationAsInitial = true;
+	// Display MC meshes by default
+	bVisualizeMCMeshes = true;
 
-	// Crate VRCamera root, set is as child of the root component
-	VRCameraRoot = CreateDefaultSubobject<USceneComponent>(TEXT("VRCameraRoot"));
-	VRCameraRoot->SetupAttachment(GetRootComponent());
+	// Crate MC root
+	MCRoot = CreateDefaultSubobject<USceneComponent>(TEXT("MCRoot"));
+	//MCRoot->SetupAttachment(GetRootComponent());
+	RootComponent = MCRoot;
 	
 	// Create camera component
 	VRCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("VRCamera"));
-	VRCamera->SetupAttachment(VRCameraRoot);
-
-	// Create the motion controller offset (hands in front of the character), attach to root component
-	MCRoot = CreateDefaultSubobject<USceneComponent>(TEXT("MCRoot"));
-	MCRoot->SetupAttachment(GetRootComponent());
-	
-	// Create the left/right motion controllers
+	VRCamera->SetupAttachment(MCRoot);
+		
+	// Create the right motion controller
 	MCLeft = CreateDefaultSubobject<UMotionControllerComponent>(TEXT("MCLeft"));
-	MCLeft->Hand = EControllerHand::Left;
+	MCLeft->MotionSource = FXRMotionControllerBase::LeftHandSourceId;
 	MCLeft->SetupAttachment(MCRoot);
+	
+	// Create the left motion controller
 	MCRight = CreateDefaultSubobject<UMotionControllerComponent>(TEXT("MCRight"));
-	MCRight->Hand = EControllerHand::Right;
+	MCRight->MotionSource = FXRMotionControllerBase::RightHandSourceId;
 	MCRight->SetupAttachment(MCRoot);
 
-	// Create left/right visualization arrow of the motion controllers
-	MCLeftTargetArrow = CreateDefaultSubobject<UArrowComponent>(TEXT("MCLeftTargetArrow"));
-	MCLeftTargetArrow->ArrowSize = 0.1;
-	MCLeftTargetArrow->SetupAttachment(MCLeft);
-	MCRightTargetArrow = CreateDefaultSubobject<UArrowComponent>(TEXT("MCRightTargetArrow"));
-	MCRightTargetArrow->ArrowSize = 0.1;
-	MCRightTargetArrow->SetupAttachment(MCRight);
+	// Create Left MC Hand Component
+	LeftHand = CreateDefaultSubobject<UMCHand>(TEXT("LeftHand"));
+	LeftHand->SetupAttachment(GetRootComponent());
 
-	/* Control parameters */
-	// Location PID default parameters
-	LeftLocationPIDController.P = 700.0f;
-	LeftLocationPIDController.I = 0.0f;
-	LeftLocationPIDController.D = 50.0f;
-	LeftLocationPIDController.MaxOutAbs = 35000.f;
-	RightLocationPIDController.P = 700.0f;
-	RightLocationPIDController.I = 0.0f;
-	RightLocationPIDController.D = 50.0f;
-	RightLocationPIDController.MaxOutAbs = 35000.f;
+	// Create Right MC Hand Component
+	RightHand = CreateDefaultSubobject<UMCHand>(TEXT("RightHand"));
+	RightHand->SetupAttachment(GetRootComponent());
 
-	// Init PIDs -- update function will be optimized if I and/or D are 0.f
-	LeftLocationPIDController.Init();
-	RightLocationPIDController.Init();
-
-	// Rotation gain
-	RotationGain = 12000.f; //TODO switch to PID, and use as P
-
-	// Default interaction type
-	LocationControlType = EMCLocationControlType::Acceleration;
-	RotationControlType = EMCRotationControlType::Velocity;
-
-	// Left / Right hand offset
-	LeftHandRotationOffset = FQuat::Identity;
-	RightHandRotationOffset = FQuat::Identity;
-
-	// TODO test
-	HandsMovementControl.LeftLocationPIDController.P = 13.5f;
-	HandsMovementControl.RightLocationPIDController.P = 213.5f;
 }
 
 // Called when the game starts or when spawned
@@ -85,170 +51,40 @@ void AMCPawn::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// TODO test
-	// Hands movement
-	HandsMovementControl.SetLocationPIDs(2.f);
-	HandsMovementControl.SetRotationPIDs(5.f);
-	HandsMovementControl.Init(MCLeft, MCRight, LeftSkeletalMeshComponent, RightSkeletalMeshComponent);
+	// MC meshes visualization
+	MCLeft->bDisplayDeviceModel = bVisualizeMCMeshes;
+	MCRight->bDisplayDeviceModel = bVisualizeMCMeshes;
 
-	// Set target arrow visibility at runtime
-	MCLeftTargetArrow->SetHiddenInGame(!bTargetArrowsVisible);
-	MCRightTargetArrow->SetHiddenInGame(!bTargetArrowsVisible);
+	// Init MC Hands
+	LeftHand->Init(MCLeft);
+	RightHand->Init(MCRight);
 
-	// Check if VR is enabled
-	IHeadMountedDisplay* HMD = (IHeadMountedDisplay*)(GEngine->XRSystem->GetHMDDevice());
-	if (HMD && HMD->IsHMDEnabled())
-	{
-		//GEngine->XRSystem->ResetOrientationAndPosition();
-		GEngine->XRSystem->SetTrackingOrigin(EHMDTrackingOrigin::Floor);
-	}
+	// Disable tick
+	SetActorTickEnabled(false);
 
-	// Set control types and enable tick
-	SetActorTickEnabled(CheckHandsAndInitControllers());
+	//// Check if VR is enabled
+	//IHeadMountedDisplay* HMD = (IHeadMountedDisplay*)(GEngine->XRSystem->GetHMDDevice());
+	//if (HMD && HMD->IsHMDEnabled())
+	//{
+	//	//GEngine->XRSystem->ResetOrientationAndPosition();
+	//	GEngine->XRSystem->SetTrackingOrigin(EHMDTrackingOrigin::Floor);
+	//	//if (GEngine->XRSystem->GetSystemName().IsEqual("SteamVR"))
+	//	//{
+	//	//	//MCLeft->SetDisplayModelSource(GEngine->XRSystem->GetSystemName());
+	//	//	//MCRight->SetDisplayModelSource(GEngine->XRSystem->GetSystemName());
+	//	//	UE_LOG(LogTemp, Warning, TEXT("STEAM VR"));
+	//	//}		
+	//}
 }
 
 // Called every frame
 void AMCPawn::Tick(float DeltaTime)
 {
-	(this->*LocationControlFunctionPtr)(DeltaTime);
-	(this->*RotationControlFunctionPtr)(DeltaTime);
+	UE_LOG(LogTemp, Warning, TEXT(" Pawn Tick ** "));
 }
 
 // Called to bind functionality to input
 void AMCPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
-}
-
-// Set location and rotation control type
-bool AMCPawn::CheckHandsAndInitControllers()
-{
-	// Make sure both hands are set
-	if (LeftHand && RightHand)
-	{
-		// Get the skeletal mesh components
-		LeftSkeletalMeshComponent = LeftHand->GetSkeletalMeshComponent();
-		RightSkeletalMeshComponent = RightHand->GetSkeletalMeshComponent();
-
-		// Continue if both hands have a skeletal mesh component
-		if (LeftSkeletalMeshComponent && RightSkeletalMeshComponent)
-		{
-			// Set hand offsets
-			if (bUseHandsCurrentRotationAsInitial)
-			{
-				LeftHandRotationOffset = LeftHand->GetSkeletalMeshComponent()->GetComponentQuat();
-				RightHandRotationOffset = RightHand->GetSkeletalMeshComponent()->GetComponentQuat();
-			}
-
-			// Teleport the hands to the MC controller position 
-			// (this however is the default pose in begin play, since tracking is not active yet)
-			/*LeftHand->SetActorLocationAndRotation(MCLeft->GetComponentLocation(),
-			MCLeft->GetComponentQuat() * LeftHandRotationOffset,
-			false, (FHitResult*)nullptr, ETeleportType::TeleportPhysics);
-			RightHand->SetActorLocationAndRotation(MCRight->GetComponentLocation(),
-			MCRight->GetComponentQuat() * RightHandRotationOffset,
-			false, (FHitResult*)nullptr, ETeleportType::TeleportPhysics);*/
-
-			// Set location control type
-			if (LocationControlType == EMCLocationControlType::Acceleration)
-			{
-				LocationControlFunctionPtr = &AMCPawn::LocationControl_AccBased;
-			}
-			else if (LocationControlType == EMCLocationControlType::Velocity)
-			{
-				LocationControlFunctionPtr = &AMCPawn::LocationControl_VelBased;
-			}
-			else
-			{
-				return false;
-			}
-
-			// Set rotation control type
-			if (RotationControlType == EMCRotationControlType::Velocity)
-			{
-				RotationControlFunctionPtr = &AMCPawn::RotationControl_VelBased;
-			}
-			else
-			{
-				return false;
-			}
-		}
-		else
-		{
-			return false;
-		}
-	}
-	else
-	{
-		return false;
-	}
-
-	// Hands, skeletal meshes, and controllers are set, tick can be enabled
-	return true;
-}
-
-// Location control, acceleration based
-void AMCPawn::LocationControl_AccBased(float InDeltaTime)
-{
-	// Calculate location outputs
-	const FVector LeftCurrError = MCLeft->GetComponentLocation() - LeftSkeletalMeshComponent->GetComponentLocation();
-	const FVector LeftLocOutput = LeftLocationPIDController.Update(LeftCurrError, InDeltaTime);
-	const FVector RightCurrError = MCRight->GetComponentLocation() - RightSkeletalMeshComponent->GetComponentLocation();
-	const FVector RightLocOutput = RightLocationPIDController.Update(RightCurrError, InDeltaTime);
-
-	// Apply outputs
-	LeftSkeletalMeshComponent->AddForceToAllBodiesBelow(LeftLocOutput, NAME_None, true, true);
-	RightSkeletalMeshComponent->AddForceToAllBodiesBelow(RightLocOutput, NAME_None, true, true);
-}
-
-// Location control, velocity based
-void AMCPawn::LocationControl_VelBased(float InDeltaTime)
-{
-	// Calculate location outputs
-	const FVector LeftCurrError = MCLeft->GetComponentLocation() - LeftSkeletalMeshComponent->GetComponentLocation();
-	const FVector LeftLocOutput = LeftLocationPIDController.Update(LeftCurrError, InDeltaTime);
-	const FVector RightCurrError = MCRight->GetComponentLocation() - RightSkeletalMeshComponent->GetComponentLocation();
-	const FVector RightLocOutput = RightLocationPIDController.Update(RightCurrError, InDeltaTime);
-
-	// Apply outputs
-	LeftSkeletalMeshComponent->SetAllPhysicsLinearVelocity(LeftLocOutput);
-	RightSkeletalMeshComponent->SetAllPhysicsLinearVelocity(RightLocOutput);
-}
-
-// Rotation control, velocity based
-void AMCPawn::RotationControl_VelBased(float InDeltaTime)
-{
-	// Get the (offsetted) target and current rotations
-	const FQuat LeftTargetQuat = MCLeft->GetComponentQuat() * LeftHandRotationOffset;
-	FQuat LeftCurrQuat = LeftSkeletalMeshComponent->GetComponentQuat();
-	const FQuat RightTargetQuat = MCRight->GetComponentQuat() * RightHandRotationOffset;
-	FQuat RightCurrQuat = RightSkeletalMeshComponent->GetComponentQuat();
-
-	//// Calculate rotation outputs
-	// Dot product to get cos theta
-	const float LeftCosTheta = LeftTargetQuat | LeftCurrQuat;
-	// Avoid taking the long path around the sphere
-	if (LeftCosTheta < 0)
-	{
-		LeftCurrQuat *= -1.f;
-	}
-	// Use the xyz part of the Quaternion as the rotation velocity
-	const FQuat LeftOutputFromQuat = LeftTargetQuat * LeftCurrQuat.Inverse();
-	const FVector LeftRotOutput = FVector(LeftOutputFromQuat.X, LeftOutputFromQuat.Y, LeftOutputFromQuat.Z) * RotationGain;
-
-	// Dot product to get cos theta
-	const float RightCosTheta = RightTargetQuat | RightCurrQuat;
-	// Avoid taking the long path around the sphere
-	if (RightCosTheta < 0)
-	{
-		RightCurrQuat *= -1.f;
-	}
-	// Use the xyz part of the Quaternion as the rotation velocity
-	const FQuat RightOutputFromQuat = RightTargetQuat * RightCurrQuat.Inverse();
-	const FVector RightRotOutput = FVector(RightOutputFromQuat.X, RightOutputFromQuat.Y, RightOutputFromQuat.Z) * RotationGain;
-
-	//// Apply outputs	
-	LeftSkeletalMeshComponent->SetAllPhysicsAngularVelocityInRadians(LeftRotOutput);
-	RightSkeletalMeshComponent->SetAllPhysicsAngularVelocityInRadians(RightRotOutput);
 }
