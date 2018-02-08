@@ -19,16 +19,16 @@ UMCHand::UMCHand()
 	
 	/* Control parameters */
 	// Location PID default parameters
-	LocationPIDController.P = 700.0f;
+	LocationPIDController.P = 250.0;
 	LocationPIDController.I = 0.0f;
 	LocationPIDController.D = 50.0f;
-	LocationPIDController.MaxOutAbs = 35000.f;	
+	LocationPIDController.MaxOutAbs = 1500.f;	
 
 	// Location PID default parameters
-	RotationPIDController.P = 12000.0f;
+	RotationPIDController.P = 100.f;
 	RotationPIDController.I = 0.0f;
 	RotationPIDController.D = 0.0f;
-	RotationPIDController.MaxOutAbs = 315000.f;	
+	RotationPIDController.MaxOutAbs = 1500.f;	
 
 	// Default control type
 	LocationControlType = EMCLocationControlType::Acceleration;
@@ -69,10 +69,10 @@ void UMCHand::TickComponent(float DeltaTime, enum ELevelTick TickType, FActorCom
 }
 
 // Init hand with the motion controllers
-void UMCHand::Init(UMotionControllerComponent* MCComp)
+void UMCHand::Init(UMotionControllerComponent* InMC)
 {
 	// Set the motion controller pointer
-	MotionControllerComp = MCComp;
+	MC = InMC;
 
 	// Set location movement control type (bind to the corresponding function ptr)
 	switch (LocationControlType)
@@ -85,6 +85,9 @@ void UMCHand::Init(UMotionControllerComponent* MCComp)
 		break;
 	case EMCLocationControlType::Acceleration:
 		LocationControlFuncPtr = &UMCHand::LocationControl_AccelBased;
+		break;
+	case EMCLocationControlType::Impulse:
+		LocationControlFuncPtr = &UMCHand::LocationControl_ImpulseBased;
 		break;
 	case EMCLocationControlType::Velocity:
 		LocationControlFuncPtr = &UMCHand::LocationControl_VelBased;
@@ -109,6 +112,9 @@ void UMCHand::Init(UMotionControllerComponent* MCComp)
 	case EMCRotationControlType::Acceleration:
 		RotationControlFuncPtr = &UMCHand::RotationControl_AccelBased;
 		break;
+	case EMCRotationControlType::Impulse:
+		RotationControlFuncPtr = &UMCHand::RotationControl_ImpulseBased;
+		break;
 	case EMCRotationControlType::Velocity:
 		RotationControlFuncPtr = &UMCHand::RotationControl_VelBased;
 		break;
@@ -127,68 +133,123 @@ void UMCHand::Init(UMotionControllerComponent* MCComp)
 // Location interaction functions types
 void UMCHand::LocationControl_None(float InDeltaTime)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Location Control None"));
+	UE_LOG(LogTemp, Warning, TEXT("Location control OFF (None)"));
 }
 
 void UMCHand::LocationControl_ForceBased(float InDeltaTime)
 {
-	const FVector LocErr = MotionControllerComp->GetComponentLocation() - GetComponentLocation();
+	const FVector LocErr = MC->GetComponentLocation() - GetComponentLocation();
 	const FVector PIDOut = LocationPIDController.Update(LocErr, InDeltaTime);
-
 	AddForce(PIDOut);
+
 	//AddForceToAllBodiesBelow(PIDOut);
+	//UE_LOG(LogTemp, Warning, TEXT("[%s] PIDOut=%s"),
+	//	*FString(__FUNCTION__), *PIDOut.ToString());
 }
 
 void UMCHand::LocationControl_ImpulseBased(float InDeltaTime)
 {
-	const FVector LocErr = MotionControllerComp->GetComponentLocation() - GetComponentLocation();
+	const FVector LocErr = MC->GetComponentLocation() - GetComponentLocation();
 	const FVector PIDOut = LocationPIDController.Update(LocErr, InDeltaTime);
+	AddImpulse(PIDOut, NAME_None, true); // mass will have no effect
 
-	AddImpulse(PIDOut, NAME_None, true); // Mass will have no effect
-	//AddImpulseToAllBodiesBelow(PIDOut, NAME_None, true);
+	//AddImpulse(PIDOut);
+	//AddImpulseToAllBodiesBelow(PIDOut, NAME_None, true); // mass will have no effect
+	//AddImpulseToAllBodiesBelow(PIDOut);
+	//UE_LOG(LogTemp, Warning, TEXT("[%s] PIDOut=%s"),
+	//	*FString(__FUNCTION__), *PIDOut.ToString());
 }
 
 void UMCHand::LocationControl_AccelBased(float InDeltaTime)
 {
-	const FVector LocErr = MotionControllerComp->GetComponentLocation() - GetComponentLocation();
+	const FVector LocErr = MC->GetComponentLocation() - GetComponentLocation();
 	const FVector PIDOut = LocationPIDController.Update(LocErr, InDeltaTime);
+	AddForce(PIDOut, NAME_None, true); // Acceleration based (mass will have no effect)	
 
-	AddForce(PIDOut, NAME_None, true); // Mass will have no effect
-	//AddForceToAllBodiesBelow(PIDOut, NAME_None, true);
+	//AddForceToAllBodiesBelow(PIDOut, NAME_None, true); // Mass will have no effect
+	//UE_LOG(LogTemp, Warning, TEXT("[%s] PIDOut=%s"),
+	//	*FString(__FUNCTION__), *PIDOut.ToString());
 }
 
 void UMCHand::LocationControl_VelBased(float InDeltaTime)
 {
-	const FVector LocErr = MotionControllerComp->GetComponentLocation() - GetComponentLocation();
+	const FVector LocErr = MC->GetComponentLocation() - GetComponentLocation();
 	const FVector PIDOut = LocationPIDController.Update(LocErr, InDeltaTime);
+	SetPhysicsLinearVelocity(PIDOut);
 
-	ComponentVelocity = PIDOut;
-	//AddForceToAllBodiesBelow(PIDOut, NAME_None, true);
+	//SetAllPhysicsLinearVelocity(PIDOut);
+	//UE_LOG(LogTemp, Warning, TEXT("[%s] MCLoc=%s, Loc=%s, PIDOut=%s, CompVel=%s"),
+	//	*FString(__FUNCTION__),
+	//	*MC->GetComponentLocation().ToString(),
+	//	*GetComponentLocation().ToString(),
+	//	*PIDOut.ToString(),
+	//	*ComponentVelocity.ToString());
 }
 
 void UMCHand::LocationControl_PosBased(float InDeltaTime)
-{
-	// Teleport flag with physics has to be set since physics is enabled
-	SetWorldLocation(MotionControllerComp->GetComponentLocation(),
-		false, (FHitResult*)nullptr, ETeleportType::TeleportPhysics);
+{	
+	// TeleportPhysics flag has to be set for physics based teleportation
+	SetWorldLocation(MC->GetComponentLocation(),
+		false, (FHitResult*)nullptr, ETeleportType::TeleportPhysics); 
+	//SetAllPhysicsPosition(MC->GetComponentLocation());
 }
 
 // Rotation interaction functions types
 void UMCHand::RotationControl_None(float InDeltaTime)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Rotation Control None"));
+	UE_LOG(LogTemp, Warning, TEXT("Rotation control OFF (None)"));
 }
 
 void UMCHand::RotationControl_TorqueBased(float InDeltaTime)
 {
-	// TODO
-	UE_LOG(LogTemp, Warning, TEXT("Rotation Control TorqueBased"));
+	const FQuat TargetQuat = MC->GetComponentQuat() * HandRotationAlignmentOffset;
+	FQuat CompQuat = GetComponentQuat();
+
+	// Check if cos theta from the dot product is negative,
+	// avoids taking the long path around the sphere
+	const float CosTheta = TargetQuat | CompQuat;
+	if (CosTheta < 0)
+	{
+		CompQuat *= -1.f;
+	}
+
+	// Use XYZ from the Quaternion as output
+	const FQuat QuatOut = TargetQuat * CompQuat.Inverse();
+	const FVector RotOut = FVector(QuatOut.X, QuatOut.Y, QuatOut.Z)
+		* RotationPIDController.P; // PID P is used as gain
+
+	AddTorqueInRadians(RotOut); 
+
+	// PID Version
+	//const FRotator RotErr = MC->GetComponentRotation() - GetComponentRotation();
+	//const FVector PIDOut = RotationPIDController.Update(RotErr.Vector(), InDeltaTime);
+	//AddTorqueInRadians(RotOut); 
 }
 
 void UMCHand::RotationControl_AccelBased(float InDeltaTime)
 {
-	// TODO
-	UE_LOG(LogTemp, Warning, TEXT("Rotation Control AccelBased"));
+	const FQuat TargetQuat = MC->GetComponentQuat() * HandRotationAlignmentOffset;
+	FQuat CompQuat = GetComponentQuat();
+
+	// Check if cos theta from the dot product is negative,
+	// avoids taking the long path around the sphere
+	const float CosTheta = TargetQuat | CompQuat;
+	if (CosTheta < 0)
+	{
+		CompQuat *= -1.f;
+	}
+
+	// Use XYZ from the Quaternion as output
+	const FQuat QuatOut = TargetQuat * CompQuat.Inverse();
+	const FVector RotOut = FVector(QuatOut.X, QuatOut.Y, QuatOut.Z)
+		* RotationPIDController.P; // PID P is used as gain
+
+	AddTorqueInRadians(RotOut, NAME_None, true); // Acceleration based (mass will have no effect) 
+
+	// PID Version
+	//const FRotator RotErr = MC->GetComponentRotation() - GetComponentRotation();
+	//const FVector PIDOut = RotationPIDController.Update(RotErr.Vector(), InDeltaTime);
+	//AddTorqueInRadians(RotOut, NAME_None, true)); // Acceleration based (mass will have no effect) 
 }
 
 void UMCHand::RotationControl_ImpulseBased(float InDeltaTime)
@@ -199,13 +260,36 @@ void UMCHand::RotationControl_ImpulseBased(float InDeltaTime)
 
 void UMCHand::RotationControl_VelBased(float InDeltaTime)
 {
-	// TODO
-	UE_LOG(LogTemp, Warning, TEXT("Rotation Control VelBased"));
+	const FQuat TargetQuat = MC->GetComponentQuat() * HandRotationAlignmentOffset;
+	FQuat CompQuat = GetComponentQuat();
+
+	// Check if cos theta from the dot product is negative,
+	// avoids taking the long path around the sphere
+	const float CosTheta = TargetQuat | CompQuat;
+	if (CosTheta < 0)
+	{
+		CompQuat *= -1.f;
+	}
+
+	// Use XYZ from the Quaternion as output
+	const FQuat QuatOut = TargetQuat * CompQuat.Inverse();
+	const FVector RotOut = FVector(QuatOut.X, QuatOut.Y, QuatOut.Z)
+		* RotationPIDController.P; // PID P is used as gain
+
+	SetPhysicsAngularVelocityInRadians(RotOut);
+	//SetAllPhysicsAngularVelocityInRadians(RotOut);
+
+	// PID Version
+	//const FRotator RotErr = MC->GetComponentRotation() - GetComponentRotation();
+	//const FVector PIDOut = RotationPIDController.Update(RotErr.Vector(), InDeltaTime);
+	//SetPhysicsAngularVelocityInRadians(PIDOut);
+	////SetAllPhysicsAngularVelocityInRadians(PIDOut);	
 }
 
 void UMCHand::RotationControl_PosBased(float InDeltaTime)
 {
 	// Teleport flag with physics has to be set since physics is enabled
-	SetWorldRotation(MotionControllerComp->GetComponentQuat() * HandRotationAlignmentOffset,
+	SetWorldRotation(MC->GetComponentQuat() * HandRotationAlignmentOffset,
 		false, (FHitResult*)nullptr, ETeleportType::TeleportPhysics);
+	//SetAllPhysicsRotation(MC->GetComponentQuat() * HandRotationAlignmentOffset);
 }

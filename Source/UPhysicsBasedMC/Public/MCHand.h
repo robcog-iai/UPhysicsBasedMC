@@ -55,11 +55,11 @@ public:
 	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	// Init hand with the motion controllers
-	void Init(UMotionControllerComponent* MCComp);
+	void Init(UMotionControllerComponent* InMC);
 
 private:
 	// Motion controller to follow
-	UMotionControllerComponent* MotionControllerComp;
+	UMotionControllerComponent* MC;
 
 	/* Control */
 	// Location PID controller
