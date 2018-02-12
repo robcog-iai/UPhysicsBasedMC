@@ -7,6 +7,7 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "MCHandMovement.h"
 #include "MCHandGrasp.h"
+#include "MCFixationGrasp.h"
 #include "MCHand.generated.h"
 
 /**
@@ -31,10 +32,19 @@ public:
 	void Init(UMotionControllerComponent* InMC);
 
 private:
-	// Location PID controller
-	UPROPERTY(EditAnywhere, Category = "MC|Movement Control")
-	FMCHandMovement MovementController;
+	// Movement controller
+	UPROPERTY(EditAnywhere, Category = "MC")
+	UMCHandMovement* MovementController;
 
-	UPROPERTY(EditAnywhere, Category = "MC|Grasp Control")
-	FMCHandGrasp GraspController;
+	// Grasp controller
+	UPROPERTY(EditAnywhere, Category = "MC")
+	UMCHandGrasp* GraspController;
+	
+	// Enable fixation grasp
+	UPROPERTY(EditAnywhere, Category = "MC")
+	bool bEnableFixationGrasp;
+
+	// Fixation grasp controller
+	UPROPERTY(EditAnywhere, Category = "MC", meta = (editcondition = "bEnableFixationGrasp"))
+	UMCFixationGrasp* FixationGraspController;
 };

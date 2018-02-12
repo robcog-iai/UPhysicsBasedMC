@@ -80,7 +80,7 @@ void AMCPawn::BeginPlay()
 // Called every frame
 void AMCPawn::Tick(float DeltaTime)
 {
-	UE_LOG(LogTemp, Warning, TEXT(" Pawn Tick ** "));
+	UE_LOG(LogTemp, Warning, TEXT(" Pawn Tick, Disable"));
 }
 
 // Called to bind functionality to input

@@ -4,7 +4,7 @@
 #include "MCHandMovement.h"
 
 // Default values of controller
-FMCHandMovement::FMCHandMovement()
+UMCHandMovement::UMCHandMovement()
 {
 	/* Control parameters */
 	// Movement controller location PID default parameters
@@ -27,12 +27,18 @@ FMCHandMovement::FMCHandMovement()
 	HandRotationAlignmentOffset = FQuat::Identity;
 
 	// Default control update function ptr
-	LocationControlFuncPtr = &FMCHandMovement::LocationControl_None;
-	RotationControlFuncPtr = &FMCHandMovement::RotationControl_None;
+	LocationControlFuncPtr = &UMCHandMovement::LocationControl_None;
+	RotationControlFuncPtr = &UMCHandMovement::RotationControl_None;
+}
+
+// Called when the game starts or when spawned
+void UMCHandMovement::BeginPlay()
+{
+	Super::BeginPlay();
 }
 
 // Init hand with the motion controllers
-void FMCHandMovement::Init(USkeletalMeshComponent* InHand, UMotionControllerComponent* InMC)
+void UMCHandMovement::Init(USkeletalMeshComponent* InHand, UMotionControllerComponent* InMC)
 {
 	// Set the hand skeletal mesh
 	HandSkelComp = InHand;
@@ -51,25 +57,25 @@ void FMCHandMovement::Init(USkeletalMeshComponent* InHand, UMotionControllerComp
 	switch (LocationControlType)
 	{
 	case EMCLocationControlType::NONE:
-		LocationControlFuncPtr = &FMCHandMovement::LocationControl_None;
+		LocationControlFuncPtr = &UMCHandMovement::LocationControl_None;
 		break;
 	case EMCLocationControlType::Force:
-		LocationControlFuncPtr = &FMCHandMovement::LocationControl_ForceBased;
+		LocationControlFuncPtr = &UMCHandMovement::LocationControl_ForceBased;
 		break;
 	case EMCLocationControlType::Acceleration:
-		LocationControlFuncPtr = &FMCHandMovement::LocationControl_AccelBased;
+		LocationControlFuncPtr = &UMCHandMovement::LocationControl_AccelBased;
 		break;
 	case EMCLocationControlType::Impulse:
-		LocationControlFuncPtr = &FMCHandMovement::LocationControl_ImpulseBased;
+		LocationControlFuncPtr = &UMCHandMovement::LocationControl_ImpulseBased;
 		break;
 	case EMCLocationControlType::Velocity:
-		LocationControlFuncPtr = &FMCHandMovement::LocationControl_VelBased;
+		LocationControlFuncPtr = &UMCHandMovement::LocationControl_VelBased;
 		break;
 	case EMCLocationControlType::Position:
-		LocationControlFuncPtr = &FMCHandMovement::LocationControl_PosBased;
+		LocationControlFuncPtr = &UMCHandMovement::LocationControl_PosBased;
 		break;
 	default:
-		LocationControlFuncPtr = &FMCHandMovement::LocationControl_None;
+		LocationControlFuncPtr = &UMCHandMovement::LocationControl_None;
 		break;
 	}
 
@@ -77,31 +83,31 @@ void FMCHandMovement::Init(USkeletalMeshComponent* InHand, UMotionControllerComp
 	switch (RotationControlType)
 	{
 	case EMCRotationControlType::NONE:
-		RotationControlFuncPtr = &FMCHandMovement::RotationControl_None;
+		RotationControlFuncPtr = &UMCHandMovement::RotationControl_None;
 		break;
 	case EMCRotationControlType::Torque:
-		RotationControlFuncPtr = &FMCHandMovement::RotationControl_TorqueBased;
+		RotationControlFuncPtr = &UMCHandMovement::RotationControl_TorqueBased;
 		break;
 	case EMCRotationControlType::Acceleration:
-		RotationControlFuncPtr = &FMCHandMovement::RotationControl_AccelBased;
+		RotationControlFuncPtr = &UMCHandMovement::RotationControl_AccelBased;
 		break;
 	case EMCRotationControlType::Impulse:
-		RotationControlFuncPtr = &FMCHandMovement::RotationControl_ImpulseBased;
+		RotationControlFuncPtr = &UMCHandMovement::RotationControl_ImpulseBased;
 		break;
 	case EMCRotationControlType::Velocity:
-		RotationControlFuncPtr = &FMCHandMovement::RotationControl_VelBased;
+		RotationControlFuncPtr = &UMCHandMovement::RotationControl_VelBased;
 		break;
 	case EMCRotationControlType::Position:
-		RotationControlFuncPtr = &FMCHandMovement::RotationControl_PosBased;
+		RotationControlFuncPtr = &UMCHandMovement::RotationControl_PosBased;
 		break;
 	default:
-		RotationControlFuncPtr = &FMCHandMovement::RotationControl_None;
+		RotationControlFuncPtr = &UMCHandMovement::RotationControl_None;
 		break;
 	}
 }
 
 // Update the movement
-void FMCHandMovement::Update(const float DeltaTime)
+void UMCHandMovement::Update(const float DeltaTime)
 {
 	// Call the movement control functions
 	(this->*LocationControlFuncPtr)(DeltaTime);
@@ -109,12 +115,12 @@ void FMCHandMovement::Update(const float DeltaTime)
 }
 
 // Location interaction functions types
-void FMCHandMovement::LocationControl_None(float InDeltaTime)
+void UMCHandMovement::LocationControl_None(float InDeltaTime)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Location control OFF (None)"));
 }
 
-void FMCHandMovement::LocationControl_ForceBased(float InDeltaTime)
+void UMCHandMovement::LocationControl_ForceBased(float InDeltaTime)
 {
 	const FVector LocErr = MC->GetComponentLocation() - HandSkelComp->GetComponentLocation();
 	const FVector PIDOut = LocationPIDController.Update(LocErr, InDeltaTime);
@@ -125,7 +131,7 @@ void FMCHandMovement::LocationControl_ForceBased(float InDeltaTime)
 	//	*FString(__FUNCTION__), *PIDOut.ToString());
 }
 
-void FMCHandMovement::LocationControl_ImpulseBased(float InDeltaTime)
+void UMCHandMovement::LocationControl_ImpulseBased(float InDeltaTime)
 {
 	const FVector LocErr = MC->GetComponentLocation() - HandSkelComp->GetComponentLocation();
 	const FVector PIDOut = LocationPIDController.Update(LocErr, InDeltaTime);
@@ -138,7 +144,7 @@ void FMCHandMovement::LocationControl_ImpulseBased(float InDeltaTime)
 	//	*FString(__FUNCTION__), *PIDOut.ToString());
 }
 
-void FMCHandMovement::LocationControl_AccelBased(float InDeltaTime)
+void UMCHandMovement::LocationControl_AccelBased(float InDeltaTime)
 {
 	const FVector LocErr = MC->GetComponentLocation() - HandSkelComp->GetComponentLocation();
 	const FVector PIDOut = LocationPIDController.Update(LocErr, InDeltaTime);
@@ -149,7 +155,7 @@ void FMCHandMovement::LocationControl_AccelBased(float InDeltaTime)
 	//	*FString(__FUNCTION__), *PIDOut.ToString());
 }
 
-void FMCHandMovement::LocationControl_VelBased(float InDeltaTime)
+void UMCHandMovement::LocationControl_VelBased(float InDeltaTime)
 {
 	const FVector LocErr = MC->GetComponentLocation() - HandSkelComp->GetComponentLocation();
 	const FVector PIDOut = LocationPIDController.Update(LocErr, InDeltaTime);
@@ -164,7 +170,7 @@ void FMCHandMovement::LocationControl_VelBased(float InDeltaTime)
 	//	*ComponentVelocity.ToString());
 }
 
-void FMCHandMovement::LocationControl_PosBased(float InDeltaTime)
+void UMCHandMovement::LocationControl_PosBased(float InDeltaTime)
 {
 	// TeleportPhysics flag has to be set for physics based teleportation
 	HandSkelComp->SetWorldLocation(MC->GetComponentLocation(),
@@ -173,12 +179,12 @@ void FMCHandMovement::LocationControl_PosBased(float InDeltaTime)
 }
 
 // Rotation interaction functions types
-void FMCHandMovement::RotationControl_None(float InDeltaTime)
+void UMCHandMovement::RotationControl_None(float InDeltaTime)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Rotation control OFF (None)"));
 }
 
-void FMCHandMovement::RotationControl_TorqueBased(float InDeltaTime)
+void UMCHandMovement::RotationControl_TorqueBased(float InDeltaTime)
 {
 	const FQuat TargetQuat = MC->GetComponentQuat() * HandRotationAlignmentOffset;
 	FQuat CompQuat = HandSkelComp->GetComponentQuat();
@@ -204,7 +210,7 @@ void FMCHandMovement::RotationControl_TorqueBased(float InDeltaTime)
 	//AddTorqueInRadians(RotOut); 
 }
 
-void FMCHandMovement::RotationControl_AccelBased(float InDeltaTime)
+void UMCHandMovement::RotationControl_AccelBased(float InDeltaTime)
 {
 	const FQuat TargetQuat = MC->GetComponentQuat() * HandRotationAlignmentOffset;
 	FQuat CompQuat = HandSkelComp->GetComponentQuat();
@@ -230,13 +236,13 @@ void FMCHandMovement::RotationControl_AccelBased(float InDeltaTime)
 	//AddTorqueInRadians(RotOut, NAME_None, true)); // Acceleration based (mass will have no effect) 
 }
 
-void FMCHandMovement::RotationControl_ImpulseBased(float InDeltaTime)
+void UMCHandMovement::RotationControl_ImpulseBased(float InDeltaTime)
 {
 	// TODO
 	UE_LOG(LogTemp, Warning, TEXT("Rotation Control AccelBased"));
 }
 
-void FMCHandMovement::RotationControl_VelBased(float InDeltaTime)
+void UMCHandMovement::RotationControl_VelBased(float InDeltaTime)
 {
 	const FQuat TargetQuat = MC->GetComponentQuat() * HandRotationAlignmentOffset;
 	FQuat CompQuat = HandSkelComp->GetComponentQuat();
@@ -264,7 +270,7 @@ void FMCHandMovement::RotationControl_VelBased(float InDeltaTime)
 	////SetAllPhysicsAngularVelocityInRadians(PIDOut);	
 }
 
-void FMCHandMovement::RotationControl_PosBased(float InDeltaTime)
+void UMCHandMovement::RotationControl_PosBased(float InDeltaTime)
 {
 	// Teleport flag with physics has to be set since physics is enabled
 	HandSkelComp->SetWorldRotation(MC->GetComponentQuat() * HandRotationAlignmentOffset,

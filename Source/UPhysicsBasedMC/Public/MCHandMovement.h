@@ -40,14 +40,17 @@ enum class EMCRotationControlType : uint8
 /**
  * 3D Movement controller of the hand
  */
-USTRUCT(/*BlueprintType*/)
-struct UPHYSICSBASEDMC_API FMCHandMovement
+UCLASS()
+class UPHYSICSBASEDMC_API UMCHandMovement : public UActorComponent
 {
-	GENERATED_USTRUCT_BODY()
+	GENERATED_BODY()
 	
 public:
 	// Constructor, set default values
-	FMCHandMovement();
+	UMCHandMovement();
+
+	// Called when the game starts or when spawned
+	virtual void BeginPlay() override;
 
 	// Init hand with the motion controllers
 	void Init(USkeletalMeshComponent* InHand, UMotionControllerComponent* InMC);
@@ -83,7 +86,7 @@ private:
 	FQuat HandRotationAlignmentOffset;
 
 	// Control function pointer variable type
-	typedef void(FMCHandMovement::*MovementControlFuncPtrType)(float);
+	typedef void(UMCHandMovement::*MovementControlFuncPtrType)(float);
 
 	// Function pointer for location movement control
 	MovementControlFuncPtrType LocationControlFuncPtr;
@@ -105,6 +108,5 @@ private:
 	void RotationControl_AccelBased(float InDeltaTime);
 	void RotationControl_ImpulseBased(float InDeltaTime);
 	void RotationControl_VelBased(float InDeltaTime);
-	void RotationControl_PosBased(float InDeltaTime);
-	
+	void RotationControl_PosBased(float InDeltaTime);	
 };
