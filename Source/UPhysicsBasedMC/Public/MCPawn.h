@@ -10,6 +10,9 @@
 #include "MCHand.h"
 #include "MCPawn.generated.h"
 
+/**
+* VR enabled Pawn with MC hands
+*/
 UCLASS()
 class UPHYSICSBASEDMC_API AMCPawn : public APawn
 {
