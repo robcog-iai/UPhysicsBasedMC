@@ -2,7 +2,7 @@
 // Author: Andrei Haidu (http://haidu.eu)
 
 #include "MCHandGrasp.h"
-#include "XRMotionControllerBase.h" // for FXRMotionControllerBase::Left/RightHandSourceId and GetHandEnumForSourceName()
+//#include "XRMotionControllerBase.h" // for FXRMotionControllerBase::Left/RightHandSourceId and GetHandEnumForSourceName()
 
 // Constructor
 UMCHandGrasp::UMCHandGrasp()
@@ -24,24 +24,24 @@ void UMCHandGrasp::Init(USkeletalMeshComponent* InHand, UMotionControllerCompone
 // Setup input bindings
 void UMCHandGrasp::SetupInputBindings(UMotionControllerComponent* InMC)
 {
-	// Get the input controller for mapping the grasping control inputs
-	APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
-	if (PC)
-	{
-		UInputComponent* IC = PC->InputComponent;
-		if (IC)
-		{
-			// Check hand type
-			if (InMC->MotionSource == FXRMotionControllerBase::LeftHandSourceId)
-			{
-				//IC->BindAxis("LeftGrasp", this, &UMCHandGrasp::UpdateGrasp);
-			}
-			else if (InMC->MotionSource == FXRMotionControllerBase::RightHandSourceId)
-			{
-				//IC->BindAxis("RightGrasp", this, &UMCHandGrasp::UpdateGrasp);
-			}
-		}
-	}
+	//// Get the input controller for mapping the grasping control inputs
+	//APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+	//if (PC)
+	//{
+	//	UInputComponent* IC = PC->InputComponent;
+	//	if (IC)
+	//	{
+	//		// Check hand type
+	//		if (InMC->MotionSource == FXRMotionControllerBase::LeftHandSourceId)
+	//		{
+	//			//IC->BindAxis("LeftGrasp", this, &UMCHandGrasp::UpdateGrasp);
+	//		}
+	//		else if (InMC->MotionSource == FXRMotionControllerBase::RightHandSourceId)
+	//		{
+	//			//IC->BindAxis("RightGrasp", this, &UMCHandGrasp::UpdateGrasp);
+	//		}
+	//	}
+	//}
 }
 
 //void UVREditorMotionControllerInteractor::PlayHapticEffect(const float Strength)

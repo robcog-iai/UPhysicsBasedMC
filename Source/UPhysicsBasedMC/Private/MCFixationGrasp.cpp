@@ -3,7 +3,7 @@
 
 #include "MCFixationGrasp.h"
 #include "Kismet/GameplayStatics.h"
-#include "XRMotionControllerBase.h" // for FXRMotionControllerBase::Left/RightHandSourceId and GetHandEnumForSourceName()
+//#include "XRMotionControllerBase.h" // for FXRMotionControllerBase::Left/RightHandSourceId and GetHandEnumForSourceName()
 
 // Constructor, set default values
 UMCFixationGrasp::UMCFixationGrasp()
@@ -31,26 +31,26 @@ void UMCFixationGrasp::Init(USkeletalMeshComponent* InHand, UMotionControllerCom
 // Setup input bindings
 void UMCFixationGrasp::SetupInputBindings(UMotionControllerComponent* InMC)
 {
-	// Get the input controller for mapping the grasping control inputs
-	APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
-	if (PC)
-	{
-		UInputComponent* IC = PC->InputComponent;
-		if (IC)
-		{
-			// Check hand type
-			if (InMC->MotionSource == FXRMotionControllerBase::LeftHandSourceId)
-			{
-				IC->BindAction("LeftFixation", IE_Pressed, this, &UMCFixationGrasp::TryFixation);
-				IC->BindAction("LeftFixation", IE_Released, this, &UMCFixationGrasp::DetachFixation);
-			}
-			else if (InMC->MotionSource == FXRMotionControllerBase::RightHandSourceId)
-			{
-				IC->BindAction("RightFixation", IE_Pressed, this, &UMCFixationGrasp::TryFixation);
-				IC->BindAction("RightFixation", IE_Released, this, &UMCFixationGrasp::DetachFixation);
-			}
-		}
-	}
+	//// Get the input controller for mapping the grasping control inputs
+	//APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+	//if (PC)
+	//{
+	//	UInputComponent* IC = PC->InputComponent;
+	//	if (IC)
+	//	{
+	//		// Check hand type
+	//		if (InMC->MotionSource == FXRMotionControllerBase::LeftHandSourceId)
+	//		{
+	//			IC->BindAction("LeftFixation", IE_Pressed, this, &UMCFixationGrasp::TryFixation);
+	//			IC->BindAction("LeftFixation", IE_Released, this, &UMCFixationGrasp::DetachFixation);
+	//		}
+	//		else if (InMC->MotionSource == FXRMotionControllerBase::RightHandSourceId)
+	//		{
+	//			IC->BindAction("RightFixation", IE_Pressed, this, &UMCFixationGrasp::TryFixation);
+	//			IC->BindAction("RightFixation", IE_Released, this, &UMCFixationGrasp::DetachFixation);
+	//		}
+	//	}
+	//}
 }
 
 // Try to fixate object to hand

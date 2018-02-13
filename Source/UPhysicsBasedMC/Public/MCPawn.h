@@ -46,13 +46,13 @@ private:
 	// Right Motion Controller
 	UMotionControllerComponent* MCRight;
 
-	// Left MC hand
-	UPROPERTY(EditAnywhere, Category = "MC")
-	UMCHand* LeftHand;
+	//// Left MC hand
+	//UPROPERTY(EditAnywhere, Category = "MC")
+	//UMCHand* LeftHand;
 
-	// Right MC hand
-	UPROPERTY(EditAnywhere, Category = "MC")
-	UMCHand* RightHand;
+	//// Right MC hand
+	//UPROPERTY(EditAnywhere, Category = "MC")
+	//UMCHand* RightHand;
 
 	// Display MC controller mesh
 	UPROPERTY(EditAnywhere, Category = "MC", DisplayName = "Visualize MC Meshes")

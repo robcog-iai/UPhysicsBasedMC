@@ -15,6 +15,7 @@ UMCHand::UMCHand()
 	SetCollisionProfileName(TEXT("BlockAll"));
 	bGenerateOverlapEvents = true;
 	
+	// TODO move all to MCPawn, name clashes
 	// Create the movement controller component
 	MovementController = CreateDefaultSubobject<UMCHandMovement>(TEXT("MovementController"));
 

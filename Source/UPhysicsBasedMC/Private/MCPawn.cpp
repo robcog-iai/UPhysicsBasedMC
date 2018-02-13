@@ -4,7 +4,7 @@
 #include "MCPawn.h"
 #include "IHeadMountedDisplay.h"
 #include "IXRTrackingSystem.h"
-#include "XRMotionControllerBase.h"
+//#include "XRMotionControllerBase.h"
 
 // Sets default values
 AMCPawn::AMCPawn()
@@ -28,21 +28,21 @@ AMCPawn::AMCPawn()
 		
 	// Create the right motion controller
 	MCLeft = CreateDefaultSubobject<UMotionControllerComponent>(TEXT("MCLeft"));
-	MCLeft->MotionSource = FXRMotionControllerBase::LeftHandSourceId;
+	//MCLeft->MotionSource = FXRMotionControllerBase::LeftHandSourceId;
 	MCLeft->SetupAttachment(MCRoot);
 	
 	// Create the left motion controller
 	MCRight = CreateDefaultSubobject<UMotionControllerComponent>(TEXT("MCRight"));
-	MCRight->MotionSource = FXRMotionControllerBase::RightHandSourceId;
+	//MCRight->MotionSource = FXRMotionControllerBase::RightHandSourceId;
 	MCRight->SetupAttachment(MCRoot);
 
-	// Create Left MC Hand Component
-	LeftHand = CreateDefaultSubobject<UMCHand>(TEXT("LeftHand"));
-	LeftHand->SetupAttachment(GetRootComponent());
+	//// Create Left MC Hand Component
+	//LeftHand = CreateDefaultSubobject<UMCHand>(TEXT("LeftHand"));
+	//LeftHand->SetupAttachment(GetRootComponent());
 
-	// Create Right MC Hand Component
-	RightHand = CreateDefaultSubobject<UMCHand>(TEXT("RightHand"));
-	RightHand->SetupAttachment(GetRootComponent());
+	//// Create Right MC Hand Component
+	//RightHand = CreateDefaultSubobject<UMCHand>(TEXT("RightHand"));
+	//RightHand->SetupAttachment(GetRootComponent());
 
 }
 
@@ -51,30 +51,30 @@ void AMCPawn::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// MC meshes visualization
-	MCLeft->bDisplayDeviceModel = bVisualizeMCMeshes;
-	MCRight->bDisplayDeviceModel = bVisualizeMCMeshes;
+	//// MC meshes visualization
+	//MCLeft->bDisplayDeviceModel = bVisualizeMCMeshes;
+	//MCRight->bDisplayDeviceModel = bVisualizeMCMeshes;
 
-	// Init MC Hands
-	LeftHand->Init(MCLeft);
-	RightHand->Init(MCRight);
+	//// Init MC Hands
+	//LeftHand->Init(MCLeft);
+	//RightHand->Init(MCRight);
 
-	// Disable tick
-	SetActorTickEnabled(false);
+	//// Disable tick
+	//SetActorTickEnabled(false);
 
-	//// Check if VR is enabled
-	//IHeadMountedDisplay* HMD = (IHeadMountedDisplay*)(GEngine->XRSystem->GetHMDDevice());
-	//if (HMD && HMD->IsHMDEnabled())
-	//{
-	//	//GEngine->XRSystem->ResetOrientationAndPosition();
-	//	GEngine->XRSystem->SetTrackingOrigin(EHMDTrackingOrigin::Floor);
-	//	//if (GEngine->XRSystem->GetSystemName().IsEqual("SteamVR"))
-	//	//{
-	//	//	//MCLeft->SetDisplayModelSource(GEngine->XRSystem->GetSystemName());
-	//	//	//MCRight->SetDisplayModelSource(GEngine->XRSystem->GetSystemName());
-	//	//	UE_LOG(LogTemp, Warning, TEXT("STEAM VR"));
-	//	//}		
-	//}
+	////// Check if VR is enabled
+	////IHeadMountedDisplay* HMD = (IHeadMountedDisplay*)(GEngine->XRSystem->GetHMDDevice());
+	////if (HMD && HMD->IsHMDEnabled())
+	////{
+	////	//GEngine->XRSystem->ResetOrientationAndPosition();
+	////	GEngine->XRSystem->SetTrackingOrigin(EHMDTrackingOrigin::Floor);
+	////	//if (GEngine->XRSystem->GetSystemName().IsEqual("SteamVR"))
+	////	//{
+	////	//	//MCLeft->SetDisplayModelSource(GEngine->XRSystem->GetSystemName());
+	////	//	//MCRight->SetDisplayModelSource(GEngine->XRSystem->GetSystemName());
+	////	//	UE_LOG(LogTemp, Warning, TEXT("STEAM VR"));
+	////	//}		
+	////}
 }
 
 // Called every frame
