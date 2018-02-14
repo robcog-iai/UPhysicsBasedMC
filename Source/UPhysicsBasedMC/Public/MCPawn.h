@@ -33,12 +33,13 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	
+	// VR Camera
+	UPROPERTY(BlueprintReadWrite)
+	UCameraComponent* VRCamera;
+
 private:
 	// MC Root
 	USceneComponent* MCRoot;
-
-	// VR Camera
-	UCameraComponent* VRCamera;
 
 	// Left Motion Controller
 	UMotionControllerComponent* MCLeft;
@@ -46,13 +47,13 @@ private:
 	// Right Motion Controller
 	UMotionControllerComponent* MCRight;
 
-	//// Left MC hand
-	//UPROPERTY(EditAnywhere, Category = "MC")
-	//UMCHand* LeftHand;
+	// Left MC hand
+	UPROPERTY(EditAnywhere, Category = "MC")
+	UMCHand* LeftHand;
 
-	//// Right MC hand
-	//UPROPERTY(EditAnywhere, Category = "MC")
-	//UMCHand* RightHand;
+	// Right MC hand
+	UPROPERTY(EditAnywhere, Category = "MC")
+	UMCHand* RightHand;
 
 	// Display MC controller mesh
 	UPROPERTY(EditAnywhere, Category = "MC", DisplayName = "Visualize MC Meshes")

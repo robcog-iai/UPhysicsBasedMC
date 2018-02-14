@@ -4,7 +4,7 @@
 #include "MCHand.h"
 
 // Sets default values
-UMCHand::UMCHand()
+UMCHand::UMCHand(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
 	// Disable ticking in the editor
 	bTickInEditor = false;
@@ -15,19 +15,21 @@ UMCHand::UMCHand()
 	SetCollisionProfileName(TEXT("BlockAll"));
 	bGenerateOverlapEvents = true;
 	
-	// TODO move all to MCPawn, name clashes
 	// Create the movement controller component
-	MovementController = CreateDefaultSubobject<UMCHandMovement>(TEXT("MovementController"));
+	//MovementController = CreateDefaultSubobject<UMCHandMovement>(TEXT("MovementController"));
+	MovementController = ObjectInitializer.CreateDefaultSubobject<UMCHandMovement>(this, TEXT("MovementController"));
 
-	// Create grasp component
-	GraspController = CreateDefaultSubobject<UMCHandGrasp>(TEXT("GraspController"));
+	//// Create grasp component
+	////GraspController = CreateDefaultSubobject<UMCHandGrasp>(TEXT("GraspController"));
+	//GraspController = ObjectInitializer.CreateDefaultSubobject<UMCHandGrasp>(this, TEXT("GraspController"));
 
-	// Create fixation grasp component
-	FixationGraspController = CreateDefaultSubobject<UMCFixationGrasp>(TEXT("FixationGraspController"));
-	FixationGraspController->SetupAttachment(this);
+	//// Create fixation grasp component
+	////FixationGraspController = CreateDefaultSubobject<UMCFixationGrasp>(TEXT("FixationGraspController"));
+	//FixationGraspController = ObjectInitializer.CreateDefaultSubobject<UMCFixationGrasp>(this, TEXT("FixationGraspController"));
+	//FixationGraspController->SetupAttachment(this);
 
-	// Enable fixation grasp by default
-	bEnableFixationGrasp = true;
+	//// Enable fixation grasp by default
+	//bEnableFixationGrasp = true;
 }
 
 // Called when the game starts or when spawned
@@ -54,18 +56,18 @@ void UMCHand::Init(UMotionControllerComponent* InMC)
 	// Init the movement controller
 	MovementController->Init(this, InMC);	
 
-	// Init the grasp controller
-	GraspController->Init(this, InMC);
+	//// Init the grasp controller
+	//GraspController->Init(this, InMC);
 
-	// Init the fixation grasp controller
-	if (bEnableFixationGrasp)
-	{
-		FixationGraspController->Init(this, InMC);
-	}
-	else
-	{
-		FixationGraspController->DestroyComponent();
-	}
+	//// Init the fixation grasp controller
+	//if (bEnableFixationGrasp)
+	//{
+	//	FixationGraspController->Init(this, InMC);
+	//}
+	//else
+	//{
+	//	FixationGraspController->DestroyComponent();
+	//}
 
 	// Enable Tick
 	SetComponentTickEnabled(true);

@@ -20,7 +20,7 @@ class UPHYSICSBASEDMC_API UMCHand : public USkeletalMeshComponent
 	
 public:
 	// Sets default values for the component
-	UMCHand();
+	UMCHand(const FObjectInitializer& ObjectInitializer);
 
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -36,15 +36,15 @@ private:
 	UPROPERTY(EditAnywhere, Category = "MC")
 	UMCHandMovement* MovementController;
 
-	// Grasp controller
-	UPROPERTY(EditAnywhere, Category = "MC")
-	UMCHandGrasp* GraspController;
-	
-	// Enable fixation grasp
-	UPROPERTY(EditAnywhere, Category = "MC")
-	bool bEnableFixationGrasp;
+	//// Grasp controller
+	//UPROPERTY(EditAnywhere, Category = "MC")
+	//UMCHandGrasp* GraspController;
+	//
+	//// Enable fixation grasp
+	//UPROPERTY(EditAnywhere, Category = "MC")
+	//bool bEnableFixationGrasp;
 
-	// Fixation grasp controller
-	UPROPERTY(EditAnywhere, Category = "MC", meta = (editcondition = "bEnableFixationGrasp"))
-	UMCFixationGrasp* FixationGraspController;
+	//// Fixation grasp controller
+	//UPROPERTY(EditAnywhere, Category = "MC", meta = (editcondition = "bEnableFixationGrasp"))
+	//UMCFixationGrasp* FixationGraspController;
 };

@@ -1,6 +1,7 @@
 // Copyright 2017, Institute for Artificial Intelligence - University of Bremen
 // Author: Andrei Haidu (http://haidu.eu)
 
+using System.IO;
 using UnrealBuildTool;
 
 public class UPhysicsBasedMC : ModuleRules
@@ -8,12 +9,16 @@ public class UPhysicsBasedMC : ModuleRules
 	public UPhysicsBasedMC(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
-		
-		PublicIncludePaths.AddRange(
+        
+        // https://answers.unrealengine.com/questions/258689/how-to-include-private-header-files-of-other-modul.html        
+        string EnginePath = Path.GetFullPath(Target.RelativeEnginePath);
+
+        PublicIncludePaths.AddRange(
 			new string[] {
-				"UPhysicsBasedMC/Public"
+				"UPhysicsBasedMC/Public",
 				// ... add public include paths required here ...
-			}
+                EnginePath + "Source/Runtime/Launch/Resources", // #include "Version.h"; #if ENGINE_MINOR_VERSION
+            }
 			);
 				
 		
@@ -42,9 +47,7 @@ public class UPhysicsBasedMC : ModuleRules
 				"Slate",
 				"SlateCore",
 				"HeadMountedDisplay",
-                "UPIDController",
-				"SemLog",
-				"UTags"
+                "UPIDController"
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);
