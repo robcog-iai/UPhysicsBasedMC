@@ -49,11 +49,11 @@ private:
 
 	// Left MC hand
 	UPROPERTY(EditAnywhere, Category = "MC")
-	UMCHand* LeftHand;
+	UMCHand* MCHandLeft;
 
 	// Right MC hand
 	UPROPERTY(EditAnywhere, Category = "MC")
-	UMCHand* RightHand;
+	UMCHand* MCHandRight;
 
 	// Display MC controller mesh
 	UPROPERTY(EditAnywhere, Category = "MC", DisplayName = "Visualize MC Meshes")

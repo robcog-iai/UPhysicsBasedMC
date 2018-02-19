@@ -7,7 +7,7 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "MotionControllerComponent.h"
 #include "PIDController3D.h"
-#include "MCHandMovement.generated.h"
+#include "MCMovementController6D.generated.h"
 
 /**
 * Location control type of the hands
@@ -41,16 +41,16 @@ enum class EMCRotationControlType : uint8
  * 3D Movement controller of the hand
  */
 UCLASS()
-class UPHYSICSBASEDMC_API UMCHandMovement : public UActorComponent
+class UPHYSICSBASEDMC_API UMCMovementController6D : public UObject /*UActorComponent*/
 {
 	GENERATED_BODY()
 	
 public:
 	// Constructor, set default values
-	UMCHandMovement();
+	UMCMovementController6D();
 
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
+	//// Called when the game starts or when spawned
+	//virtual void BeginPlay() override;
 
 	// Init hand with the motion controllers
 	void Init(USkeletalMeshComponent* InHand, UMotionControllerComponent* InMC);
@@ -86,7 +86,7 @@ private:
 	FQuat HandRotationAlignmentOffset;
 
 	// Control function pointer variable type
-	typedef void(UMCHandMovement::*MovementControlFuncPtrType)(float);
+	typedef void(UMCMovementController6D::*MovementControlFuncPtrType)(float);
 
 	// Function pointer for location movement control
 	MovementControlFuncPtrType LocationControlFuncPtr;

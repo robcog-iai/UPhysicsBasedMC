@@ -48,12 +48,12 @@ AMCPawn::AMCPawn()
 	MCRight->SetupAttachment(MCRoot);
 
 	// Create Left MC Hand Component
-	LeftHand = CreateDefaultSubobject<UMCHand>(TEXT("LeftHand"));
-	LeftHand->SetupAttachment(GetRootComponent());
+	MCHandLeft = CreateDefaultSubobject<UMCHand>(TEXT("LeftHand"));
+	MCHandLeft->SetupAttachment(GetRootComponent());
 
 	// Create Right MC Hand Component
-	RightHand = CreateDefaultSubobject<UMCHand>(TEXT("RightHand"));
-	RightHand->SetupAttachment(GetRootComponent());
+	MCHandRight = CreateDefaultSubobject<UMCHand>(TEXT("RightHand"));
+	MCHandRight->SetupAttachment(GetRootComponent());
 
 }
 
@@ -69,31 +69,17 @@ void AMCPawn::BeginPlay()
 #endif
 
 	// Init MC Hands
-	LeftHand->Init(MCLeft);
-	RightHand->Init(MCRight);
+	MCHandLeft->Init(MCLeft);
+	MCHandRight->Init(MCRight);
 
 	// Disable tick
 	SetActorTickEnabled(false);
-
-	//// Check if VR is enabled
-	//IHeadMountedDisplay* HMD = (IHeadMountedDisplay*)(GEngine->XRSystem->GetHMDDevice());
-	//if (HMD && HMD->IsHMDEnabled())
-	//{
-	//	//GEngine->XRSystem->ResetOrientationAndPosition();
-	//	GEngine->XRSystem->SetTrackingOrigin(EHMDTrackingOrigin::Floor);
-	//	//if (GEngine->XRSystem->GetSystemName().IsEqual("SteamVR"))
-	//	//{
-	//	//	//MCLeft->SetDisplayModelSource(GEngine->XRSystem->GetSystemName());
-	//	//	//MCRight->SetDisplayModelSource(GEngine->XRSystem->GetSystemName());
-	//	//	UE_LOG(LogTemp, Warning, TEXT("STEAM VR"));
-	//	//}		
-	//}
 }
 
 // Called every frame
 void AMCPawn::Tick(float DeltaTime)
 {
-	UE_LOG(LogTemp, Warning, TEXT(" Pawn Tick, Disable"));
+	UE_LOG(LogTemp, Warning, TEXT("[%s] Disable me"), *FString(__FUNCTION__));
 }
 
 // Called to bind functionality to input

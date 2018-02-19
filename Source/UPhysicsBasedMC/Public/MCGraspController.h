@@ -8,43 +8,43 @@
 #include "Components/SphereComponent.h"
 #include "MotionControllerComponent.h"
 #include "MCFinger.h"
-#include "MCHandGrasp.generated.h"
+#include "MCGraspController.generated.h"
 
 
 /**
 * Grasp control type
 */
-UENUM(/*BlueprintType*/)
-enum class EGraspType : uint8
+UENUM()
+enum class EGraspStyle : uint8
 {
-	PowerSphere			UMETA(DisplayName = "PowerSphere")	
+	PowerSphere			UMETA(DisplayName = "PowerSphere")
 };
 
 /**
  * Grasp control of the hand
  */
 UCLASS()
-class UPHYSICSBASEDMC_API UMCHandGrasp : public UActorComponent
+class UPHYSICSBASEDMC_API UMCGraspController : public UObject
 {
 	GENERATED_BODY()
 
 public:
 	// Constructor, set default values
-	UMCHandGrasp();
-
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
+	UMCGraspController();
 	
 	// Init grasp controller
-	void Init(USkeletalMeshComponent* InHand, UMotionControllerComponent* InMC);
+	void Init(USkeletalMeshComponent* InHand, UMotionControllerComponent* InMC, UInputComponent* InIC = nullptr);
 
 	// Grasp type
 	UPROPERTY(EditAnywhere, Category = "Grasp Control")
-	EGraspType GraspType;
+	EGraspStyle GraspStyle;
 
 private:
 	// Bind grasping inputs
-	void SetupInputBindings(UMotionControllerComponent* InMC);
+	void SetupInputBindings(UMotionControllerComponent* InMC, UInputComponent* InIC);
+
+	// Update grasp
+	void Update(const float Val);
 
 	/* Fingers */
 	// Thumb finger 

@@ -5,9 +5,9 @@
 
 #include "CoreMinimal.h"
 #include "Components/SkeletalMeshComponent.h"
-#include "MCHandMovement.h"
-#include "MCHandGrasp.h"
-#include "MCFixationGrasp.h"
+#include "MCMovementController6D.h"
+#include "MCGraspController.h"
+#include "MCFixationGraspController.h"
 #include "MCHand.generated.h"
 
 /**
@@ -34,17 +34,17 @@ public:
 private:
 	// Movement controller
 	UPROPERTY(EditAnywhere, Category = "MC")
-	UMCHandMovement* MovementController;
+	UMCMovementController6D* MovementController;
 
-	//// Grasp controller
-	//UPROPERTY(EditAnywhere, Category = "MC")
-	//UMCHandGrasp* GraspController;
-	//
-	//// Enable fixation grasp
-	//UPROPERTY(EditAnywhere, Category = "MC")
-	//bool bEnableFixationGrasp;
+	// Grasp controller
+	UPROPERTY(EditAnywhere, Category = "MC")
+	UMCGraspController* GraspController;
+	
+	// Enable fixation grasp
+	UPROPERTY(EditAnywhere, Category = "MC")
+	bool bEnableFixationGrasp;
 
-	//// Fixation grasp controller
-	//UPROPERTY(EditAnywhere, Category = "MC", meta = (editcondition = "bEnableFixationGrasp"))
-	//UMCFixationGrasp* FixationGraspController;
+	// Fixation grasp controller
+	UPROPERTY(EditAnywhere, Category = "MC", meta = (editcondition = "bEnableFixationGrasp"))
+	UMCFixationGraspController* FixationGraspController;
 };
