@@ -32,6 +32,11 @@ public:
 	void Init(UMotionControllerComponent* InMC);
 
 private:
+#if WITH_EDITOR
+	// Post edit change property callback
+	virtual void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent);
+#endif //WITH_EDITOR
+
 	// Movement controller
 	UPROPERTY(EditAnywhere, Category = "MC")
 	UMCMovementController6D* MovementController;

@@ -8,13 +8,13 @@ UMCMovementController6D::UMCMovementController6D()
 {
 	/* Control parameters */
 	// Movement controller location PID default parameters
-	LocationPIDController.P = 250.0;
+	LocationPIDController.P = 300.0;
 	LocationPIDController.I = 0.0f;
-	LocationPIDController.D = 50.0f;
-	LocationPIDController.MaxOutAbs = 1500.f;
+	LocationPIDController.D = 55.0f;
+	LocationPIDController.MaxOutAbs = 9500.f;
 
 	// Movement controller rotation PID default parameters
-	RotationPIDController.P = 100.f;
+	RotationPIDController.P = 128.f;
 	RotationPIDController.I = 0.0f;
 	RotationPIDController.D = 0.0f;
 	RotationPIDController.MaxOutAbs = 1500.f;
@@ -30,12 +30,6 @@ UMCMovementController6D::UMCMovementController6D()
 	LocationControlFuncPtr = &UMCMovementController6D::LocationControl_None;
 	RotationControlFuncPtr = &UMCMovementController6D::RotationControl_None;
 }
-
-//// Called when the game starts or when spawned
-//void UMCMovementController6D::BeginPlay()
-//{
-//	Super::BeginPlay();
-//}
 
 // Init hand with the motion controllers
 void UMCMovementController6D::Init(USkeletalMeshComponent* InHand, UMotionControllerComponent* InMC)

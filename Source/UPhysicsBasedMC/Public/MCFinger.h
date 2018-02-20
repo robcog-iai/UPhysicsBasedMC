@@ -10,14 +10,14 @@
 * Enum indicating the finger parts
 * https://en.wikipedia.org/wiki/Phalanx_bone
 */
-UENUM(/*BlueprintType*/)
-enum class EFingerBone : uint8
-{
-	Distal			UMETA(DisplayName = "Distal"),
-	Intermediate	UMETA(DisplayName = "Intermediate"),
-	Proximal		UMETA(DisplayName = "Proximal"),
-	Metacarpal		UMETA(DisplayName = "Metacarpal")
-};
+//UENUM(/*BlueprintType*/)
+//enum class EFingerBone : uint8
+//{
+//	Distal			UMETA(DisplayName = "Distal"),
+//	Intermediate	UMETA(DisplayName = "Intermediate"),
+//	Proximal		UMETA(DisplayName = "Proximal"),
+//	Metacarpal		UMETA(DisplayName = "Metacarpal")
+//};
 
 /**
 * Finger bone type
@@ -28,9 +28,9 @@ struct UPHYSICSBASEDMC_API FMCFingerBone
 {
 	GENERATED_USTRUCT_BODY()
 
-	// Bone type
-	UPROPERTY(EditAnywhere, Category = "Grasp Control")
-	EFingerBone Type;
+	//// Bone type
+	//UPROPERTY(EditAnywhere, Category = "Grasp Control")
+	//EFingerBone Type;
 
 	// Bone name
 	UPROPERTY(EditAnywhere, Category = "Grasp Control")
@@ -38,12 +38,20 @@ struct UPHYSICSBASEDMC_API FMCFingerBone
 
 	// Bone constraint
 	FConstraintInstance* ConstraintInstance;
+
+	// Init finger
+	void Init(/*EFingerBone InType, */const FString& InName, FConstraintInstance* InConstraintInstance)
+	{
+		/*Type = InType;*/
+		Name = InName;
+		ConstraintInstance = InConstraintInstance;
+	}
 };
 
 /**
 * Hand finger type
 */
-USTRUCT(/*BlueprintType*/)
+USTRUCT()
 struct UPHYSICSBASEDMC_API FMCFinger
 {
 	GENERATED_USTRUCT_BODY()

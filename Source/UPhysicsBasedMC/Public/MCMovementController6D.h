@@ -49,9 +49,6 @@ public:
 	// Constructor, set default values
 	UMCMovementController6D();
 
-	//// Called when the game starts or when spawned
-	//virtual void BeginPlay() override;
-
 	// Init hand with the motion controllers
 	void Init(USkeletalMeshComponent* InHand, UMotionControllerComponent* InMC);
 

@@ -14,7 +14,7 @@ UMCFixationGraspController::UMCFixationGraspController()
 	bGenerateOverlapEvents = true;
 	bWeldFixation = true;
 	ObjectMaxLength = 50.f;
-	ObjectMaxMass = 15.f;	
+	ObjectMaxMass = 15.f;
 }
 
 // Called when the game starts or when spawned
@@ -100,7 +100,7 @@ void UMCFixationGraspController::FixateObject(AStaticMeshActor* InSMA)
 	// Disable physics and overlap events
 	UStaticMeshComponent* SMC = InSMA->GetStaticMeshComponent();
 	SMC->SetSimulatePhysics(false);
-	//SMC->bGenerateOverlapEvents = false;
+	//SMC->bGenerateOverlapEvents = false; // We want the object to continue to generate overlap events (e.g. semantic contacts)
 	
 	InSMA->AttachToComponent(SkeletalHand, FAttachmentTransformRules(
 	EAttachmentRule::KeepWorld, EAttachmentRule::KeepWorld, EAttachmentRule::KeepWorld, bWeldFixation));
@@ -188,6 +188,15 @@ void UMCFixationGraspController::OnFixationGraspAreaBeginOverlap(class UPrimitiv
 	{
 		ObjectsInReach.Emplace(OtherSMA);
 	}
+
+	//// TODO add separate functions for the force feedback
+	//APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+	//if (PC)
+	//{
+	//	FLatentActionInfo LatentActionInfo;
+	//	LatentActionInfo.CallbackTarget = this;
+	//	PC->PlayDynamicForceFeedback(1.0, 1.0, true, true, true, true, EDynamicForceFeedbackAction::Start, LatentActionInfo);
+	//}
 }
 
 // Function called when an item leaves the fixation overlap area

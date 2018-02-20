@@ -53,11 +53,30 @@ void UMCHand::TickComponent(float DeltaTime, enum ELevelTick TickType, FActorCom
 // Init hand with the motion controllers
 void UMCHand::Init(UMotionControllerComponent* InMC)
 {
+	// Check hand type
+	EControllerHand HandType = EControllerHand::AnyHand;
+#if ENGINE_MINOR_VERSION >= 19
+	if (InMC->MotionSource == FXRMotionControllerBase::LeftHandSourceId)
+#else
+	if (InMC->Hand == EControllerHand::Left)
+#endif
+	{
+		HandType = EControllerHand::Left;
+	}
+#if ENGINE_MINOR_VERSION >= 19
+	else if(InMC->MotionSource == FXRMotionControllerBase::RightHandSourceId)
+#else
+	else if(InMC->Hand == EControllerHand::Right)
+#endif
+	{
+		HandType = EControllerHand::Right;
+	}
+
 	// Init the movement controller
 	MovementController->Init(this, InMC);	
 
 	// Init the grasp controller
-	GraspController->Init(this, InMC);
+	GraspController->Init(this, HandType);
 
 	// Init the fixation grasp controller
 	if (bEnableFixationGrasp)
@@ -72,3 +91,21 @@ void UMCHand::Init(UMotionControllerComponent* InMC)
 	// Enable Tick
 	SetComponentTickEnabled(true);
 }
+
+// Update default values if properties have been changed in the editor
+#if WITH_EDITOR
+void UMCHand::PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent)
+{
+	// Call the base class version  
+	Super::PostEditChangeProperty(PropertyChangedEvent);
+
+	//// Get the name of the property that was changed  
+	//FName PropertyName = (PropertyChangedEvent.Property != nullptr) ? PropertyChangedEvent.Property->GetFName() : NAME_None;
+
+	//// If hand type has been changed
+	//if ((PropertyName == GET_MEMBER_NAME_CHECKED(UMCHand, HandType)))
+	//{
+	//	AMCHand::SetupHandDefaultValues(HandType);
+	//}
+}
+#endif
