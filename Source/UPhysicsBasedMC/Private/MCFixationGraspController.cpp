@@ -26,7 +26,10 @@ void UMCFixationGraspController::BeginPlay()
 // Init fixation grasp	
 void UMCFixationGraspController::Init(USkeletalMeshComponent* InHand, UMotionControllerComponent* InMC, UInputComponent* InIC)
 {
-	// Check if InputComponent is given
+	// Set pointer of skeletal hand
+	SkeletalHand = InHand;
+
+	// Setup input
 	if (InIC)
 	{
 		SetupInputBindings(InMC, InIC);
@@ -44,8 +47,7 @@ void UMCFixationGraspController::Init(USkeletalMeshComponent* InHand, UMotionCon
 			}
 		}
 	}
-
-
+	
 	// Bind overlap events
 	OnComponentBeginOverlap.AddDynamic(this, &UMCFixationGraspController::OnFixationGraspAreaBeginOverlap);
 	OnComponentEndOverlap.AddDynamic(this, &UMCFixationGraspController::OnFixationGraspAreaEndOverlap);
@@ -79,13 +81,10 @@ void UMCFixationGraspController::SetupInputBindings(UMotionControllerComponent* 
 // Try to fixate object to hand
 void UMCFixationGraspController::TryToFixate()
 {
-	UE_LOG(LogTemp, Error, TEXT("[%s]"), *FString(__FUNCTION__));
-	while (ObjectsInReach.Num() > 0 || !FixatedObject)
+	while (!FixatedObject && ObjectsInReach.Num() > 0)
 	{
 		// Pop a SMA
 		AStaticMeshActor* SMA = ObjectsInReach.Pop();
-
-		UE_LOG(LogTemp, Error, TEXT("[%s] Try to fixate %s"), *FString(__FUNCTION__), *SMA->GetName());
 
 		// Check if the actor is graspable
 		if (CanBeGrasped(SMA))
@@ -98,14 +97,15 @@ void UMCFixationGraspController::TryToFixate()
 // Fixate object to hand
 void UMCFixationGraspController::FixateObject(AStaticMeshActor* InSMA)
 {
-	UE_LOG(LogTemp, Error, TEXT("[%s] Fixate %s"), *FString(__FUNCTION__), *InSMA->GetName());
 	// Disable physics and overlap events
 	UStaticMeshComponent* SMC = InSMA->GetStaticMeshComponent();
 	SMC->SetSimulatePhysics(false);
-	SMC->bGenerateOverlapEvents = false;
+	//SMC->bGenerateOverlapEvents = false;
 	
 	InSMA->AttachToComponent(SkeletalHand, FAttachmentTransformRules(
 	EAttachmentRule::KeepWorld, EAttachmentRule::KeepWorld, EAttachmentRule::KeepWorld, bWeldFixation));
+	//SMC->AttachToComponent(SkeletalHand, FAttachmentTransformRules(
+	//	EAttachmentRule::KeepWorld, EAttachmentRule::KeepWorld, EAttachmentRule::KeepWorld, bWeldFixation));
 	//InSMA->AttachToActor(SkeletalHand, FAttachmentTransformRules(
 	//	EAttachmentRule::KeepWorld, EAttachmentRule::KeepWorld, EAttachmentRule::KeepWorld, bWeldFixation));
 
@@ -125,9 +125,11 @@ void UMCFixationGraspController::FixateObject(AStaticMeshActor* InSMA)
 // Detach fixation
 void UMCFixationGraspController::TryToDetach()
 {
-	UE_LOG(LogTemp, Error, TEXT("[%s]"), *FString(__FUNCTION__));
 	if (FixatedObject)
 	{
+		// Get current velocity before detachment (gets reseted)
+		const FVector CurrVel = FixatedObject->GetVelocity();
+
 		// Detach object from hand
 		UStaticMeshComponent* SMC = FixatedObject->GetStaticMeshComponent();
 		SMC->DetachFromComponent(FDetachmentTransformRules(
@@ -136,7 +138,9 @@ void UMCFixationGraspController::TryToDetach()
 		// Enable physics with and apply current hand velocity, clear pointer to object
 		SMC->SetSimulatePhysics(true);
 		SMC->bGenerateOverlapEvents = true;
-		SMC->SetPhysicsLinearVelocity(FixatedObject->GetVelocity());
+		SMC->SetPhysicsLinearVelocity(CurrVel);
+		
+		// Clear fixate object reference
 		FixatedObject = nullptr;
 		
 		// Enable and update overlaps
@@ -184,7 +188,6 @@ void UMCFixationGraspController::OnFixationGraspAreaBeginOverlap(class UPrimitiv
 	{
 		ObjectsInReach.Emplace(OtherSMA);
 	}
-	UE_LOG(LogTemp, Error, TEXT("[%s]ObjectsInREach: %i"), *FString(__FUNCTION__), ObjectsInReach.Num());
 }
 
 // Function called when an item leaves the fixation overlap area
@@ -196,6 +199,5 @@ void UMCFixationGraspController::OnFixationGraspAreaEndOverlap(class UPrimitiveC
 	{
 		ObjectsInReach.Remove(SMA);
 	}
-	UE_LOG(LogTemp, Error, TEXT("[%s]ObjectsInREach: %i"), *FString(__FUNCTION__), ObjectsInReach.Num());
 }
 

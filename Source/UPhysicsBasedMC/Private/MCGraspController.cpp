@@ -62,10 +62,6 @@ void UMCGraspController::SetupInputBindings(UMotionControllerComponent* InMC, UI
 // Update grasp
 void UMCGraspController::Update(const float Val)
 {
-	if (Val > 0.4f && Val < 0.45f)
-	{
-		UE_LOG(LogTemp, Error, TEXT("[%s] Val %f"), *FString(__FUNCTION__), Val);
-	}
 }
 
 //void UVREditorMotionControllerInteractor::PlayHapticEffect(const float Strength)
