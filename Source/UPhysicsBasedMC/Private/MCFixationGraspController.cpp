@@ -3,6 +3,9 @@
 
 #include "MCFixationGraspController.h"
 #include "Kismet/GameplayStatics.h"
+#include "EngineUtils.h"
+#include "TagStatics.h"
+#include "SLUtils.h"
 #if ENGINE_MINOR_VERSION >= 19
 #include "XRMotionControllerBase.h" // 4.19
 #endif
@@ -21,6 +24,13 @@ UMCFixationGraspController::UMCFixationGraspController()
 void UMCFixationGraspController::BeginPlay()
 {
 	Super::BeginPlay();
+
+	// Get the semantic log runtime manager from the world
+	for (TActorIterator<ASLRuntimeManager>RMItr(GetWorld()); RMItr; ++RMItr)
+	{
+		SemLogRuntimeManager = *RMItr;
+		break;
+	}
 }
 
 // Init fixation grasp	
@@ -28,6 +38,16 @@ void UMCFixationGraspController::Init(USkeletalMeshComponent* InHand, UMotionCon
 {
 	// Set pointer of skeletal hand
 	SkeletalHand = InHand;
+
+	// Set hand semantic logging (SL) individual name
+	int32 TagIndex = FTagStatics::GetTagTypeIndex(InHand->ComponentTags, "SemLog");
+	// If tag type exist, read the Class and the Id
+	if (TagIndex != INDEX_NONE)
+	{
+		HandIndividual = FOwlIndividualName("log",
+			FTagStatics::GetKeyValue(InHand->ComponentTags[TagIndex], "Class"),
+			FTagStatics::GetKeyValue(InHand->ComponentTags[TagIndex], "Id"));
+	}
 
 	// Setup input
 	if (InIC)
@@ -119,7 +139,7 @@ void UMCFixationGraspController::FixateObject(AStaticMeshActor* InSMA)
 	ObjectsInReach.Empty();
 
 	// Start grasp event
-	//UMCFixationGraspController::StartGraspEvent(FixatedObject);
+	UMCFixationGraspController::StartGraspEvent(FixatedObject);
 }
 
 // Detach fixation
@@ -139,16 +159,16 @@ void UMCFixationGraspController::TryToDetach()
 		SMC->SetSimulatePhysics(true);
 		SMC->bGenerateOverlapEvents = true;
 		SMC->SetPhysicsLinearVelocity(CurrVel);
-		
-		// Clear fixate object reference
-		FixatedObject = nullptr;
-		
+				
 		// Enable and update overlaps
 		bGenerateOverlapEvents = true;
 		UpdateOverlaps();
 
 		// Finish grasp event
-		//UMCFixationGraspController::FinishGraspEvent(FixatedObject);
+		UMCFixationGraspController::FinishGraspEvent(FixatedObject);
+
+		// Clear fixate object reference
+		FixatedObject = nullptr;
 	}
 }
 
@@ -210,3 +230,76 @@ void UMCFixationGraspController::OnFixationGraspAreaEndOverlap(class UPrimitiveC
 	}
 }
 
+// Start grasp event
+bool UMCFixationGraspController::StartGraspEvent(AActor* OtherActor)
+{
+	// Check if actor has a semantic description
+	int32 TagIndex = FTagStatics::GetTagTypeIndex(OtherActor->Tags, "SemLog");
+
+	// If tag type exist, read the Class and the Id
+	if (TagIndex != INDEX_NONE)
+	{
+		// Get the Class and Id from the semantic description
+		const FString OtherActorClass = FTagStatics::GetKeyValue(OtherActor->Tags[TagIndex], "Class");
+		const FString OtherActorId = FTagStatics::GetKeyValue(OtherActor->Tags[TagIndex], "Id");
+
+		// Example of a contact event represented in OWL:
+		/********************************************************************
+		<!-- Event node described with a FOwlTriple (Subject-Predicate-Object) and Properties: -->
+		<owl:NamedIndividual rdf:about="&log;GraspingSomething_S1dz">
+		<!-- List of the event properties as FOwlTriple (Subject-Predicate-Object): -->
+		<rdf:type rdf:resource="&knowrob;GraspingSomething"/>
+		<knowrob:taskContext rdf:datatype="&xsd;string">Grasp-LeftHand_BRmZ-Bowl3_9w2Y</knowrob:taskContext>
+		<knowrob:startTime rdf:resource="&log;timepoint_22.053652"/>
+		<knowrob:objectActedOn rdf:resource="&log;Bowl3_9w2Y"/>
+		<knowrob:performedBy rdf:resource="&log;LeftHand_BRmZ"/>
+		<knowrob:endTime rdf:resource="&log;timepoint_32.28545"/>
+		</owl:NamedIndividual>
+		*********************************************************************/
+
+		// Create contact event and other actor individual
+		const FOwlIndividualName OtherIndividual("log", OtherActorClass, OtherActorId);
+		const FOwlIndividualName GraspingIndividual("log", "GraspingSomething", FSLUtils::GenerateRandomFString(4));
+		// Owl prefixed names
+		const FOwlPrefixName RdfType("rdf", "type");
+		const FOwlPrefixName RdfAbout("rdf", "about");
+		const FOwlPrefixName RdfResource("rdf", "resource");
+		const FOwlPrefixName RdfDatatype("rdf", "datatype");
+		const FOwlPrefixName TaskContext("knowrob", "taskContext");
+		const FOwlPrefixName PerformedBy("knowrob", "performedBy");
+		const FOwlPrefixName ActedOn("knowrob", "objectActedOn");
+		const FOwlPrefixName OwlNamedIndividual("owl", "NamedIndividual");
+		// Owl classes
+		const FOwlClass XsdString("xsd", "string");
+		const FOwlClass GraspingSomething("knowrob", "GraspingSomething");
+
+		// Add the event properties
+		TArray <FOwlTriple> Properties;
+		Properties.Add(FOwlTriple(RdfType, RdfResource, GraspingSomething));
+		Properties.Add(FOwlTriple(TaskContext, RdfDatatype, XsdString,
+			"Grasp-" + OtherIndividual.GetName() + "-" + HandIndividual.GetName()));
+		Properties.Add(FOwlTriple(PerformedBy, RdfResource, HandIndividual));
+		Properties.Add(FOwlTriple(ActedOn, RdfResource, OtherIndividual));
+
+		// Create the contact event
+		GraspEvent = MakeShareable(new FOwlNode(
+			OwlNamedIndividual, RdfAbout, GraspingIndividual, Properties));
+
+		// Start the event with the given properties
+		return SemLogRuntimeManager->StartEvent(GraspEvent);
+	}
+	return false;
+}
+
+// Finish grasp event
+bool UMCFixationGraspController::FinishGraspEvent(AActor* OtherActor)
+{
+	// Check if event started
+	if (GraspEvent.IsValid())
+	{
+		return SemLogRuntimeManager->FinishEvent(GraspEvent);
+		// Clear event
+		GraspEvent.Reset();
+	}
+	return false;
+}

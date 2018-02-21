@@ -8,6 +8,7 @@
 #include "Components/SphereComponent.h"
 #include "Engine/StaticMeshActor.h"
 #include "MotionControllerComponent.h"
+#include "SLRuntimeManager.h"
 #include "MCFixationGraspController.generated.h"
 
 /**
@@ -29,21 +30,6 @@ public:
 	void Init(USkeletalMeshComponent* InHand, UMotionControllerComponent* InMC, UInputComponent* InIC = nullptr);
 
 private:
-	// Object maximum length (cm)
-	UPROPERTY(EditAnywhere, Category = "MC")
-	float ObjectMaxLength;
-
-	// Object maximum mass (kg)
-	UPROPERTY(EditAnywhere, Category = "MC")
-	float ObjectMaxMass;
-
-	// Flag if the object should be welded to the hand
-	UPROPERTY(EditAnywhere, Category = "MC")
-	bool bWeldFixation;
-
-	// Hand to fixate (attach) the object to
-	USkeletalMeshComponent* SkeletalHand;
-
 	// Bind grasping inputs
 	void SetupInputBindings(UMotionControllerComponent* InMC, UInputComponent* InIC);
 
@@ -68,10 +54,42 @@ private:
 	UFUNCTION()
 	void OnFixationGraspAreaEndOverlap(class UPrimitiveComponent* HitComp, class AActor* OtherActor,
 		class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+
+	// Object maximum length (cm)
+	UPROPERTY(EditAnywhere, Category = "MC")
+	float ObjectMaxLength;
+
+	// Object maximum mass (kg)
+	UPROPERTY(EditAnywhere, Category = "MC")
+	float ObjectMaxMass;
+
+	// Flag if the object should be welded to the hand
+	UPROPERTY(EditAnywhere, Category = "MC")
+	bool bWeldFixation;
+
+	// Hand to fixate (attach) the object to
+	USkeletalMeshComponent* SkeletalHand;
 	
 	// Array of items currently in reach (overlapping the sphere component)
 	TArray<AStaticMeshActor*> ObjectsInReach;
 
 	// Fixated object
 	AStaticMeshActor* FixatedObject;
+
+
+	/* SemLog */
+	// Start grasp event
+	bool StartGraspEvent(AActor* OtherActor);
+
+	// Finish grasp event
+	bool FinishGraspEvent(AActor* OtherActor);
+
+	// Semantic events runtime manager
+	ASLRuntimeManager* SemLogRuntimeManager;
+
+	// Current grasp event
+	TSharedPtr<FOwlNode> GraspEvent;
+
+	// Hand individual
+	FOwlIndividualName HandIndividual;
 };

@@ -47,7 +47,9 @@ public class UPhysicsBasedMC : ModuleRules
 				"Slate",
 				"SlateCore",
 				"HeadMountedDisplay",
-                "UPIDController"
+                "UPIDController",
+                "SemLog",
+                "UTags"
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);
