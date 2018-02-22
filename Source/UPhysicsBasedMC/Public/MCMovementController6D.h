@@ -54,6 +54,14 @@ public:
 
 	// Update the movement
 	void Update(const float DeltaTime);
+	
+	// Use custom bone as tracking location // TODO use a scene component to avoid moving bones rotation control
+	UPROPERTY(EditAnywhere, Category = "Movement Control")
+	bool bUseCustomBoneForTracking;
+
+	// Custom bone for tracking location
+	UPROPERTY(EditAnywhere, Category = "Movement Control", meta = (editcondition = "bUseCustomBoneForTracking"))
+	FName CustomBoneFName;
 
 	/* Control */
 	// Location PID controller
@@ -95,6 +103,7 @@ private:
 	void LocationControl_None(float InDeltaTime);
 	void LocationControl_ForceBased(float InDeltaTime);
 	void LocationControl_AccelBased(float InDeltaTime);
+	void LocationControl_AccelBased_CustomBone(float InDeltaTime);
 	void LocationControl_ImpulseBased(float InDeltaTime);
 	void LocationControl_VelBased(float InDeltaTime);
 	void LocationControl_PosBased(float InDeltaTime);
@@ -105,5 +114,6 @@ private:
 	void RotationControl_AccelBased(float InDeltaTime);
 	void RotationControl_ImpulseBased(float InDeltaTime);
 	void RotationControl_VelBased(float InDeltaTime);
+	void RotationControl_VelBased_CustomBone(float InDeltaTime);
 	void RotationControl_PosBased(float InDeltaTime);	
 };
