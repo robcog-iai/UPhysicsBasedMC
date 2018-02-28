@@ -18,6 +18,7 @@ UMCHand::UMCHand(const FObjectInitializer& ObjectInitializer) : Super(ObjectInit
 	// Create the movement controller component
 	MovementController = ObjectInitializer.CreateDefaultSubobject<UMCMovementController6D>(
 		this, FName(*GetName().Append(TEXT("_MovementController"))));
+	MovementController->SetupAttachment(this);
 
 	// Create grasp component
 	GraspController = ObjectInitializer.CreateDefaultSubobject<UMCGraspController>(

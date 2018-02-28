@@ -19,8 +19,14 @@ UMCMovementController6D::UMCMovementController6D()
 	RotationPIDController.D = 0.0f;
 	RotationPIDController.MaxOutAbs = 1500.f;
 
-	// Use default bone for motion by default
-	bUseCustomBoneForTracking = false;
+	// Use default location for tracking by default
+	bUseTrackingOffset = false;
+	//bUseCustomBoneForTracking = false;
+	
+	//// Create tracking offset component
+	//TrackingOffsetComp = CreateDefaultSubobject<USceneComponent>(TEXT("TrackingOffset"));
+	//TrackingOffsetComp->SetupAttachment();
+
 
 	// Default control type
 	LocationControlType = EMCLocationControlType::Acceleration;
@@ -41,21 +47,29 @@ void UMCMovementController6D::Init(USkeletalMeshComponent* InHand, UMotionContro
 	HandSkelComp = InHand;
 
 	// Set rotation offset of the skeletal mesh to the initial rotation
-	HandRotationAlignmentOffset = HandSkelComp->GetComponentQuat();
-
-	// Check if custom bone should and can be used for tracking
-	if (bUseCustomBoneForTracking)
+	if (bUseTrackingOffset)
 	{
-		if (HandSkelComp->GetBoneIndex(CustomBoneFName) == INDEX_NONE)
-		{
-			bUseCustomBoneForTracking = false;
-		}
-		else
-		{
-			// Set rotation offset of the skeletal mesh to the initial rotation
-			//HandRotationAlignmentOffset = HandSkelComp->GetBoneQuaternion(CustomBoneFName);
-		}
+		HandRotationAlignmentOffset = GetComponentQuat();
 	}
+	else
+	{
+		HandRotationAlignmentOffset = HandSkelComp->GetComponentQuat();
+	}
+
+
+	//// Check if custom bone should and can be used for tracking
+	//if (bUseCustomBoneForTracking)
+	//{
+	//	if (HandSkelComp->GetBoneIndex(CustomBoneFName) == INDEX_NONE)
+	//	{
+	//		bUseCustomBoneForTracking = false;
+	//	}
+	//	else
+	//	{
+	//		// Set rotation offset of the skeletal mesh to the initial rotation
+	//		//HandRotationAlignmentOffset = HandSkelComp->GetBoneQuaternion(CustomBoneFName);
+	//	}
+	//}
 
 	// Set the motion controller pointer
 	MC = InMC;
@@ -75,8 +89,8 @@ void UMCMovementController6D::Init(USkeletalMeshComponent* InHand, UMotionContro
 		LocationControlFuncPtr = &UMCMovementController6D::LocationControl_ForceBased;
 		break;
 	case EMCLocationControlType::Acceleration:
-		LocationControlFuncPtr = bUseCustomBoneForTracking ? 
-			&UMCMovementController6D::LocationControl_AccelBased_CustomBone : 
+		LocationControlFuncPtr = bUseTrackingOffset ?
+			&UMCMovementController6D::LocationControl_AccelBased_Offset : 
 			&UMCMovementController6D::LocationControl_AccelBased;
 		//LocationControlFuncPtr = &UMCMovementController6D::LocationControl_AccelBased;
 		break;
@@ -110,8 +124,8 @@ void UMCMovementController6D::Init(USkeletalMeshComponent* InHand, UMotionContro
 		RotationControlFuncPtr = &UMCMovementController6D::RotationControl_ImpulseBased;
 		break;
 	case EMCRotationControlType::Velocity:
-		RotationControlFuncPtr = bUseCustomBoneForTracking ?
-			&UMCMovementController6D::RotationControl_VelBased/*_CustomBone*/ :
+		RotationControlFuncPtr = bUseTrackingOffset ?
+			&UMCMovementController6D::RotationControl_VelBased/*_Offset */: // Offset does not seem to be relevant for rotation
 			&UMCMovementController6D::RotationControl_VelBased;
 		//RotationControlFuncPtr = &UMCMovementController6D::RotationControl_VelBased;
 		break;
@@ -173,9 +187,10 @@ void UMCMovementController6D::LocationControl_AccelBased(float InDeltaTime)
 	//	*FString(__FUNCTION__), *PIDOut.ToString());
 }
 
-void UMCMovementController6D::LocationControl_AccelBased_CustomBone(float InDeltaTime)
+void UMCMovementController6D::LocationControl_AccelBased_Offset(float InDeltaTime)
 {
-	const FVector LocErr = MC->GetComponentLocation() - HandSkelComp->GetBoneLocation(CustomBoneFName);
+	//const FVector LocErr = MC->GetComponentLocation() - HandSkelComp->GetBoneLocation(CustomBoneFName);
+	const FVector LocErr = MC->GetComponentLocation() - GetComponentLocation();
 	const FVector PIDOut = LocationPIDController.Update(LocErr, InDeltaTime);
 	HandSkelComp->AddForce(PIDOut, NAME_None, true); // Acceleration based (mass will have no effect)	
 
@@ -299,10 +314,11 @@ void UMCMovementController6D::RotationControl_VelBased(float InDeltaTime)
 	////SetAllPhysicsAngularVelocityInRadians(PIDOut);	
 }
 
-void UMCMovementController6D::RotationControl_VelBased_CustomBone(float InDeltaTime)
+void UMCMovementController6D::RotationControl_VelBased_Offset(float InDeltaTime)
 {
 	const FQuat TargetQuat = MC->GetComponentQuat() * HandRotationAlignmentOffset;
-	FQuat CompQuat = HandSkelComp->GetBoneQuaternion(CustomBoneFName);
+	FQuat CompQuat = GetComponentQuat();
+	/*FQuat CompQuat = HandSkelComp->GetBoneQuaternion(CustomBoneFName);*/
 	
 	// Check if cos theta from the dot product is negative,
 	// avoids taking the long path around the sphere
