@@ -19,8 +19,8 @@ enum class EMCLocationControlType : uint8
 	Force					UMETA(DisplayName = "Force"),
 	Acceleration			UMETA(DisplayName = "Acceleration"),
 	Impulse					UMETA(DisplayName = "Impulse"),
-	Velocity	     		UMETA(DisplayName = "Velocity"),
-	Position    			UMETA(DisplayName = "Position"),
+	Velocity		 		UMETA(DisplayName = "Velocity"),
+	Position				UMETA(DisplayName = "Position"),
 };
 
 /**
@@ -33,8 +33,8 @@ enum class EMCRotationControlType : uint8
 	Torque					UMETA(DisplayName = "Torque"),
 	Acceleration			UMETA(DisplayName = "Acceleration"),
 	Impulse					UMETA(DisplayName = "Impulse"),
-	Velocity	     		UMETA(DisplayName = "Velocity"),
-	Position    			UMETA(DisplayName = "Position"),
+	Velocity		 		UMETA(DisplayName = "Velocity"),
+	Position				UMETA(DisplayName = "Position"),
 };
 
 /**

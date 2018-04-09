@@ -21,17 +21,17 @@
 		}
 	],
   "Plugins": [
-    {
-      "Name": "UPIDController",
-      "Enabled": true
-    },
-    {
-      "Name": "USemLog",
-      "Enabled": true
-    },
-    {
-      "Name": "UTags",
-      "Enabled": true
-    }
+	{
+	  "Name": "UPIDController",
+	  "Enabled": true
+	},
+	{
+	  "Name": "USemLog",
+	  "Enabled": true
+	},
+	{
+	  "Name": "UTags",
+	  "Enabled": true
+	}
   ]
 }
