@@ -10,21 +10,19 @@ public class UPhysicsBasedMC : ModuleRules
 	{
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 		
-		// https://answers.unrealengine.com/questions/258689/how-to-include-private-header-files-of-other-modul.html		
-		string EnginePath = Path.GetFullPath(Target.RelativeEnginePath);
+		//// https://answers.unrealengine.com/questions/258689/how-to-include-private-header-files-of-other-modul.html		
+		//string EnginePath = Path.GetFullPath(Target.RelativeEnginePath);
 
 		PublicIncludePaths.AddRange(
 			new string[] {
-				"UPhysicsBasedMC/Public",
 				// ... add public include paths required here ...
-				EnginePath + "Source/Runtime/Launch/Resources", // #include "Version.h"; #if ENGINE_MINOR_VERSION
+				//EnginePath + "Source/Runtime/Launch/Resources", // #include "Version.h"; #if ENGINE_MINOR_VERSION
 			}
 			);
 				
 		
 		PrivateIncludePaths.AddRange(
 			new string[] {
-				"UPhysicsBasedMC/Private",
 				// ... add other private include paths required here ...
 			}
 			);
@@ -48,13 +46,15 @@ public class UPhysicsBasedMC : ModuleRules
 				"SlateCore",
 				"HeadMountedDisplay",
 				"UPIDController",
-				"SemLog",
-				"UTags"
+				//"USemLog",
+				//"UTags"
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);
-		
-		
+
+		// Flag to use the semantic logger
+		PublicDefinitions.Add("WITH_SEMLOG=0");
+
 		DynamicallyLoadedModuleNames.AddRange(
 			new string[]
 			{

@@ -4,17 +4,18 @@
 #include "MCFixationGraspController.h"
 #include "Kismet/GameplayStatics.h"
 #include "EngineUtils.h"
+#if WITH_SEMLOG
 #include "TagStatics.h"
 #include "SLUtils.h"
-#if ENGINE_MINOR_VERSION >= 19
-#include "XRMotionControllerBase.h" // 4.19
-#endif
+#endif //WITH_SEMLOG
+#include "XRMotionControllerBase.h"
+
 
 // Constructor, set default values
 UMCFixationGraspController::UMCFixationGraspController()
 {
 	InitSphereRadius(3.f);
-	bGenerateOverlapEvents = true;
+	SetGenerateOverlapEvents(true);
 	bWeldFixation = true;
 	ObjectMaxLength = 50.f;
 	ObjectMaxMass = 15.f;
@@ -24,13 +25,14 @@ UMCFixationGraspController::UMCFixationGraspController()
 void UMCFixationGraspController::BeginPlay()
 {
 	Super::BeginPlay();
-
+#if WITH_SEMLOG
 	// Get the semantic log runtime manager from the world
 	for (TActorIterator<ASLRuntimeManager>RMItr(GetWorld()); RMItr; ++RMItr)
 	{
 		SemLogRuntimeManager = *RMItr;
 		break;
 	}
+#endif //WITH_SEMLOG
 }
 
 // Init fixation grasp	
@@ -38,7 +40,7 @@ void UMCFixationGraspController::Init(USkeletalMeshComponent* InHand, UMotionCon
 {
 	// Set pointer of skeletal hand
 	SkeletalHand = InHand;
-
+#if WITH_SEMLOG
 	// Set hand semantic logging (SL) individual name
 	int32 TagIndex = FTagStatics::GetTagTypeIndex(InHand->ComponentTags, "SemLog");
 	// If tag type exist, read the Class and the Id
@@ -48,7 +50,7 @@ void UMCFixationGraspController::Init(USkeletalMeshComponent* InHand, UMotionCon
 			FTagStatics::GetKeyValue(InHand->ComponentTags[TagIndex], "Class"),
 			FTagStatics::GetKeyValue(InHand->ComponentTags[TagIndex], "Id"));
 	}
-
+#endif //WITH_SEMLOG
 	// Setup input
 	if (InIC)
 	{
@@ -77,20 +79,12 @@ void UMCFixationGraspController::Init(USkeletalMeshComponent* InHand, UMotionCon
 void UMCFixationGraspController::SetupInputBindings(UMotionControllerComponent* InMC, UInputComponent* InIC)
 {
 	// Check hand type
-#if ENGINE_MINOR_VERSION >= 19
 	if (InMC->MotionSource == FXRMotionControllerBase::LeftHandSourceId)
-#else
-	if(InMC->Hand == EControllerHand::Left)
-#endif
 	{
 		InIC->BindAction("LeftFixate", IE_Pressed, this, &UMCFixationGraspController::TryToFixate);
 		InIC->BindAction("LeftFixate", IE_Released, this, &UMCFixationGraspController::TryToDetach);
 	}
-#if ENGINE_MINOR_VERSION >= 19
 	if (InMC->MotionSource == FXRMotionControllerBase::RightHandSourceId)
-#else
-	if (InMC->Hand == EControllerHand::Right)
-#endif
 	{
 		InIC->BindAction("RightFixate", IE_Pressed, this, &UMCFixationGraspController::TryToFixate);
 		InIC->BindAction("RightFixate", IE_Released, this, &UMCFixationGraspController::TryToDetach);
@@ -130,7 +124,7 @@ void UMCFixationGraspController::FixateObject(AStaticMeshActor* InSMA)
 	//	EAttachmentRule::KeepWorld, EAttachmentRule::KeepWorld, EAttachmentRule::KeepWorld, bWeldFixation));
 
 	// Disable overlap checks during fixation grasp
-	bGenerateOverlapEvents = false;
+	SetGenerateOverlapEvents(false);
 
 	// Set the fixated object
 	FixatedObject = InSMA;
@@ -157,11 +151,11 @@ void UMCFixationGraspController::TryToDetach()
 
 		// Enable physics with and apply current hand velocity, clear pointer to object
 		SMC->SetSimulatePhysics(true);
-		SMC->bGenerateOverlapEvents = true;
+		SMC->SetGenerateOverlapEvents(true);
 		SMC->SetPhysicsLinearVelocity(CurrVel);
 				
 		// Enable and update overlaps
-		bGenerateOverlapEvents = true;
+		SetGenerateOverlapEvents(true);
 		UpdateOverlaps();
 
 		// Finish grasp event
@@ -233,6 +227,7 @@ void UMCFixationGraspController::OnFixationGraspAreaEndOverlap(class UPrimitiveC
 // Start grasp event
 bool UMCFixationGraspController::StartGraspEvent(AActor* OtherActor)
 {
+#if WITH_SEMLOG
 	// Check if actor has a semantic description
 	int32 TagIndex = FTagStatics::GetTagTypeIndex(OtherActor->Tags, "SemLog");
 
@@ -288,12 +283,14 @@ bool UMCFixationGraspController::StartGraspEvent(AActor* OtherActor)
 		// Start the event with the given properties
 		return SemLogRuntimeManager->StartEvent(GraspEvent);
 	}
+#endif //WITH_SEMLOG
 	return false;
 }
 
 // Finish grasp event
 bool UMCFixationGraspController::FinishGraspEvent(AActor* OtherActor)
 {
+#if WITH_SEMLOG
 	// Check if event started
 	if (GraspEvent.IsValid())
 	{
@@ -301,5 +298,6 @@ bool UMCFixationGraspController::FinishGraspEvent(AActor* OtherActor)
 		// Clear event
 		GraspEvent.Reset();
 	}
+#endif //WITH_SEMLOG
 	return false;
 }

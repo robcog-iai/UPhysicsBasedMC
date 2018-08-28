@@ -13,7 +13,7 @@ UMCHand::UMCHand(const FObjectInitializer& ObjectInitializer) : Super(ObjectInit
 	SetSimulatePhysics(true);
 	SetEnableGravity(false);
 	SetCollisionProfileName(TEXT("BlockAll"));
-	bGenerateOverlapEvents = true;
+	SetGenerateOverlapEvents(true);
 	
 	// Create the movement controller component
 	MovementController = ObjectInitializer.CreateDefaultSubobject<UMCMovementController6D>(
@@ -56,19 +56,11 @@ void UMCHand::Init(UMotionControllerComponent* InMC)
 {
 	// Check hand type
 	EControllerHand HandType = EControllerHand::AnyHand;
-#if ENGINE_MINOR_VERSION >= 19
 	if (InMC->MotionSource == FXRMotionControllerBase::LeftHandSourceId)
-#else
-	if (InMC->Hand == EControllerHand::Left)
-#endif
 	{
 		HandType = EControllerHand::Left;
 	}
-#if ENGINE_MINOR_VERSION >= 19
 	else if(InMC->MotionSource == FXRMotionControllerBase::RightHandSourceId)
-#else
-	else if(InMC->Hand == EControllerHand::Right)
-#endif
 	{
 		HandType = EControllerHand::Right;
 	}

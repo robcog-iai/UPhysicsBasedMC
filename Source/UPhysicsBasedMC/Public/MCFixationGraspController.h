@@ -8,7 +8,9 @@
 #include "Components/SphereComponent.h"
 #include "Engine/StaticMeshActor.h"
 #include "MotionControllerComponent.h"
+#if WITH_SEMLOG
 #include "SLRuntimeManager.h"
+#endif //WITH_SEMLOG
 #include "MCFixationGraspController.generated.h"
 
 /**
@@ -83,7 +85,7 @@ private:
 
 	// Finish grasp event
 	bool FinishGraspEvent(AActor* OtherActor);
-
+#if WITH_SEMLOG
 	// Semantic events runtime manager
 	ASLRuntimeManager* SemLogRuntimeManager;
 
@@ -92,4 +94,5 @@ private:
 
 	// Hand individual
 	FOwlIndividualName HandIndividual;
+#endif //WITH_SEMLOG
 };

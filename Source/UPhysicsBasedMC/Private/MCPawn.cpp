@@ -4,10 +4,7 @@
 #include "MCPawn.h"
 #include "IHeadMountedDisplay.h"
 #include "IXRTrackingSystem.h"
-#include "Version.h"
-#if ENGINE_MINOR_VERSION >= 19
-#include "XRMotionControllerBase.h" // 4.19
-#endif
+#include "XRMotionControllerBase.h"
 
 // Sets default values
 AMCPawn::AMCPawn()
@@ -31,20 +28,12 @@ AMCPawn::AMCPawn()
 		
 	// Create the right motion controller
 	MCLeft = CreateDefaultSubobject<UMotionControllerComponent>(TEXT("MCLeft"));
-#if ENGINE_MINOR_VERSION >= 19
-	MCLeft->MotionSource = FXRMotionControllerBase::LeftHandSourceId; // 4.19
-#else
-	MCLeft->Hand = EControllerHand::Left;
-#endif
+	MCLeft->MotionSource = FXRMotionControllerBase::LeftHandSourceId;
 	MCLeft->SetupAttachment(MCRoot);
 	
 	// Create the left motion controller
 	MCRight = CreateDefaultSubobject<UMotionControllerComponent>(TEXT("MCRight"));
-#if ENGINE_MINOR_VERSION >= 19
-	MCRight->MotionSource = FXRMotionControllerBase::RightHandSourceId; // 4.19
-#else
-	MCRight->Hand = EControllerHand::Right;
-#endif
+	MCRight->MotionSource = FXRMotionControllerBase::RightHandSourceId; 
 	MCRight->SetupAttachment(MCRoot);
 
 	// Create Left MC Hand Component
@@ -63,10 +52,8 @@ void AMCPawn::BeginPlay()
 	Super::BeginPlay();
 
 	// MC meshes visualization
-#if ENGINE_MINOR_VERSION >= 19
 	MCLeft->bDisplayDeviceModel = bVisualizeMCMeshes;
 	MCRight->bDisplayDeviceModel = bVisualizeMCMeshes;
-#endif
 
 	// Init MC Hands
 	MCHandLeft->Init(MCLeft);
