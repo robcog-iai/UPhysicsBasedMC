@@ -62,6 +62,7 @@ void AMCPawn::BeginPlay()
 	// Disable tick
 	SetActorTickEnabled(false);
 
+	// Turns hands invisible for any clients and instead turns poseable meshes visible
 	if (this->Role >= ROLE_Authority) {
 		MCHandLeft->SetVisibility(true, false);
 		MCHandRight->SetVisibility(true, false);
@@ -71,8 +72,8 @@ void AMCPawn::BeginPlay()
 		MCHandRight->bIsServer = true;
 	}
 	else {
-		MCHandLeft->SetVisibility(true, false);
-		MCHandRight->SetVisibility(true, false);
+		MCHandLeft->SetVisibility(false, false);
+		MCHandRight->SetVisibility(false, false);
 		MCHandLeft->PoseableMesh->SetVisibility(true, false);
 		MCHandRight->PoseableMesh->SetVisibility(true, false);
 		MCHandLeft->bIsServer = false;

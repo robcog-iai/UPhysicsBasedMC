@@ -34,28 +34,37 @@ public:
 	// Init hand with the motion controllers
 	void Init(UMotionControllerComponent* InMC);
 
+	// List of all bone names
 	UPROPERTY(Replicated)
 		TArray<FName> ReplicatedBoneNames;
 
+	// List of all bone transforms
 	UPROPERTY(Replicated)
 		TArray<FTransform> ReplicatedBoneTransforms;
 
+	// A poseable mesh that will mirror the hands movements on the client side
 	UPROPERTY(EditAnywhere, Category = "MC")
 		UPoseableMeshComponent* PoseableMesh;
 
+	// If a mesh has been attached
 	UPROPERTY(Replicated)
 		bool HasAttached;
 
+	// Pointer to the attached mesh
 	UPROPERTY(Replicated)
 		AStaticMeshActor* AttachedMesh;
 
+	// Transform of the attached mesh
 	UPROPERTY(Replicated)
 		FTransform AttachedTransform;
 
+	// If this is the server
 	bool bIsServer = true;
 
+	// Sends information about hands and grasped mesh to the client
 	void SendPose();
 
+	// Receives informatin about hands and grasped mesh
 	void ReceivePose();
 
 private:

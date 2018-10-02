@@ -44,9 +44,11 @@ void UMCHand::BeginPlay()
 	// Ticks last
 	PrimaryComponentTick.TickGroup = TG_PostUpdateWork;
 
+	// Set the skeletal mesh for the poseable mesh
 	PoseableMesh->SetSkeletalMesh(this->SkeletalMesh);
 	PoseableMesh->SetMobility(EComponentMobility::Movable);
 
+	// Writes the names of all bones into a replicated array
 	GetBoneNames(ReplicatedBoneNames);
 	ReplicatedBoneTransforms.SetNum(ReplicatedBoneNames.Num(), true);
 }
@@ -124,6 +126,8 @@ void UMCHand::PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChang
 }
 #endif
 
+// Sets up a number of variables to be replicated
+// I use 2 replicated arrays instead of just one Map, because replciation currently doesn't work for maps
 void UMCHand::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(UMCHand, ReplicatedBoneNames);
@@ -133,6 +137,7 @@ void UMCHand::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifeti
 	DOREPLIFETIME(UMCHand, AttachedTransform);
 }
 
+// Send data about current hand position and attached mesh
 void UMCHand::SendPose()
 {
 	int i = 0;
@@ -143,6 +148,7 @@ void UMCHand::SendPose()
 		ReplicatedBoneTransforms[i] = FTransform(Quat, Location, Scale);
 		i++;
 	}
+	// Only when mesh has been attached
 	if (FixationGraspController->HasAttached)
 	{
 		AttachedMesh = FixationGraspController->FixatedObject;
@@ -151,6 +157,7 @@ void UMCHand::SendPose()
 	}
 }
 
+// Apply data about hand position to the poseable mesh
 void UMCHand::ReceivePose()
 {
 	int i = 0;
@@ -158,6 +165,8 @@ void UMCHand::ReceivePose()
 		PoseableMesh->SetBoneTransformByName(Name, ReplicatedBoneTransforms[i], EBoneSpaces::WorldSpace);
 		i++;
 	}
+	// Only when mesh has been attached
+	// Since this ticks last we overwrite any other replication
 	if (HasAttached)
 	{
 		AttachedMesh->SetActorTransform(AttachedTransform);
