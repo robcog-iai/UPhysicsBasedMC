@@ -40,6 +40,15 @@ void UMCHand::BeginPlay()
 
 	// Disable tick by default, enable it if Init() is called
 	SetComponentTickEnabled(false);
+
+	// Ticks last
+	PrimaryComponentTick.TickGroup = TG_PostUpdateWork;
+
+	PoseableMesh->SetSkeletalMesh(this->SkeletalMesh);
+	PoseableMesh->SetMobility(EComponentMobility::Movable);
+
+	GetBoneNames(ReplicatedBoneNames);
+	ReplicatedBoneTransforms.SetNum(ReplicatedBoneNames.Num(), true);
 }
 
 // Called every frame, used for motion control
@@ -49,6 +58,18 @@ void UMCHand::TickComponent(float DeltaTime, enum ELevelTick TickType, FActorCom
 
 	// Update the movement control of the hand
 	MovementController->Update(DeltaTime);
+
+#if WITH_MULTIPLAYER
+
+	if (bIsServer)
+	{
+		SendPose();
+	}
+	else
+	{
+		ReceivePose();
+	}
+#endif
 }
 
 // Init hand with the motion controllers
@@ -102,3 +123,43 @@ void UMCHand::PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChang
 	//}
 }
 #endif
+
+void UMCHand::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const {
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(UMCHand, ReplicatedBoneNames);
+	DOREPLIFETIME(UMCHand, ReplicatedBoneTransforms);
+	DOREPLIFETIME(UMCHand, HasAttached);
+	DOREPLIFETIME(UMCHand, AttachedMesh);
+	DOREPLIFETIME(UMCHand, AttachedTransform);
+}
+
+void UMCHand::SendPose()
+{
+	int i = 0;
+	for (FName Name : ReplicatedBoneNames) {
+		FQuat Quat = GetBoneQuaternion(Name, EBoneSpaces::WorldSpace);
+		FVector Location = GetBoneLocation(Name, EBoneSpaces::WorldSpace);
+		FVector Scale = FVector(1, 1, 1);
+		ReplicatedBoneTransforms[i] = FTransform(Quat, Location, Scale);
+		i++;
+	}
+	if (FixationGraspController->HasAttached)
+	{
+		AttachedMesh = FixationGraspController->FixatedObject;
+		AttachedTransform = AttachedMesh->GetTransform();
+		HasAttached = true;
+	}
+}
+
+void UMCHand::ReceivePose()
+{
+	int i = 0;
+	for (FName Name : ReplicatedBoneNames) {
+		PoseableMesh->SetBoneTransformByName(Name, ReplicatedBoneTransforms[i], EBoneSpaces::WorldSpace);
+		i++;
+	}
+	if (HasAttached)
+	{
+		AttachedMesh->SetActorTransform(AttachedTransform);
+	}
+}

@@ -61,6 +61,23 @@ void AMCPawn::BeginPlay()
 
 	// Disable tick
 	SetActorTickEnabled(false);
+
+	if (this->Role >= ROLE_Authority) {
+		MCHandLeft->SetVisibility(true, false);
+		MCHandRight->SetVisibility(true, false);
+		MCHandLeft->PoseableMesh->SetVisibility(false, false);
+		MCHandRight->PoseableMesh->SetVisibility(false, false);
+		MCHandLeft->bIsServer = true;
+		MCHandRight->bIsServer = true;
+	}
+	else {
+		MCHandLeft->SetVisibility(true, false);
+		MCHandRight->SetVisibility(true, false);
+		MCHandLeft->PoseableMesh->SetVisibility(true, false);
+		MCHandRight->PoseableMesh->SetVisibility(true, false);
+		MCHandLeft->bIsServer = false;
+		MCHandRight->bIsServer = false;
+	}
 }
 
 // Called every frame

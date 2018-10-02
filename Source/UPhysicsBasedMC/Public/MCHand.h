@@ -8,6 +8,9 @@
 #include "MCMovementController6D.h"
 #include "MCGraspController.h"
 #include "MCFixationGraspController.h"
+#include <Net/UnrealNetwork.h>
+#include "Runtime/Engine/Classes/Components/PoseableMeshComponent.h"
+#include "Runtime/Engine/Classes/Engine/SkeletalMeshSocket.h"
 #include "MCHand.generated.h"
 
 /**
@@ -30,6 +33,30 @@ public:
 
 	// Init hand with the motion controllers
 	void Init(UMotionControllerComponent* InMC);
+
+	UPROPERTY(Replicated)
+		TArray<FName> ReplicatedBoneNames;
+
+	UPROPERTY(Replicated)
+		TArray<FTransform> ReplicatedBoneTransforms;
+
+	UPROPERTY(EditAnywhere, Category = "MC")
+		UPoseableMeshComponent* PoseableMesh;
+
+	UPROPERTY(Replicated)
+		bool HasAttached;
+
+	UPROPERTY(Replicated)
+		AStaticMeshActor* AttachedMesh;
+
+	UPROPERTY(Replicated)
+		FTransform AttachedTransform;
+
+	bool bIsServer = true;
+
+	void SendPose();
+
+	void ReceivePose();
 
 private:
 #if WITH_EDITOR
