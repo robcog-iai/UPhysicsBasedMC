@@ -32,6 +32,7 @@ public class UPhysicsBasedMC : ModuleRules
 			new string[]
 			{
 				"Core",
+				"UPIDController",
 				// ... add other public dependencies that you statically link with here ...
 			}
 			);
@@ -45,15 +46,15 @@ public class UPhysicsBasedMC : ModuleRules
 				"Slate",
 				"SlateCore",
 				"HeadMountedDisplay",
-				"UPIDController",
-				//"USemLog",
-				//"UTags"
+				//"UPIDController", // moved to public, this way other projects depending n this one do not have to include it
+				"USemLog",
+				//"UUtils"
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);
 
 		// Flag to use the semantic logger
-		PublicDefinitions.Add("WITH_SEMLOG=0");
+		PublicDefinitions.Add("WITH_SEMLOG=1");
 
 		DynamicallyLoadedModuleNames.AddRange(
 			new string[]

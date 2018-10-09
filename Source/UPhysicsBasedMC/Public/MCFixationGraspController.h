@@ -8,9 +8,6 @@
 #include "Components/SphereComponent.h"
 #include "Engine/StaticMeshActor.h"
 #include "MotionControllerComponent.h"
-#if WITH_SEMLOG
-#include "SLRuntimeManager.h"
-#endif //WITH_SEMLOG
 #include "MCFixationGraspController.generated.h"
 
 /**
@@ -27,6 +24,9 @@ public:
 
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+	// Called when actor removed from game or game ended
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 	// Init fixation grasp	
 	void Init(USkeletalMeshComponent* InHand, UMotionControllerComponent* InMC, UInputComponent* InIC = nullptr);
@@ -78,21 +78,11 @@ private:
 	// Fixated object
 	AStaticMeshActor* FixatedObject;
 
-
-	/* SemLog */
-	// Start grasp event
-	bool StartGraspEvent(AActor* OtherActor);
-
-	// Finish grasp event
-	bool FinishGraspEvent(AActor* OtherActor);
 #if WITH_SEMLOG
-	// Semantic events runtime manager
-	ASLRuntimeManager* SemLogRuntimeManager;
+	// Semantic grasp event trigger
+	class USLGraspTrigger* SLGraspTrigger;
 
-	// Current grasp event
-	TSharedPtr<FOwlNode> GraspEvent;
-
-	// Hand individual
-	FOwlIndividualName HandIndividual;
+	// Shows if the grasp trigger has been successfully initialized
+	bool bGraspTriggerInit;
 #endif //WITH_SEMLOG
 };
