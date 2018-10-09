@@ -56,7 +56,10 @@ public class UPhysicsBasedMC : ModuleRules
 		// Flag to use the semantic logger
 		PublicDefinitions.Add("WITH_SEMLOG=1");
 
-		DynamicallyLoadedModuleNames.AddRange(
+        // Flag for multipalyer
+        PublicDefinitions.Add("WITH_MULTIPLAYER=0");
+
+        DynamicallyLoadedModuleNames.AddRange(
 			new string[]
 			{
 				// ... add any modules that your module loads dynamically here ...

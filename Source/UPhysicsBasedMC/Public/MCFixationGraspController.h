@@ -31,6 +31,12 @@ public:
 	// Init fixation grasp	
 	void Init(USkeletalMeshComponent* InHand, UMotionControllerComponent* InMC, UInputComponent* InIC = nullptr);
 
+	// Object has been attached
+	bool HasAttached;
+
+	// Fixated object
+	AStaticMeshActor* FixatedObject;
+
 private:
 	// Bind grasping inputs
 	void SetupInputBindings(UMotionControllerComponent* InMC, UInputComponent* InIC);
@@ -74,9 +80,6 @@ private:
 	
 	// Array of items currently in reach (overlapping the sphere component)
 	TArray<AStaticMeshActor*> ObjectsInReach;
-
-	// Fixated object
-	AStaticMeshActor* FixatedObject;
 
 #if WITH_SEMLOG
 	// Semantic grasp event trigger
