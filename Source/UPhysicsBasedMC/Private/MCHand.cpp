@@ -31,6 +31,12 @@ UMCHand::UMCHand(const FObjectInitializer& ObjectInitializer) : Super(ObjectInit
 
 	// Enable fixation grasp by default
 	bEnableFixationGrasp = true;
+
+	// Initialize poseable mesh
+	PoseableMesh = ObjectInitializer.CreateDefaultSubobject<UPoseableMeshComponent>(this, TEXT("PoseableMesh"));
+
+	// Turn on replictation
+	this->SetIsReplicated(true);
 }
 
 // Called when the game starts or when spawned

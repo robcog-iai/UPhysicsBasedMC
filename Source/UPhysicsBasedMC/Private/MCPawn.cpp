@@ -44,6 +44,14 @@ AMCPawn::AMCPawn()
 	MCHandRight = CreateDefaultSubobject<UMCHand>(TEXT("RightHand"));
 	MCHandRight->SetupAttachment(GetRootComponent());
 
+	// Replication
+	this->SetReplicateMovement(true);
+	this->SetReplicates(true);
+	this->bAlwaysRelevant = true;
+	MCHandLeft->SetIsReplicated(true);
+	MCHandRight->SetIsReplicated(true);
+	VRCamera->SetIsReplicated(true);
+
 }
 
 // Called when the game starts or when spawned
