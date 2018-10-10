@@ -168,7 +168,7 @@ void UMCMovementController6D::LocationControl_ImpulseBased(float InDeltaTime)
 	const FVector LocErr = MC->GetComponentLocation() - HandSkelComp->GetComponentLocation();
 	const FVector PIDOut = LocationPIDController.Update(LocErr, InDeltaTime);
 	HandSkelComp->AddImpulse(PIDOut, NAME_None, true); // mass will have no effect
-
+	
 	//AddImpulse(PIDOut);
 	//AddImpulseToAllBodiesBelow(PIDOut, NAME_None, true); // mass will have no effect
 	//AddImpulseToAllBodiesBelow(PIDOut);
