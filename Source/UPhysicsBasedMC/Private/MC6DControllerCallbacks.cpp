@@ -70,8 +70,8 @@ void FMC6DControllerCallbacks::Init(USceneComponent* InTarget,
 	SelfAsSkeletalMeshComp = InSelfAsSkeletalMesh;
 	bApplyToAllChildBodies = bApplyToAllBodies;
 
-	// Set target offset
-	TargetOffset = InOffset;
+	// Calculate target offset
+	LocalTargetOffset = SelfAsSkeletalMeshComp->GetComponentTransform().GetRelativeTransform(InOffset);
 
 	// Init pid controllers
 	PIDLoc.Init(PLoc, ILoc, DLoc, MaxLoc);
@@ -152,8 +152,8 @@ void FMC6DControllerCallbacks::Init(USceneComponent* InTarget,
 	TargetSceneComp = InTarget;
 	SelfAsStaticMeshComp = InSelfAsStaticMesh;
 
-	// Set target offset
-	TargetOffset = InOffset;
+	// Calculate target offset
+	LocalTargetOffset = SelfAsStaticMeshComp->GetComponentTransform().GetRelativeTransform(InOffset);
 
 	// Init pid controllers
 	PIDLoc.Init(PLoc, ILoc, DLoc, MaxLoc);
@@ -183,7 +183,7 @@ void FMC6DControllerCallbacks::Init(USceneComponent* InTarget,
 	}
 }
 
-// Update
+// Call the update function pointer
 void FMC6DControllerCallbacks::Update(float DeltaTime)
 {
 	(this->*UpdateFunctionPointer)(DeltaTime);
@@ -198,23 +198,31 @@ void FMC6DControllerCallbacks::Update_NONE(float DeltaTime)
 // Skeletal updates
 void FMC6DControllerCallbacks::Update_Skel_Position(float DeltaTime)
 {
-	UE_LOG(LogTemp, Warning, TEXT(">> %s::%d"), TEXT(__FUNCTION__), __LINE__);
+	SelfAsSkeletalMeshComp->SetWorldTransform(TargetSceneComp->GetComponentTransform(),
+		false, (FHitResult*)nullptr, ETeleportType::TeleportPhysics);
 }
 
 // Skeletal updates with offset
 void FMC6DControllerCallbacks::Update_Skel_Position_Offset(float DeltaTime)
 {
-	UE_LOG(LogTemp, Warning, TEXT(">> %s::%d"), TEXT(__FUNCTION__), __LINE__);
+	SelfAsSkeletalMeshComp->SetWorldTransform(TargetSceneComp->GetComponentTransform(),
+		false, (FHitResult*)nullptr, ETeleportType::TeleportPhysics);
+	SelfAsSkeletalMeshComp->AddLocalTransform(LocalTargetOffset,
+		false, (FHitResult*)nullptr, ETeleportType::TeleportPhysics);
 }
 
 // Static mesh updates
 void FMC6DControllerCallbacks::Update_Static_Position(float DeltaTime)
 {
-	UE_LOG(LogTemp, Warning, TEXT(">> %s::%d"), TEXT(__FUNCTION__), __LINE__);
+	SelfAsStaticMeshComp->SetWorldTransform(TargetSceneComp->GetComponentTransform(),
+		false, (FHitResult*)nullptr, ETeleportType::TeleportPhysics);
 }
 
 // Static mesh updates with offset
 void FMC6DControllerCallbacks::Update_Static_Position_Offset(float DeltaTime)
 {
-	UE_LOG(LogTemp, Warning, TEXT(">> %s::%d"), TEXT(__FUNCTION__), __LINE__);
+	SelfAsStaticMeshComp->SetWorldTransform(TargetSceneComp->GetComponentTransform(),
+		false, (FHitResult*)nullptr, ETeleportType::TeleportPhysics);
+	SelfAsStaticMeshComp->AddLocalTransform(LocalTargetOffset,
+		false, (FHitResult*)nullptr, ETeleportType::TeleportPhysics);
 }

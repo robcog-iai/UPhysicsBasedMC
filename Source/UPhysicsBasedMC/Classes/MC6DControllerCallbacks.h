@@ -51,15 +51,15 @@ public:
 		float PRot, float IRot, float DRot, float MaxRot,
 		FTransform InOffset);
 
-	// Update
+	// Call the update function pointer
 	void Update(float DeltaTime);
 
 private:
 	// Target (goal) component (to which transform to move to)
 	USceneComponent* TargetSceneComp;
 
-	// Offset to target (goal)
-	FTransform TargetOffset;
+	// Relative offset to target (goal)
+	FTransform LocalTargetOffset;
 
 	// Self as skeletal mesh (from which transform to move away)
 	USkeletalMeshComponent* SelfAsSkeletalMeshComp;
