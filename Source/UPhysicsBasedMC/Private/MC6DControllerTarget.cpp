@@ -90,7 +90,7 @@ void UMC6DControllerTarget::BeginPlay()
 				// Reset velocity to 0 and teleport to the motion controller location
 				// (the controller applies the PID output on the mesh before the lambda is called)
 				SkelMeshComp->SetPhysicsLinearVelocity(FVector(0.f));
-				SkelMeshComp->SetPhysicsAngularVelocity(FVector(0.f));
+				SkelMeshComp->SetPhysicsAngularVelocityInRadians(FVector(0.f));
 				SkelMeshComp->SetWorldTransform(GetComponentTransform(),
 					false, (FHitResult*)nullptr, ETeleportType::TeleportPhysics);
 			});
@@ -130,7 +130,7 @@ void UMC6DControllerTarget::BeginPlay()
 				// Reset velocity to 0 and teleport to the motion controller location
 				// (the controller applies the PID output on the mesh before the lambda is called)
 				StaticMeshComp->SetPhysicsLinearVelocity(FVector(0.f));
-				StaticMeshComp->SetPhysicsAngularVelocity(FVector(0.f));
+				StaticMeshComp->SetPhysicsAngularVelocityInRadians(FVector(0.f));
 				StaticMeshComp->SetWorldTransform(GetComponentTransform(),
 				 false, (FHitResult*)nullptr, ETeleportType::TeleportPhysics);
 			});
