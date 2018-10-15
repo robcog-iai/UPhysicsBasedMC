@@ -10,7 +10,7 @@
 /**
  * Used as 6D offset for the motion controller tracking
  */
-UCLASS( ClassGroup=(MC), meta=(BlueprintSpawnableComponent) )
+UCLASS( ClassGroup=(MC), meta=(BlueprintSpawnableComponent, DisplayName = "MC 6D Controller Offset") )
 class UPHYSICSBASEDMC_API UMC6DControllerOffset : public USceneComponent
 {
 	GENERATED_BODY()

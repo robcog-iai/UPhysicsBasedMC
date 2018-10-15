@@ -12,7 +12,7 @@
 #include "MC3DRotationController.generated.h"
 
 // Forward declaration
-class UMC6DController;
+class UMC6DControllerTarget;
 class UMC6DControllerOffset;
 
 /**
@@ -34,7 +34,7 @@ public:
 	void Update(float DeltaTime);
 
 	// Init with skeletal mesh
-	void Init(UMC6DController* InMCParent,
+	void Init(UMC6DControllerTarget* InMCParent,
 		USkeletalMeshComponent* SkeletalMeshComp,
 		FTransform Offset,
 		EMCControlType ControlType,
@@ -42,7 +42,7 @@ public:
 		bool bApplyToAllChildBodies);
 
 	// Init with static mesh
-	void Init(UMC6DController* InMCParent,
+	void Init(UMC6DControllerTarget* InMCParent,
 		UStaticMeshComponent* StaticMeshComp,
 		FTransform Offset,
 		EMCControlType ControlType,
@@ -54,7 +54,7 @@ private:
 	FPIDController3D PIDController;
 
 	// Motion controller parent (Target)
-	UMC6DController* MC;
+	UMC6DControllerTarget* MC;
 
 	// Owner skeletal mesh component (if controlling a skeletal mesh)
 	USkeletalMeshComponent* SkeletalMesh;
