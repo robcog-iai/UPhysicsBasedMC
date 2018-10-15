@@ -9,27 +9,23 @@
 #include "Animation/SkeletalMeshActor.h"
 #include "MCControlType.h"
 #include "MC6DControllerCallbacks.h"
-#include "MC6DController.generated.h"
+#include "MC6DControllerTarget.generated.h"
 
-// Forward declaration
-class UMC6DControllerOffset;
-class UMC3DLocationController;
-class UMC3DRotationController;
 
 /**
  * 6D physics based movement applied to the skeletal or static mesh pointed to
  */
-UCLASS(ClassGroup=(MC), meta=(BlueprintSpawnableComponent, DisplayName = "MC6DController"), hidecategories = (Physics, Collision, Lighting))
-class UPHYSICSBASEDMC_API UMC6DController : public UMotionControllerComponent
+UCLASS(ClassGroup=(MC), meta=(BlueprintSpawnableComponent, DisplayName = "MC 6D Controller Target"), hidecategories = (Physics, Collision, Lighting))
+class UPHYSICSBASEDMC_API UMC6DControllerTarget : public UMotionControllerComponent
 {
 	GENERATED_BODY()
 	
 public:
 	// Sets default values for this component's properties
-	UMC6DController();
+	UMC6DControllerTarget();
 	
 	// Dtor
-	~UMC6DController();
+	~UMC6DControllerTarget();
 
 protected:
 	// Called when the game starts
@@ -45,34 +41,17 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 private:
-	// Create location and rotation controllers for the skeletal mesh comp
-	void CreateControllers(USkeletalMeshComponent* SkeletalMeshComp, FTransform Offset);
-
-	// Create location and rotation controllers for the static mesh comp
-	void CreateControllers(UStaticMeshComponent* StaticMeshComp, FTransform Offset);
-
-	// Empty, default update function 
-	void Update_NONE(float DeltaTime) {};
-
-private:
-//#if WITH_EDITORONLY_DATA
-//	// Location and orientation visualization of the component
-//	UPROPERTY()
-//	class UArrowComponent* ArrowVis;
-//#endif // WITH_EDITORONLY_DATA
-
 	// Control a skeletal mesh
 	UPROPERTY(EditAnywhere, Category = "Movement Control")
 	bool bUseSkeletalMesh;
+	
+	// Apply movement control to all bones of the skeletal mesh
+	UPROPERTY(EditAnywhere, Category = "Movement Control", meta = (editcondition = "bUseSkeletalMesh"))
+	bool bApplyToAllSkeletalBodies;
 
 	// Skeletal mesh actor to control
 	UPROPERTY(EditAnywhere, Category = "Movement Control", meta = (editcondition = "bUseSkeletalMesh"))
 	ASkeletalMeshActor* SkeletalMeshActor;
-
-	
-	// Apply movement control to all bones of the skeletal mesh
-	UPROPERTY(EditAnywhere, Category = "Movement Control", meta = (editcondition = "bUseSkeletalMesh"))
-	bool bApplyToAllChildBodies;
 
 	// Control a static mesh
 	UPROPERTY(EditAnywhere, Category = "Movement Control")
@@ -83,9 +62,9 @@ private:
 	AStaticMeshActor* StaticMeshActor;
 
 	/* Control */
-	// Control type for the location
-	UPROPERTY(EditAnywhere, Category = "Movement Control|Location")
-	EMCControlType ControlTypeLoc;
+	// Control type (location and rotation)
+	UPROPERTY(EditAnywhere, Category = "Movement Control")
+	EMCControlType ControlType;
 
 	// Location PID controller values
 	UPROPERTY(EditAnywhere, Category = "Movement Control|Location")
@@ -99,10 +78,6 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "Movement Control|Location")
 	float MaxLoc;
-
-	// Control type for the rotation
-	UPROPERTY(EditAnywhere, Category = "Movement Control|Rotation")
-	EMCControlType ControlTypeRot;
 
 	// Rotation PID controller values
 	UPROPERTY(EditAnywhere, Category = "Movement Control|Rotation")
@@ -118,13 +93,5 @@ private:
 	float MaxRot;
 
 	// Update fallback function binding
-	FMC6DControllerCallbacks ControllerCallbacks;
-
-	// Location controller
-	UPROPERTY()
-	UMC3DLocationController* LocationController;
-
-	// Rotation controller
-	UPROPERTY()
-	UMC3DRotationController* RotationController;
+	FMC6DControllerCallbacks ControllerUpdateCallbacks;
 };

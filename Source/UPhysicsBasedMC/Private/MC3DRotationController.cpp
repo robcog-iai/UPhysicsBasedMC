@@ -2,7 +2,7 @@
 // Author: Andrei Haidu (http://haidu.eu)
 
 #include "MC3DRotationController.h"
-#include "MC6DController.h"
+#include "MC6DControllerTarget.h"
 #include "MC6DControllerOffset.h"
 
 // Ctor
@@ -18,7 +18,7 @@ UMC3DRotationController::~UMC3DRotationController()
 }
 
 // Init
-void UMC3DRotationController::Init(UMC6DController* InMC,
+void UMC3DRotationController::Init(UMC6DControllerTarget* InMC,
 	USkeletalMeshComponent* InSkelMesh,
 	FTransform InOffset,
 	EMCControlType ControlType,
@@ -91,7 +91,7 @@ void UMC3DRotationController::Init(UMC6DController* InMC,
 }
 
 // Init
-void UMC3DRotationController::Init(UMC6DController* InMC,
+void UMC3DRotationController::Init(UMC6DControllerTarget* InMC,
 	UStaticMeshComponent* InStaticMesh,
 	FTransform InOffset,
 	EMCControlType ControlType,

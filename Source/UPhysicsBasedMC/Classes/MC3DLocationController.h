@@ -12,7 +12,7 @@
 #include "MC3DLocationController.generated.h"
 
 // Forward declaration
-class UMC6DController;
+class UMC6DControllerTarget;
 
 /**
  * 3D location controller
@@ -30,7 +30,7 @@ public:
 	~UMC3DLocationController();
 
 	// Init with skeletal mesh
-	void Init(UMC6DController* InMC,
+	void Init(UMC6DControllerTarget* InMC,
 		USkeletalMeshComponent* SkeletalMeshComp,
 		FTransform InOffset,
 		EMCControlType ControlType,
@@ -38,7 +38,7 @@ public:
 		bool bApplyToAllChildBodies);
 
 	// Init with static mesh
-	void Init(UMC6DController* InMCParent,
+	void Init(UMC6DControllerTarget* InMCParent,
 		UStaticMeshComponent* StaticMeshComp,
 		FTransform InOffset,
 		EMCControlType ControlType,
@@ -53,7 +53,7 @@ private:
 	FPIDController3D PIDController;
 
 	// Motion controller parent (Target)
-	UMC6DController* MC;
+	UMC6DControllerTarget* MC;
 
 	// Owner skeletal mesh component (if controlling a skeletal mesh)
 	USkeletalMeshComponent* SkeletalMesh;
