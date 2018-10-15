@@ -11,6 +11,8 @@ UMC6DControllerTarget::UMC6DControllerTarget()
 	PrimaryComponentTick.bCanEverTick = true;
 	// Disable tick, it will be enabled after init
 	PrimaryComponentTick.bStartWithTickEnabled = false;
+	// Set ticking group 
+	//PrimaryComponentTick.TickGroup = ETickingGroup::TG_PrePhysics;
 
 #if WITH_EDITORONLY_DATA
 	bDisplayDeviceModel = true;
@@ -78,6 +80,21 @@ void UMC6DControllerTarget::BeginPlay()
 			}
 			// Enable Tick
 			SetComponentTickEnabled(true);
+
+			// Bind lambda function on the next tick to teleport the mesh to the target location
+			// (cannot be done on begin play since the tracking is not active yet)
+			// Timer delegate to be able to bind against non UObject functions
+			FTimerDelegate TimerDelegateNextTick;
+			TimerDelegateNextTick.BindLambda([&, SkelMeshComp]
+			{
+				// Reset velocity to 0 and teleport to the motion controller location
+				// (the controller applies the PID output on the mesh before the lambda is called)
+				SkelMeshComp->SetPhysicsLinearVelocity(FVector(0.f));
+				SkelMeshComp->SetPhysicsAngularVelocity(FVector(0.f));
+				SkelMeshComp->SetWorldTransform(GetComponentTransform(),
+					false, (FHitResult*)nullptr, ETeleportType::TeleportPhysics);
+			});
+			GetWorld()->GetTimerManager().SetTimerForNextTick(TimerDelegateNextTick);
 		}
 	}
 	else if (bUseStaticMesh && StaticMeshActor)
@@ -103,6 +120,21 @@ void UMC6DControllerTarget::BeginPlay()
 			}
 			// Enable Tick
 			SetComponentTickEnabled(true);
+
+			// Bind lambda function on the next tick to teleport the mesh to the target location
+			// (cannot be done on begin play since the tracking is not active yet)
+			// Timer delegate to be able to bind against non UObject functions
+			FTimerDelegate TimerDelegateNextTick;
+			TimerDelegateNextTick.BindLambda([&, StaticMeshComp]
+			{
+				// Reset velocity to 0 and teleport to the motion controller location
+				// (the controller applies the PID output on the mesh before the lambda is called)
+				StaticMeshComp->SetPhysicsLinearVelocity(FVector(0.f));
+				StaticMeshComp->SetPhysicsAngularVelocity(FVector(0.f));
+				StaticMeshComp->SetWorldTransform(GetComponentTransform(),
+				 false, (FHitResult*)nullptr, ETeleportType::TeleportPhysics);
+			});
+			GetWorld()->GetTimerManager().SetTimerForNextTick(TimerDelegateNextTick);
 		}
 	}
 	// Could not set the update controller, tick remains disabled
@@ -158,6 +190,6 @@ void UMC6DControllerTarget::TickComponent(float DeltaTime, ELevelTick TickType, 
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	// Update controller
+	// Apply target location to the referenced mesh
 	ControllerUpdateCallbacks.Update(DeltaTime);
 }
