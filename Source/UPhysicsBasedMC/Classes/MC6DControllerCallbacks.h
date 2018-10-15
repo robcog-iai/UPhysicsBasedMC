@@ -4,6 +4,7 @@
 #pragma once
 
 #include "PIDController3D.h"
+#include "MCControlType.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/StaticMeshComponent.h"
 
