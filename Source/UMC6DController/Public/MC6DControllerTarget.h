@@ -16,7 +16,7 @@
  * 6D physics based movement applied to the skeletal or static mesh pointed to
  */
 UCLASS(ClassGroup=(MC), meta=(BlueprintSpawnableComponent, DisplayName = "MC 6D Controller Target"), hidecategories = (Physics, Collision, Lighting))
-class UPHYSICSBASEDMC_API UMC6DControllerTarget : public UMotionControllerComponent
+class UMC6DCONTROLLER_API UMC6DControllerTarget : public UMotionControllerComponent
 {
 	GENERATED_BODY()
 	

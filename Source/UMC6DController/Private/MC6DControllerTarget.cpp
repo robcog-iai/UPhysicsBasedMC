@@ -29,15 +29,15 @@ UMC6DControllerTarget::UMC6DControllerTarget()
 	ControlType = EMCControlType::Position;
 
 	// PID values
-	PLoc = 300.0f;
-	ILoc = 0.0f;
-	DLoc = 50.0f;
-	MaxLoc = 9000.f;
+	PLoc = 10.0f;
+	ILoc = 0.1f;
+	DLoc = 1.0f;
+	MaxLoc = 20.f;
 
-	PRot = 128.0f;
-	IRot = 0.0f;
-	DRot = 0.0f;
-	MaxRot = 1500.f;
+	PRot = 12.0f;
+	IRot = 0.1f;
+	DRot = 1.0f;
+	MaxRot = 15.f;
 }
 
 // Destructor
