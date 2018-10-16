@@ -15,7 +15,17 @@
 	"Installed": false,
 	"Modules": [
 		{
-			"Name": "UPhysicsBasedMC",
+			"Name": "UMC6DController",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		},
+		{
+			"Name": "UMCGrasp",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		},
+		{
+			"Name": "UMCParallelGripper",
 			"Type": "Runtime",
 			"LoadingPhase": "Default"
 		}

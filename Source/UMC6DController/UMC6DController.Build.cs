@@ -4,9 +4,9 @@
 using System.IO;
 using UnrealBuildTool;
 
-public class UPhysicsBasedMC : ModuleRules
+public class UMC6DController : ModuleRules
 {
-	public UPhysicsBasedMC(ReadOnlyTargetRules Target) : base(Target)
+	public UMC6DController(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 		
@@ -46,9 +46,6 @@ public class UPhysicsBasedMC : ModuleRules
 				"Slate",
 				"SlateCore",
 				"HeadMountedDisplay",
-				//"UPIDController", // moved to public, this way other projects depending n this one do not have to include it
-				"USemLog",
-				//"UUtils"
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);

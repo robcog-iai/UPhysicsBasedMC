@@ -23,7 +23,11 @@ UMC6DControllerOffset::UMC6DControllerOffset()
 		if (ControllerVisualAsset.Succeeded())
 		{
 			ControllerVisual->SetStaticMesh(ControllerVisualAsset.Object);
+			ControllerVisual->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+			ControllerVisual->SetGenerateOverlapEvents(false);
+			ControllerVisual->SetHiddenInGame(true);
 		}
+		ControllerVisual->SetHiddenInGame(true);
 	}
 #endif // WITH_EDITORONLY_DATA
 }

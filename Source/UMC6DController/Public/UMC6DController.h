@@ -6,7 +6,7 @@
 #include "CoreMinimal.h"
 #include "ModuleManager.h"
 
-class FUPhysicsBasedMCModule : public IModuleInterface
+class FUMC6DControllerModule : public IModuleInterface
 {
 public:
 
