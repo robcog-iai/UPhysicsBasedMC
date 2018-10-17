@@ -7,10 +7,9 @@
 #include "MotionControllerComponent.h"
 #include "Engine/StaticMeshActor.h"
 #include "Animation/SkeletalMeshActor.h"
-#include "MCControlType.h"
+#include "MC6DControlType.h"
 #include "MC6DControllerCallbacks.h"
 #include "MC6DControllerTarget.generated.h"
-
 
 /**
  * 6D physics based movement applied to the skeletal or static mesh pointed to
@@ -64,7 +63,7 @@ private:
 	/* Control */
 	// Control type (location and rotation)
 	UPROPERTY(EditAnywhere, Category = "Movement Control")
-	EMCControlType ControlType;
+	EMC6DControlType ControlType;
 
 	// Location PID controller values
 	UPROPERTY(EditAnywhere, Category = "Movement Control|Location")

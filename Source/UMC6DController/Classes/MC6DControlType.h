@@ -12,7 +12,7 @@
 *	Impulse - set impulse: mass * distance(rad) / time
 */
 UENUM()
-enum class EMCControlType : uint8
+enum class EMC6DControlType : uint8
 {
 	NONE					UMETA(DisplayName = "NONE"),
 	Position				UMETA(DisplayName = "Position"),

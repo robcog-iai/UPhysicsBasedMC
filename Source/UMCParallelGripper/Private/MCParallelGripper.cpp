@@ -3,29 +3,28 @@
 
 #include "MCParallelGripper.h"
 
-
 // Sets default values for this component's properties
 UMCParallelGripper::UMCParallelGripper()
 {
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
-	PrimaryComponentTick.bCanEverTick = true;
-	// Disable tick, it will be enabled after init
-	PrimaryComponentTick.bStartWithTickEnabled = false;
+	PrimaryComponentTick.bCanEverTick = false;
 
 	// Create the constraints
-	LeftFingerConstraint = CreateDefaultSubobject<UPhysicsConstraintComponent>(TEXT("LeftFingerConstraint"));	
+	LeftFingerConstraint = CreateDefaultSubobject<UPhysicsConstraintComponent>(TEXT("LeftFingerConstraint"));
 	RightFingerConstraint = CreateDefaultSubobject<UPhysicsConstraintComponent>(TEXT("RightFingerConstraint"));
 
-	// Init constraints
-	UMCParallelGripper::InitConstraint(LeftFingerConstraint);
-	UMCParallelGripper::InitConstraint(RightFingerConstraint);
-	
 	// Set as children
 	LeftFingerConstraint->SetupAttachment(this);
 	RightFingerConstraint->SetupAttachment(this);
-}
 
+	// Init constraints
+	UMCParallelGripper::SetupConstraintLimits(LeftFingerConstraint);
+	UMCParallelGripper::SetupConstraintLimits(RightFingerConstraint);
+
+	// Default values
+	ControlType = EMCGripperControlType::LinearDrive;
+}
 
 // Called when the game starts
 void UMCParallelGripper::BeginPlay()
@@ -60,20 +59,16 @@ void UMCParallelGripper::BeginPlay()
 		UStaticMeshComponent* OwnerSM = OwnerAsStaticMeshActor->GetStaticMeshComponent();
 		if (OwnerSM && LeftSM && RightSM)
 		{
-			OwnerSM->SetMobility(EComponentMobility::Movable);
-			OwnerSM->SetSimulatePhysics(true);
-			OwnerSM->SetEnableGravity(false);
-
-			LeftSM->SetMobility(EComponentMobility::Movable);
-			LeftSM->SetSimulatePhysics(true);
-			LeftSM->SetEnableGravity(false);
-
-			RightSM->SetMobility(EComponentMobility::Movable);
-			RightSM->SetSimulatePhysics(true);
-			RightSM->SetEnableGravity(false);
-
-			UE_LOG(LogTemp, Warning, TEXT(">> %s::%d"), TEXT(__FUNCTION__), __LINE__);
+			UMCParallelGripper::SetupPhysics(OwnerSM);
+			UMCParallelGripper::SetupPhysics(LeftSM);
+			UMCParallelGripper::SetupPhysics(RightSM);
 			//SetComponentTickEnabled(true);
+
+			// Create the controller
+			PGController = NewObject<UMCParallelGripperController>(this);
+
+			// Init controller
+			PGController->Init(ControlType, LeftFingerConstraint, RightFingerConstraint);
 		}
 	}	
 }
@@ -95,10 +90,18 @@ void UMCParallelGripper::PostEditChangeProperty(struct FPropertyChangedEvent& Pr
 		{
 			if (AStaticMeshActor* OwnerAsStaticMeshActor = Cast<AStaticMeshActor>(GetOwner()))
 			{
-				LeftFingerConstraint->ConstraintActor1 = OwnerAsStaticMeshActor;
+				LeftFingerConstraint->ConstraintActor1 = OwnerAsStaticMeshActor;				
+				LeftFingerConstraint->ConstraintActor2 = LeftFinger;
+				LeftFingerConstraint->SetWorldTransform(LeftFinger->GetTransform());
+
+				UStaticMeshComponent* LeftSM = LeftFinger->GetStaticMeshComponent();
+				UStaticMeshComponent* OwnerSM = OwnerAsStaticMeshActor->GetStaticMeshComponent();
+				if (OwnerSM && LeftSM)
+				{
+					UMCParallelGripper::SetupPhysics(OwnerSM);
+					UMCParallelGripper::SetupPhysics(LeftSM);
+				}
 			}
-			LeftFingerConstraint->ConstraintActor2 = LeftFinger;
-			LeftFingerConstraint->SetWorldTransform(LeftFinger->GetTransform());
 		}
 		else
 		{
@@ -114,9 +117,17 @@ void UMCParallelGripper::PostEditChangeProperty(struct FPropertyChangedEvent& Pr
 			if (AStaticMeshActor* OwnerAsStaticMeshActor = Cast<AStaticMeshActor>(GetOwner()))
 			{
 				RightFingerConstraint->ConstraintActor1 = OwnerAsStaticMeshActor;
+				RightFingerConstraint->ConstraintActor2 = RightFinger;
+				RightFingerConstraint->SetWorldTransform(RightFinger->GetTransform());
+
+				UStaticMeshComponent* RightSM = RightFinger->GetStaticMeshComponent();
+				UStaticMeshComponent* OwnerSM = OwnerAsStaticMeshActor->GetStaticMeshComponent();
+				if (OwnerSM && RightSM)
+				{
+					UMCParallelGripper::SetupPhysics(OwnerSM);
+					UMCParallelGripper::SetupPhysics(RightSM);
+				}
 			}
-			RightFingerConstraint->ConstraintActor2 = RightFinger;
-			RightFingerConstraint->SetWorldTransform(RightFinger->GetTransform());
 		}
 		else
 		{
@@ -139,7 +150,7 @@ void UMCParallelGripper::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 }
 
 // Set default values to the constraints
-void UMCParallelGripper::InitConstraint(UPhysicsConstraintComponent* Constraint)
+void UMCParallelGripper::SetupConstraintLimits(UPhysicsConstraintComponent* Constraint)
 {
 	Constraint->SetAngularSwing1Limit(ACM_Locked, 0.f);
 	Constraint->SetAngularSwing2Limit(ACM_Locked, 0.f);
@@ -147,4 +158,13 @@ void UMCParallelGripper::InitConstraint(UPhysicsConstraintComponent* Constraint)
 	Constraint->SetLinearXLimit(LCM_Limited, 3.5f);
 	Constraint->SetLinearYLimit(LCM_Locked, 0.f);
 	Constraint->SetLinearZLimit(LCM_Locked, 0.f);
+	Constraint->SetDisableCollision(true);
+}
+
+// Set default physics and collision values to the static meshes
+void UMCParallelGripper::SetupPhysics(UStaticMeshComponent* StaticMeshComponent)
+{
+	StaticMeshComponent->SetMobility(EComponentMobility::Movable);
+	StaticMeshComponent->SetSimulatePhysics(true);
+	StaticMeshComponent->SetEnableGravity(false);
 }

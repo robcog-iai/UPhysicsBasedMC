@@ -4,7 +4,7 @@
 #pragma once
 
 #include "PIDController3D.h"
-#include "MCControlType.h"
+#include "MC6DControlType.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/StaticMeshComponent.h"
 
@@ -24,7 +24,7 @@ public:
 	void Init(USceneComponent* InTarget,
 		USkeletalMeshComponent* InSelfAsSkeletalMesh,
 		bool bApplyToAllBodies,
-		EMCControlType ControlType,
+		EMC6DControlType ControlType,
 		float PLoc, float ILoc, float DLoc, float MaxLoc,
 		float PRot, float IRot, float DRot, float MaxRot);
 
@@ -32,7 +32,7 @@ public:
 	void Init(USceneComponent* InTarget,
 		USkeletalMeshComponent* InSelfAsSkeletalMesh,
 		bool bApplyToAllBodies,
-		EMCControlType ControlType,
+		EMC6DControlType ControlType,
 		float PLoc, float ILoc, float DLoc, float MaxLoc,
 		float PRot, float IRot, float DRot, float MaxRot,
 		FTransform InOffset);
@@ -40,14 +40,14 @@ public:
 	// Init as static mesh
 	void Init(USceneComponent* InTarget,
 		UStaticMeshComponent* InSelfAsStaticMesh,
-		EMCControlType ControlType,
+		EMC6DControlType ControlType,
 		float PLoc, float ILoc, float DLoc, float MaxLoc,
 		float PRot, float IRot, float DRot, float MaxRot);
 
 	// Init as static mesh with an offset
 	void Init(USceneComponent* InTarget,
 		UStaticMeshComponent* InSelfAsStaticMesh,
-		EMCControlType ControlType,
+		EMC6DControlType ControlType,
 		float PLoc, float ILoc, float DLoc, float MaxLoc,
 		float PRot, float IRot, float DRot, float MaxRot,
 		FTransform InOffset);

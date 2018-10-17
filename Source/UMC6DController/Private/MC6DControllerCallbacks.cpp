@@ -19,7 +19,7 @@ FMC6DControllerCallbacks::~FMC6DControllerCallbacks()
 void FMC6DControllerCallbacks::Init(USceneComponent* InTarget,
 	USkeletalMeshComponent* InSelfAsSkeletalMesh,
 	bool bApplyToAllBodies,
-	EMCControlType ControlType,
+	EMC6DControlType ControlType,
 	float PLoc, float ILoc, float DLoc, float MaxLoc,
 	float PRot, float IRot, float DRot, float MaxRot)
 {
@@ -35,19 +35,19 @@ void FMC6DControllerCallbacks::Init(USceneComponent* InTarget,
 	// Bind update function depending on the control type
 	switch (ControlType)
 	{
-	case EMCControlType::Position:
+	case EMC6DControlType::Position:
 		UpdateFunctionPointer = &FMC6DControllerCallbacks::Update_Skel_Position;
 		break;
-	case EMCControlType::Velocity:
+	case EMC6DControlType::Velocity:
 		UpdateFunctionPointer = &FMC6DControllerCallbacks::Update_Skel_Velocity;
 		break;
-	case EMCControlType::Acceleration:
+	case EMC6DControlType::Acceleration:
 		UpdateFunctionPointer = &FMC6DControllerCallbacks::Update_Skel_Acceleration;
 		break;
-	case EMCControlType::Force:
+	case EMC6DControlType::Force:
 		UpdateFunctionPointer = &FMC6DControllerCallbacks::Update_Skel_Force;
 		break;
-	case EMCControlType::Impulse:
+	case EMC6DControlType::Impulse:
 		UpdateFunctionPointer = &FMC6DControllerCallbacks::Update_Skel_Impulse;
 		break;
 	default:
@@ -60,7 +60,7 @@ void FMC6DControllerCallbacks::Init(USceneComponent* InTarget,
 void FMC6DControllerCallbacks::Init(USceneComponent* InTarget,
 	USkeletalMeshComponent* InSelfAsSkeletalMesh,
 	bool bApplyToAllBodies,
-	EMCControlType ControlType,
+	EMC6DControlType ControlType,
 	float PLoc, float ILoc, float DLoc, float MaxLoc,
 	float PRot, float IRot, float DRot, float MaxRot,
 	FTransform InOffset)
@@ -80,19 +80,19 @@ void FMC6DControllerCallbacks::Init(USceneComponent* InTarget,
 	// Bind update function depending on the control type
 	switch (ControlType)
 	{
-	case EMCControlType::Position:
+	case EMC6DControlType::Position:
 		UpdateFunctionPointer = &FMC6DControllerCallbacks::Update_Skel_Position_Offset;
 		break;
-	case EMCControlType::Velocity:
+	case EMC6DControlType::Velocity:
 		UpdateFunctionPointer = &FMC6DControllerCallbacks::Update_Skel_Velocity_Offset;
 		break;
-	case EMCControlType::Acceleration:
+	case EMC6DControlType::Acceleration:
 		UpdateFunctionPointer = &FMC6DControllerCallbacks::Update_Skel_Acceleration_Offset;
 		break;
-	case EMCControlType::Force:
+	case EMC6DControlType::Force:
 		UpdateFunctionPointer = &FMC6DControllerCallbacks::Update_Skel_Force_Offset;
 		break;
-	case EMCControlType::Impulse:
+	case EMC6DControlType::Impulse:
 		UpdateFunctionPointer = &FMC6DControllerCallbacks::Update_Skel_Impulse_Offset;
 		break;
 	default:
@@ -104,7 +104,7 @@ void FMC6DControllerCallbacks::Init(USceneComponent* InTarget,
 // Init as static mesh
 void FMC6DControllerCallbacks::Init(USceneComponent* InTarget,
 	UStaticMeshComponent* InSelfAsStaticMesh,
-	EMCControlType ControlType,
+	EMC6DControlType ControlType,
 	float PLoc, float ILoc, float DLoc, float MaxLoc,
 	float PRot, float IRot, float DRot, float MaxRot)
 {
@@ -119,19 +119,19 @@ void FMC6DControllerCallbacks::Init(USceneComponent* InTarget,
 	// Bind update function depending on the control type
 	switch (ControlType)
 	{
-	case EMCControlType::Position:
+	case EMC6DControlType::Position:
 		UpdateFunctionPointer = &FMC6DControllerCallbacks::Update_Static_Position;
 		break;
-	case EMCControlType::Velocity:
+	case EMC6DControlType::Velocity:
 		UpdateFunctionPointer = &FMC6DControllerCallbacks::Update_Static_Velocity;
 		break;
-	case EMCControlType::Acceleration:
+	case EMC6DControlType::Acceleration:
 		UpdateFunctionPointer = &FMC6DControllerCallbacks::Update_Static_Acceleration;
 		break;
-	case EMCControlType::Force:
+	case EMC6DControlType::Force:
 		UpdateFunctionPointer = &FMC6DControllerCallbacks::Update_Static_Force;
 		break;
-	case EMCControlType::Impulse:
+	case EMC6DControlType::Impulse:
 		UpdateFunctionPointer = &FMC6DControllerCallbacks::Update_Static_Impulse;
 		break;
 	default:
@@ -143,7 +143,7 @@ void FMC6DControllerCallbacks::Init(USceneComponent* InTarget,
 // Init as static mesh with an offset
 void FMC6DControllerCallbacks::Init(USceneComponent* InTarget,
 	UStaticMeshComponent* InSelfAsStaticMesh,
-	EMCControlType ControlType,
+	EMC6DControlType ControlType,
 	float PLoc, float ILoc, float DLoc, float MaxLoc,
 	float PRot, float IRot, float DRot, float MaxRot,
 	FTransform InOffset)
@@ -162,19 +162,19 @@ void FMC6DControllerCallbacks::Init(USceneComponent* InTarget,
 	// Bind update function depending on the control type
 	switch (ControlType)
 	{
-	case EMCControlType::Position:
+	case EMC6DControlType::Position:
 		UpdateFunctionPointer = &FMC6DControllerCallbacks::Update_Static_Position_Offset;
 		break;
-	case EMCControlType::Velocity:
+	case EMC6DControlType::Velocity:
 		UpdateFunctionPointer = &FMC6DControllerCallbacks::Update_Static_Velocity_Offset;
 		break;
-	case EMCControlType::Acceleration:
+	case EMC6DControlType::Acceleration:
 		UpdateFunctionPointer = &FMC6DControllerCallbacks::Update_Static_Acceleration_Offset;
 		break;
-	case EMCControlType::Force:
+	case EMC6DControlType::Force:
 		UpdateFunctionPointer = &FMC6DControllerCallbacks::Update_Static_Force_Offset;
 		break;
-	case EMCControlType::Impulse:
+	case EMC6DControlType::Impulse:
 		UpdateFunctionPointer = &FMC6DControllerCallbacks::Update_Static_Impulse_Offset;
 		break;
 	default:
