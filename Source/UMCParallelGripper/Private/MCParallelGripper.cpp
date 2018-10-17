@@ -9,8 +9,6 @@ UMCParallelGripper::UMCParallelGripper()
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = false;
-	//// Disable tick, it will be enabled after init
-	//PrimaryComponentTick.bStartWithTickEnabled = false;
 
 	// Create the constraints
 	LeftFingerConstraint = CreateDefaultSubobject<UPhysicsConstraintComponent>(TEXT("LeftFingerConstraint"));
@@ -33,11 +31,6 @@ void UMCParallelGripper::BeginPlay()
 {
 	Super::BeginPlay();
 	UE_LOG(LogTemp, Warning, TEXT(">> %s::%d"), TEXT(__FUNCTION__), __LINE__);
-	//// Disable tick by default
-	//// TODO / ISSUE why does this have to be manually disabled
-	//// even if PrimaryComponentTick.bStartWithTickEnabled = false;
-	//// this does not happen with USLVisManager.cpp
-	//SetComponentTickEnabled(false);
 
 	AStaticMeshActor* OwnerAsStaticMeshActor = Cast<AStaticMeshActor>(GetOwner());
 	if (OwnerAsStaticMeshActor && LeftFinger && RightFinger)
@@ -74,7 +67,8 @@ void UMCParallelGripper::BeginPlay()
 			// Create the controller
 			PGController = NewObject<UMCParallelGripperController>(this);
 
-			//PGController->Init(ControlType, LeftFingerConstraint, RightFingerConstraint);
+			// Init controller
+			PGController->Init(ControlType, LeftFingerConstraint, RightFingerConstraint);
 		}
 	}	
 }
