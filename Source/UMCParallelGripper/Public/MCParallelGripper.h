@@ -7,9 +7,13 @@
 #include "Components/SceneComponent.h"
 #include "Engine/StaticMeshActor.h"
 #include "PhysicsEngine/PhysicsConstraintComponent.h"
+#include "MCGripperControlType.h"
+#include "MCParallelGripperController.h"
 #include "MCParallelGripper.generated.h"
 
-
+/**
+ * Actor component setting up a parallel gripper constraints and its controller
+ */
 UCLASS( ClassGroup=(MC), meta=(BlueprintSpawnableComponent, DisplayName = "MC Parallel Gripper" ) )
 class UMCPARALLELGRIPPER_API UMCParallelGripper : public USceneComponent
 {
@@ -34,7 +38,10 @@ public:
 
 private:
 	// Set default values to the constraints
-	void InitConstraint(UPhysicsConstraintComponent* Constraint);
+	void SetupConstraintLimits(UPhysicsConstraintComponent* Constraint);
+
+	// Set default physics and collision values to the static meshes
+	void SetupPhysics(UStaticMeshComponent* StaticMeshComponent);
 
 private:
 	// Left finger static mesh
@@ -53,4 +60,10 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Parallel Gripper")
 	UPhysicsConstraintComponent* RightFingerConstraint;
 
+	// Control type
+	UPROPERTY(EditAnywhere, Category = "Parallel Gripper")
+	EMCGripperControlType ControlType;
+
+	// Parallel grasp controller (take the input from user and maps it to the gripper)
+	UMCParallelGripperController* PGController;
 };

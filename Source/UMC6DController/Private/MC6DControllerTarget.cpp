@@ -41,7 +41,7 @@ UMC6DControllerTarget::UMC6DControllerTarget()
 	//MaxRot = 15.f;
 
 	// PID values (acc)
-	ControlType = EMCControlType::Acceleration;
+	ControlType = EMC6DControlType::Acceleration;
 	PLoc = 750.0f;
 	ILoc = 10.0f;
 	DLoc = 75.0f;
