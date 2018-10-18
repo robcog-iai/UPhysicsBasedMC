@@ -1,10 +1,11 @@
 // Copyright 2018, Institute for Artificial Intelligence - University of Bremen
+// Author: Andrei Haidu (http://haidu.eu)
 
-#include "MC6DControllerTarget.h"
-#include "MC6DControllerOffset.h"
+#include "MC6DTarget.h"
+#include "MC6DOffset.h"
 
 // Sets default values for this component's properties
-UMC6DControllerTarget::UMC6DControllerTarget()
+UMC6DTarget::UMC6DTarget()
 {
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
@@ -55,12 +56,12 @@ UMC6DControllerTarget::UMC6DControllerTarget()
 }
 
 // Destructor
-UMC6DControllerTarget::~UMC6DControllerTarget()
+UMC6DTarget::~UMC6DTarget()
 {
 }
 
 // Called when the game starts
-void UMC6DControllerTarget::BeginPlay()
+void UMC6DTarget::BeginPlay()
 {
 	Super::BeginPlay();
 
@@ -81,7 +82,7 @@ void UMC6DControllerTarget::BeginPlay()
 			SkelMeshComp->SetEnableGravity(false);
 
 			// Initialize update callbacks with/without offset
-			if (UMC6DControllerOffset* OffsetComp = Cast<UMC6DControllerOffset>(SkeletalMeshActor->GetComponentByClass(UMC6DControllerOffset::StaticClass())))
+			if (UMC6DOffset* OffsetComp = Cast<UMC6DOffset>(SkeletalMeshActor->GetComponentByClass(UMC6DOffset::StaticClass())))
 			{
 				ControllerUpdateCallbacks.Init(this, SkelMeshComp, bApplyToAllSkeletalBodies, ControlType,
 					PLoc, ILoc, DLoc, MaxLoc, PRot, IRot, DRot, MaxRot,
@@ -121,7 +122,7 @@ void UMC6DControllerTarget::BeginPlay()
 			StaticMeshComp->SetEnableGravity(false);
 
 			// Initialize update callbacks with/without offset
-			if (UMC6DControllerOffset* OffsetComp = Cast<UMC6DControllerOffset>(StaticMeshActor->GetComponentByClass(UMC6DControllerOffset::StaticClass())))
+			if (UMC6DOffset* OffsetComp = Cast<UMC6DOffset>(StaticMeshActor->GetComponentByClass(UMC6DOffset::StaticClass())))
 			{
 				ControllerUpdateCallbacks.Init(this, StaticMeshComp, ControlType,
 					PLoc, ILoc, DLoc, MaxLoc, PRot, IRot, DRot, MaxRot,
@@ -157,7 +158,7 @@ void UMC6DControllerTarget::BeginPlay()
 
 #if WITH_EDITOR
 // Called when a property is changed in the editor
-void UMC6DControllerTarget::PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent)
+void UMC6DTarget::PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent)
 {
 	Super::PostEditChangeProperty(PropertyChangedEvent);
 
@@ -166,7 +167,7 @@ void UMC6DControllerTarget::PostEditChangeProperty(struct FPropertyChangedEvent&
 		PropertyChangedEvent.Property->GetFName() : NAME_None;
 
 	// Radio button style between bUseSkeletalMesh, bUseStaticMesh
-	if (PropertyName == GET_MEMBER_NAME_CHECKED(UMC6DControllerTarget, bUseSkeletalMesh))
+	if (PropertyName == GET_MEMBER_NAME_CHECKED(UMC6DTarget, bUseSkeletalMesh))
 	{
 		if (bUseSkeletalMesh)
 		{
@@ -181,7 +182,7 @@ void UMC6DControllerTarget::PostEditChangeProperty(struct FPropertyChangedEvent&
 			bUseStaticMesh = true;
 		}
 	}
-	else if (PropertyName == GET_MEMBER_NAME_CHECKED(UMC6DControllerTarget, bUseStaticMesh))
+	else if (PropertyName == GET_MEMBER_NAME_CHECKED(UMC6DTarget, bUseStaticMesh))
 	{
 		if (bUseStaticMesh)
 		{
@@ -200,7 +201,7 @@ void UMC6DControllerTarget::PostEditChangeProperty(struct FPropertyChangedEvent&
 #endif // WITH_EDITOR
 
 // Called every frame
-void UMC6DControllerTarget::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+void UMC6DTarget::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 

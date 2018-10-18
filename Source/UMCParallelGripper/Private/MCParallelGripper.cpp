@@ -19,18 +19,24 @@ UMCParallelGripper::UMCParallelGripper()
 	RightFingerConstraint->SetupAttachment(this);
 
 	// Init constraints
-	UMCParallelGripper::SetupConstraintLimits(LeftFingerConstraint);
-	UMCParallelGripper::SetupConstraintLimits(RightFingerConstraint);
+	UMCParallelGripper::SetupConstraint(LeftFingerConstraint);
+	UMCParallelGripper::SetupConstraint(RightFingerConstraint);
 
 	// Default values
+	InputAxisName = "LeftGrasp";
 	ControlType = EMCGripperControlType::LinearDrive;
+
+	// Linear driver default values
+	P = 5000.f;
+	I = 0.f;
+	D = 200.f;
+	Max = 15000.f;
 }
 
 // Called when the game starts
 void UMCParallelGripper::BeginPlay()
 {
 	Super::BeginPlay();
-	UE_LOG(LogTemp, Warning, TEXT(">> %s::%d"), TEXT(__FUNCTION__), __LINE__);
 
 	AStaticMeshActor* OwnerAsStaticMeshActor = Cast<AStaticMeshActor>(GetOwner());
 	if (OwnerAsStaticMeshActor && LeftFinger && RightFinger)
@@ -68,7 +74,7 @@ void UMCParallelGripper::BeginPlay()
 			PGController = NewObject<UMCParallelGripperController>(this);
 
 			// Init controller
-			PGController->Init(ControlType, LeftFingerConstraint, RightFingerConstraint);
+			PGController->Init(ControlType, InputAxisName, LeftFingerConstraint, RightFingerConstraint, P, I, D, Max);
 		}
 	}	
 }
@@ -139,18 +145,14 @@ void UMCParallelGripper::PostEditChangeProperty(struct FPropertyChangedEvent& Pr
 }
 #endif // WITH_EDITOR
 
-
 // Called every frame
 void UMCParallelGripper::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-	// ...
-	UE_LOG(LogTemp, Warning, TEXT(">> %s::%d"), TEXT(__FUNCTION__), __LINE__);
 }
 
 // Set default values to the constraints
-void UMCParallelGripper::SetupConstraintLimits(UPhysicsConstraintComponent* Constraint)
+void UMCParallelGripper::SetupConstraint(UPhysicsConstraintComponent* Constraint)
 {
 	Constraint->SetAngularSwing1Limit(ACM_Locked, 0.f);
 	Constraint->SetAngularSwing2Limit(ACM_Locked, 0.f);

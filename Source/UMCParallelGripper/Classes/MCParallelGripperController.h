@@ -18,18 +18,50 @@ class UMCParallelGripperController : public UObject
 	GENERATED_BODY()
 	
 public:
+	// Default constructor
+	UMCParallelGripperController();
+
 	// Initialize controller
 	void Init(EMCGripperControlType ControlType,
+		const FName& InputAxisName,
 		UPhysicsConstraintComponent* LeftFingerConstraint,
-		UPhysicsConstraintComponent* RightFingerConstraint);
+		UPhysicsConstraintComponent* RightFingerConstraint,
+		float InP, float InI, float InD, float InMax);
 
 private:
 	// Bind user inputs
-	void SetupInputBindings(UInputComponent* InIC);
+	void SetupInputBindings(UInputComponent* InIC, const FName& InputAxisName);
 
-	// Update function bound to the left input
-	void UpdateLeft(const float Value);
+	// Setup the controller for linear drive (PD controller)
+	// force = spring * (targetPosition - position) + damping * (targetVelocity - velocity)
+	void SetupLinearDrive(float Spring, float Damping, float ForceLimit);
 
-	// Update function bound to the right input
-	void UpdateRight(const float Value);
+	// Update function bound to the input
+	void Update(float Value);
+
+	/* Update function bindings */
+	// Function pointer type for calling the correct update function
+	typedef void(UMCParallelGripperController::*UpdateFunctionPointerType)(float);
+
+	// Function pointer for left/right update
+	UpdateFunctionPointerType UpdateFunctionPointer;
+
+	/* Default update functions */
+	void Update_NONE(float Value);
+
+	/* Update function for the linear driver */
+	void Update_LinearDriver(float Value);
+
+private:
+	// Left finger constraint
+	UPhysicsConstraintComponent* LeftConstraint;
+
+	// Left finger constraint
+	UPhysicsConstraintComponent* RightConstraint;
+
+	// Left finger movement limit
+	float LeftLimit;
+
+	// Right finger movement limit
+	float RightLimit;
 };

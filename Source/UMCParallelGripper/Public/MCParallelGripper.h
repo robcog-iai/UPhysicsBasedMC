@@ -38,7 +38,7 @@ public:
 
 private:
 	// Set default values to the constraints
-	void SetupConstraintLimits(UPhysicsConstraintComponent* Constraint);
+	void SetupConstraint(UPhysicsConstraintComponent* Constraint);
 
 	// Set default physics and collision values to the static meshes
 	void SetupPhysics(UStaticMeshComponent* StaticMeshComponent);
@@ -63,6 +63,27 @@ private:
 	// Control type
 	UPROPERTY(EditAnywhere, Category = "Parallel Gripper")
 	EMCGripperControlType ControlType;
+
+	// Input axis name
+	UPROPERTY(EditAnywhere, Category = "Parallel Gripper")
+	FName InputAxisName;
+
+	/* Driver */
+	// Proportional gain
+	UPROPERTY(EditAnywhere, Category = "Parallel Gripper|PID Driver")
+	float P;
+
+	// Integral gain
+	UPROPERTY(EditAnywhere, Category = "Parallel Gripper|PID Driver")
+	float I;
+
+	// Derivative gain
+	UPROPERTY(EditAnywhere, Category = "Parallel Gripper|PID Driver")
+	float D;
+
+	// Maximum output
+	UPROPERTY(EditAnywhere, Category = "Parallel Gripper|PID Driver")
+	float Max;
 
 	// Parallel grasp controller (take the input from user and maps it to the gripper)
 	UMCParallelGripperController* PGController;

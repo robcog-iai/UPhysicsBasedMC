@@ -11,14 +11,14 @@
 /**
  * 6D controller update callbacks
  */
-struct FMC6DControllerCallbacks
+struct FMC6DController
 {
 public:
 	// Default constructor
-	FMC6DControllerCallbacks();
+	FMC6DController();
 
 	// Destructor
-	~FMC6DControllerCallbacks();
+	~FMC6DController();
 
 	// Init as skeletal mesh
 	void Init(USceneComponent* InTarget,
@@ -79,7 +79,7 @@ private:
 
 	/* Update function bindings */
 	// Function pointer type for calling the correct update function
-	typedef void(FMC6DControllerCallbacks::*UpdateFunctionPointerType)(float);
+	typedef void(FMC6DController::*UpdateFunctionPointerType)(float);
 
 	// Function pointer for update
 	UpdateFunctionPointerType UpdateFunctionPointer;
