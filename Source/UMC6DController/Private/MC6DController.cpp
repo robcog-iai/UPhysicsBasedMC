@@ -1,22 +1,22 @@
 // Copyright 2018, Institute for Artificial Intelligence - University of Bremen
 // Author: Andrei Haidu (http://haidu.eu)
 
-#include "MC6DControllerCallbacks.h"
+#include "MC6DController.h"
 
 // Default constructor
-FMC6DControllerCallbacks::FMC6DControllerCallbacks()
+FMC6DController::FMC6DController()
 {
 	bApplyToAllChildBodies = false;
-	UpdateFunctionPointer = &FMC6DControllerCallbacks::Update_NONE;
+	UpdateFunctionPointer = &FMC6DController::Update_NONE;
 }
 
 // Destructor
-FMC6DControllerCallbacks::~FMC6DControllerCallbacks() 
+FMC6DController::~FMC6DController() 
 {
 }
 
 // Init as skeletal mesh
-void FMC6DControllerCallbacks::Init(USceneComponent* InTarget,
+void FMC6DController::Init(USceneComponent* InTarget,
 	USkeletalMeshComponent* InSelfAsSkeletalMesh,
 	bool bApplyToAllBodies,
 	EMC6DControlType ControlType,
@@ -36,28 +36,28 @@ void FMC6DControllerCallbacks::Init(USceneComponent* InTarget,
 	switch (ControlType)
 	{
 	case EMC6DControlType::Position:
-		UpdateFunctionPointer = &FMC6DControllerCallbacks::Update_Skel_Position;
+		UpdateFunctionPointer = &FMC6DController::Update_Skel_Position;
 		break;
 	case EMC6DControlType::Velocity:
-		UpdateFunctionPointer = &FMC6DControllerCallbacks::Update_Skel_Velocity;
+		UpdateFunctionPointer = &FMC6DController::Update_Skel_Velocity;
 		break;
 	case EMC6DControlType::Acceleration:
-		UpdateFunctionPointer = &FMC6DControllerCallbacks::Update_Skel_Acceleration;
+		UpdateFunctionPointer = &FMC6DController::Update_Skel_Acceleration;
 		break;
 	case EMC6DControlType::Force:
-		UpdateFunctionPointer = &FMC6DControllerCallbacks::Update_Skel_Force;
+		UpdateFunctionPointer = &FMC6DController::Update_Skel_Force;
 		break;
 	case EMC6DControlType::Impulse:
-		UpdateFunctionPointer = &FMC6DControllerCallbacks::Update_Skel_Impulse;
+		UpdateFunctionPointer = &FMC6DController::Update_Skel_Impulse;
 		break;
 	default:
-		UpdateFunctionPointer = &FMC6DControllerCallbacks::Update_NONE;
+		UpdateFunctionPointer = &FMC6DController::Update_NONE;
 		break;
 	}
 }
 
 // Init as skeletal mesh with an offset
-void FMC6DControllerCallbacks::Init(USceneComponent* InTarget,
+void FMC6DController::Init(USceneComponent* InTarget,
 	USkeletalMeshComponent* InSelfAsSkeletalMesh,
 	bool bApplyToAllBodies,
 	EMC6DControlType ControlType,
@@ -81,28 +81,28 @@ void FMC6DControllerCallbacks::Init(USceneComponent* InTarget,
 	switch (ControlType)
 	{
 	case EMC6DControlType::Position:
-		UpdateFunctionPointer = &FMC6DControllerCallbacks::Update_Skel_Position_Offset;
+		UpdateFunctionPointer = &FMC6DController::Update_Skel_Position_Offset;
 		break;
 	case EMC6DControlType::Velocity:
-		UpdateFunctionPointer = &FMC6DControllerCallbacks::Update_Skel_Velocity_Offset;
+		UpdateFunctionPointer = &FMC6DController::Update_Skel_Velocity_Offset;
 		break;
 	case EMC6DControlType::Acceleration:
-		UpdateFunctionPointer = &FMC6DControllerCallbacks::Update_Skel_Acceleration_Offset;
+		UpdateFunctionPointer = &FMC6DController::Update_Skel_Acceleration_Offset;
 		break;
 	case EMC6DControlType::Force:
-		UpdateFunctionPointer = &FMC6DControllerCallbacks::Update_Skel_Force_Offset;
+		UpdateFunctionPointer = &FMC6DController::Update_Skel_Force_Offset;
 		break;
 	case EMC6DControlType::Impulse:
-		UpdateFunctionPointer = &FMC6DControllerCallbacks::Update_Skel_Impulse_Offset;
+		UpdateFunctionPointer = &FMC6DController::Update_Skel_Impulse_Offset;
 		break;
 	default:
-		UpdateFunctionPointer = &FMC6DControllerCallbacks::Update_NONE;
+		UpdateFunctionPointer = &FMC6DController::Update_NONE;
 		break;
 	}
 }
 
 // Init as static mesh
-void FMC6DControllerCallbacks::Init(USceneComponent* InTarget,
+void FMC6DController::Init(USceneComponent* InTarget,
 	UStaticMeshComponent* InSelfAsStaticMesh,
 	EMC6DControlType ControlType,
 	float PLoc, float ILoc, float DLoc, float MaxLoc,
@@ -120,28 +120,28 @@ void FMC6DControllerCallbacks::Init(USceneComponent* InTarget,
 	switch (ControlType)
 	{
 	case EMC6DControlType::Position:
-		UpdateFunctionPointer = &FMC6DControllerCallbacks::Update_Static_Position;
+		UpdateFunctionPointer = &FMC6DController::Update_Static_Position;
 		break;
 	case EMC6DControlType::Velocity:
-		UpdateFunctionPointer = &FMC6DControllerCallbacks::Update_Static_Velocity;
+		UpdateFunctionPointer = &FMC6DController::Update_Static_Velocity;
 		break;
 	case EMC6DControlType::Acceleration:
-		UpdateFunctionPointer = &FMC6DControllerCallbacks::Update_Static_Acceleration;
+		UpdateFunctionPointer = &FMC6DController::Update_Static_Acceleration;
 		break;
 	case EMC6DControlType::Force:
-		UpdateFunctionPointer = &FMC6DControllerCallbacks::Update_Static_Force;
+		UpdateFunctionPointer = &FMC6DController::Update_Static_Force;
 		break;
 	case EMC6DControlType::Impulse:
-		UpdateFunctionPointer = &FMC6DControllerCallbacks::Update_Static_Impulse;
+		UpdateFunctionPointer = &FMC6DController::Update_Static_Impulse;
 		break;
 	default:
-		UpdateFunctionPointer = &FMC6DControllerCallbacks::Update_NONE;
+		UpdateFunctionPointer = &FMC6DController::Update_NONE;
 		break;
 	}
 }
 
 // Init as static mesh with an offset
-void FMC6DControllerCallbacks::Init(USceneComponent* InTarget,
+void FMC6DController::Init(USceneComponent* InTarget,
 	UStaticMeshComponent* InSelfAsStaticMesh,
 	EMC6DControlType ControlType,
 	float PLoc, float ILoc, float DLoc, float MaxLoc,
@@ -163,47 +163,47 @@ void FMC6DControllerCallbacks::Init(USceneComponent* InTarget,
 	switch (ControlType)
 	{
 	case EMC6DControlType::Position:
-		UpdateFunctionPointer = &FMC6DControllerCallbacks::Update_Static_Position_Offset;
+		UpdateFunctionPointer = &FMC6DController::Update_Static_Position_Offset;
 		break;
 	case EMC6DControlType::Velocity:
-		UpdateFunctionPointer = &FMC6DControllerCallbacks::Update_Static_Velocity_Offset;
+		UpdateFunctionPointer = &FMC6DController::Update_Static_Velocity_Offset;
 		break;
 	case EMC6DControlType::Acceleration:
-		UpdateFunctionPointer = &FMC6DControllerCallbacks::Update_Static_Acceleration_Offset;
+		UpdateFunctionPointer = &FMC6DController::Update_Static_Acceleration_Offset;
 		break;
 	case EMC6DControlType::Force:
-		UpdateFunctionPointer = &FMC6DControllerCallbacks::Update_Static_Force_Offset;
+		UpdateFunctionPointer = &FMC6DController::Update_Static_Force_Offset;
 		break;
 	case EMC6DControlType::Impulse:
-		UpdateFunctionPointer = &FMC6DControllerCallbacks::Update_Static_Impulse_Offset;
+		UpdateFunctionPointer = &FMC6DController::Update_Static_Impulse_Offset;
 		break;
 	default:
-		UpdateFunctionPointer = &FMC6DControllerCallbacks::Update_NONE;
+		UpdateFunctionPointer = &FMC6DController::Update_NONE;
 		break;
 	}
 }
 
 // Call the update function pointer
-void FMC6DControllerCallbacks::Update(float DeltaTime)
+void FMC6DController::Update(float DeltaTime)
 {
 	(this->*UpdateFunctionPointer)(DeltaTime);
 }
 
 // Default update function
-void FMC6DControllerCallbacks::Update_NONE(float DeltaTime)
+void FMC6DController::Update_NONE(float DeltaTime)
 {
 	UE_LOG(LogTemp, Warning, TEXT(">> %s::%d"), TEXT(__FUNCTION__), __LINE__);
 }
 
 
 // Skeletal updates
-void FMC6DControllerCallbacks::Update_Skel_Position(float DeltaTime)
+void FMC6DController::Update_Skel_Position(float DeltaTime)
 {
 	SelfAsSkeletalMeshComp->SetWorldTransform(TargetSceneComp->GetComponentTransform(),
 		false, (FHitResult*)nullptr, ETeleportType::TeleportPhysics);
 }
 
-void FMC6DControllerCallbacks::Update_Skel_Velocity(float DeltaTime)
+void FMC6DController::Update_Skel_Velocity(float DeltaTime)
 {
 	/* Location */
 	const FVector DeltaLoc = TargetSceneComp->GetComponentLocation() - SelfAsSkeletalMeshComp->GetComponentLocation();
@@ -229,7 +229,7 @@ void FMC6DControllerCallbacks::Update_Skel_Velocity(float DeltaTime)
 	SelfAsSkeletalMeshComp->SetPhysicsAngularVelocityInRadians(OutRot);
 }
 
-void FMC6DControllerCallbacks::Update_Skel_Acceleration(float DeltaTime)
+void FMC6DController::Update_Skel_Acceleration(float DeltaTime)
 {
 	/* Location */
 	const FVector DeltaLoc = TargetSceneComp->GetComponentLocation() - SelfAsSkeletalMeshComp->GetComponentLocation();
@@ -255,7 +255,7 @@ void FMC6DControllerCallbacks::Update_Skel_Acceleration(float DeltaTime)
 	SelfAsSkeletalMeshComp->AddTorqueInRadians(OutRot, NAME_None, true); // Acceleration based (mass will have no effect)
 }
 
-void FMC6DControllerCallbacks::Update_Skel_Force(float DeltaTime)
+void FMC6DController::Update_Skel_Force(float DeltaTime)
 {
 	/* Location */
 	const FVector DeltaLoc = TargetSceneComp->GetComponentLocation() - SelfAsSkeletalMeshComp->GetComponentLocation();
@@ -281,7 +281,7 @@ void FMC6DControllerCallbacks::Update_Skel_Force(float DeltaTime)
 	SelfAsSkeletalMeshComp->AddTorqueInRadians(OutRot);
 }
 
-void FMC6DControllerCallbacks::Update_Skel_Impulse(float DeltaTime)
+void FMC6DController::Update_Skel_Impulse(float DeltaTime)
 {
 	/* Location */
 	const FVector DeltaLoc = TargetSceneComp->GetComponentLocation() - SelfAsSkeletalMeshComp->GetComponentLocation();
@@ -310,7 +310,7 @@ void FMC6DControllerCallbacks::Update_Skel_Impulse(float DeltaTime)
 
 
 // Skeletal updates with offset
-void FMC6DControllerCallbacks::Update_Skel_Position_Offset(float DeltaTime)
+void FMC6DController::Update_Skel_Position_Offset(float DeltaTime)
 {
 	/* Offset target calculation */
 	FTransform CurrentTargetOffset;
@@ -321,7 +321,7 @@ void FMC6DControllerCallbacks::Update_Skel_Position_Offset(float DeltaTime)
 		false, (FHitResult*)nullptr, ETeleportType::TeleportPhysics);
 }
 
-void FMC6DControllerCallbacks::Update_Skel_Velocity_Offset(float DeltaTime)
+void FMC6DController::Update_Skel_Velocity_Offset(float DeltaTime)
 {
 	/* Offset target calculation */
 	FTransform CurrentTargetOffset;
@@ -351,7 +351,7 @@ void FMC6DControllerCallbacks::Update_Skel_Velocity_Offset(float DeltaTime)
 	SelfAsSkeletalMeshComp->SetPhysicsAngularVelocityInRadians(OutRot);
 }
 
-void FMC6DControllerCallbacks::Update_Skel_Acceleration_Offset(float DeltaTime)
+void FMC6DController::Update_Skel_Acceleration_Offset(float DeltaTime)
 {
 	/* Offset target calculation */
 	FTransform CurrentTargetOffset;
@@ -381,7 +381,7 @@ void FMC6DControllerCallbacks::Update_Skel_Acceleration_Offset(float DeltaTime)
 	SelfAsSkeletalMeshComp->AddTorqueInRadians(OutRot, NAME_None, true); // Acceleration based (mass will have no effect)
 }
 
-void FMC6DControllerCallbacks::Update_Skel_Force_Offset(float DeltaTime)
+void FMC6DController::Update_Skel_Force_Offset(float DeltaTime)
 {
 	/* Offset target calculation */
 	FTransform CurrentTargetOffset;
@@ -411,7 +411,7 @@ void FMC6DControllerCallbacks::Update_Skel_Force_Offset(float DeltaTime)
 	SelfAsSkeletalMeshComp->AddTorqueInRadians(OutRot);
 }
 
-void FMC6DControllerCallbacks::Update_Skel_Impulse_Offset(float DeltaTime)
+void FMC6DController::Update_Skel_Impulse_Offset(float DeltaTime)
 {
 	/* Offset target calculation */
 	FTransform CurrentTargetOffset;
@@ -443,13 +443,13 @@ void FMC6DControllerCallbacks::Update_Skel_Impulse_Offset(float DeltaTime)
 
 
 // Static mesh updates
-void FMC6DControllerCallbacks::Update_Static_Position(float DeltaTime)
+void FMC6DController::Update_Static_Position(float DeltaTime)
 {
 	SelfAsStaticMeshComp->SetWorldTransform(TargetSceneComp->GetComponentTransform(),
 		false, (FHitResult*)nullptr, ETeleportType::TeleportPhysics);
 }
 
-void FMC6DControllerCallbacks::Update_Static_Velocity(float DeltaTime)
+void FMC6DController::Update_Static_Velocity(float DeltaTime)
 {
 	/* Location */
 	const FVector DeltaLoc = TargetSceneComp->GetComponentLocation() - SelfAsStaticMeshComp->GetComponentLocation();
@@ -475,7 +475,7 @@ void FMC6DControllerCallbacks::Update_Static_Velocity(float DeltaTime)
 	SelfAsStaticMeshComp->SetPhysicsAngularVelocityInRadians(OutRot);
 }
 
-void FMC6DControllerCallbacks::Update_Static_Acceleration(float DeltaTime)
+void FMC6DController::Update_Static_Acceleration(float DeltaTime)
 {
 	/* Location */
 	const FVector DeltaLoc = TargetSceneComp->GetComponentLocation() - SelfAsStaticMeshComp->GetComponentLocation();
@@ -501,7 +501,7 @@ void FMC6DControllerCallbacks::Update_Static_Acceleration(float DeltaTime)
 	SelfAsStaticMeshComp->AddTorqueInRadians(OutRot, NAME_None, true); // Acceleration based (mass will have no effect)
 }
 
-void FMC6DControllerCallbacks::Update_Static_Force(float DeltaTime)
+void FMC6DController::Update_Static_Force(float DeltaTime)
 {
 	/* Location */
 	const FVector DeltaLoc = TargetSceneComp->GetComponentLocation() - SelfAsStaticMeshComp->GetComponentLocation();
@@ -527,7 +527,7 @@ void FMC6DControllerCallbacks::Update_Static_Force(float DeltaTime)
 	SelfAsStaticMeshComp->AddTorqueInRadians(OutRot);
 }
 
-void FMC6DControllerCallbacks::Update_Static_Impulse(float DeltaTime)
+void FMC6DController::Update_Static_Impulse(float DeltaTime)
 {
 	/* Location */
 	const FVector DeltaLoc = TargetSceneComp->GetComponentLocation() - SelfAsStaticMeshComp->GetComponentLocation();
@@ -555,7 +555,7 @@ void FMC6DControllerCallbacks::Update_Static_Impulse(float DeltaTime)
 
 
 // Static mesh updates with offset
-void FMC6DControllerCallbacks::Update_Static_Position_Offset(float DeltaTime)
+void FMC6DController::Update_Static_Position_Offset(float DeltaTime)
 {
 	/* Offset target calculation */
 	FTransform CurrentTargetOffset;
@@ -566,7 +566,7 @@ void FMC6DControllerCallbacks::Update_Static_Position_Offset(float DeltaTime)
 		false, (FHitResult*)nullptr, ETeleportType::TeleportPhysics);
 }
 
-void FMC6DControllerCallbacks::Update_Static_Velocity_Offset(float DeltaTime)
+void FMC6DController::Update_Static_Velocity_Offset(float DeltaTime)
 {
 	/* Offset target calculation */
 	FTransform CurrentTargetOffset;
@@ -596,7 +596,7 @@ void FMC6DControllerCallbacks::Update_Static_Velocity_Offset(float DeltaTime)
 	SelfAsStaticMeshComp->SetPhysicsAngularVelocityInRadians(OutRot);
 }
 
-void FMC6DControllerCallbacks::Update_Static_Acceleration_Offset(float DeltaTime)
+void FMC6DController::Update_Static_Acceleration_Offset(float DeltaTime)
 {
 	/* Offset target calculation */
 	FTransform CurrentTargetOffset;
@@ -626,7 +626,7 @@ void FMC6DControllerCallbacks::Update_Static_Acceleration_Offset(float DeltaTime
 	SelfAsStaticMeshComp->AddTorqueInRadians(OutRot, NAME_None, true); // Acceleration based (mass will have no effect)
 }
 
-void FMC6DControllerCallbacks::Update_Static_Force_Offset(float DeltaTime)
+void FMC6DController::Update_Static_Force_Offset(float DeltaTime)
 {
 	/* Offset target calculation */
 	FTransform CurrentTargetOffset;
@@ -656,7 +656,7 @@ void FMC6DControllerCallbacks::Update_Static_Force_Offset(float DeltaTime)
 	SelfAsStaticMeshComp->AddTorqueInRadians(OutRot); 
 }
 
-void FMC6DControllerCallbacks::Update_Static_Impulse_Offset(float DeltaTime)
+void FMC6DController::Update_Static_Impulse_Offset(float DeltaTime)
 {
 	/* Offset target calculation */
 	FTransform CurrentTargetOffset;

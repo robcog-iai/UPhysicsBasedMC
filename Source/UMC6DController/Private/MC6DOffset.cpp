@@ -1,13 +1,13 @@
 // Copyright 2018, Institute for Artificial Intelligence - University of Bremen
 // Author: Andrei Haidu (http://haidu.eu)
 
-#include "MC6DControllerOffset.h"
+#include "MC6DOffset.h"
 #if WITH_EDITORONLY_DATA
 #include "Components/StaticMeshComponent.h"
 #endif // WITH_EDITORONLY_DATA
 
 // Sets default values for this component's properties
-UMC6DControllerOffset::UMC6DControllerOffset()
+UMC6DOffset::UMC6DOffset()
 {
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.

@@ -5,19 +5,19 @@
 
 #include "CoreMinimal.h"
 #include "Components/SceneComponent.h"
-#include "MC6DControllerOffset.generated.h"
+#include "MC6DOffset.generated.h"
 
 /**
  * Used as 6D offset for the motion controller tracking
  */
-UCLASS( ClassGroup=(MC), meta=(BlueprintSpawnableComponent, DisplayName = "MC 6D Controller Offset") )
-class UMC6DCONTROLLER_API UMC6DControllerOffset : public USceneComponent
+UCLASS( ClassGroup=(MC), meta=(BlueprintSpawnableComponent, DisplayName = "MC 6D Offset") )
+class UMC6DCONTROLLER_API UMC6DOffset : public USceneComponent
 {
 	GENERATED_BODY()
 
 public:	
 	// Sets default values for this component's properties
-	UMC6DControllerOffset();
+	UMC6DOffset();
 
 private:
 #if WITH_EDITORONLY_DATA

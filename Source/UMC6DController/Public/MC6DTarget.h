@@ -8,23 +8,23 @@
 #include "Engine/StaticMeshActor.h"
 #include "Animation/SkeletalMeshActor.h"
 #include "MC6DControlType.h"
-#include "MC6DControllerCallbacks.h"
-#include "MC6DControllerTarget.generated.h"
+#include "MC6DController.h"
+#include "MC6DTarget.generated.h"
 
 /**
  * 6D physics based movement applied to the skeletal or static mesh pointed to
  */
-UCLASS(ClassGroup=(MC), meta=(BlueprintSpawnableComponent, DisplayName = "MC 6D Controller Target"), hidecategories = (Physics, Collision, Lighting))
-class UMC6DCONTROLLER_API UMC6DControllerTarget : public UMotionControllerComponent
+UCLASS(ClassGroup=(MC), meta=(BlueprintSpawnableComponent, DisplayName = "MC 6D Target"), hidecategories = (Physics, Collision, Lighting))
+class UMC6DCONTROLLER_API UMC6DTarget : public UMotionControllerComponent
 {
 	GENERATED_BODY()
 	
 public:
 	// Sets default values for this component's properties
-	UMC6DControllerTarget();
+	UMC6DTarget();
 	
 	// Dtor
-	~UMC6DControllerTarget();
+	~UMC6DTarget();
 
 protected:
 	// Called when the game starts
@@ -92,5 +92,5 @@ private:
 	float MaxRot;
 
 	// Update fallback function binding
-	FMC6DControllerCallbacks ControllerUpdateCallbacks;
+	FMC6DController ControllerUpdateCallbacks;
 };
