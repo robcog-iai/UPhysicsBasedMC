@@ -52,7 +52,6 @@ UMC6DTarget::UMC6DTarget()
 	IRot = 10.0f;
 	DRot = 400.0f;
 	MaxRot = 5000.0f;
-
 }
 
 // Destructor
