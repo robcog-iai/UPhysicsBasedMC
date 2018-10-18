@@ -10,7 +10,7 @@
 /**
  * Sphere area that fixates objects to the owner according to some rules
  */
-UCLASS(ClassGroup=(MC), meta=(DisplayName = "MC Fixation Grasp"))
+UCLASS(ClassGroup=(MC), meta=(BlueprintSpawnableComponent, DisplayName = "MC Fixation Grasp"))
 class UMCGRASP_API UMCFixationGrasp : public USphereComponent
 {
 	GENERATED_BODY()

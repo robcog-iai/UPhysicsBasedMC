@@ -14,7 +14,7 @@ UMCFixationGrasp::UMCFixationGrasp()
 	PrimaryComponentTick.bCanEverTick = false;
 
 	// Default sphere radius
-	InitSphereRadius(0.3f);
+	InitSphereRadius(3.0f);
 
 	// Default physics properties
 	SetGenerateOverlapEvents(true);

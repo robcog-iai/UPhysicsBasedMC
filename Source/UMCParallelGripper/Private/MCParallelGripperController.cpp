@@ -112,20 +112,4 @@ void UMCParallelGripperController::Update_LinearDriver(float Value)
 	// Apply target command
 	LeftConstraint->SetLinearPositionTarget(FVector(LeftTarget, 0.f, 0.f));
 	RightConstraint->SetLinearPositionTarget(FVector(RightTarget, 0.f, 0.f));
-	UE_LOG(LogTemp, Warning, TEXT(">> %s::%d Val=%f, LeftTarget=%f, RightTarget=%f"),
-		TEXT(__FUNCTION__), __LINE__, Value, LeftTarget, RightTarget);
-
-	FVector OutLinearConstraintForceLeft;
-	FVector OutAngularConstraintForceLeft;
-	LeftConstraint->GetConstraintForce(OutLinearConstraintForceLeft, OutAngularConstraintForceLeft);
-
-	FVector OutLinearConstraintForceRight;
-	FVector OutAngularConstraintForceRight;
-	RightConstraint->GetConstraintForce(OutLinearConstraintForceRight, OutAngularConstraintForceRight);
-
-	UE_LOG(LogTemp, Warning, TEXT(">> %s::%d Force: Left.X=%f, Right.X=%f"),
-		TEXT(__FUNCTION__), __LINE__,
-		OutLinearConstraintForceLeft.X, OutLinearConstraintForceRight.X);
-
-	UE_LOG(LogTemp, Warning, TEXT(">> %s::%d *** ** ** ***"), TEXT(__FUNCTION__), __LINE__);
 }
