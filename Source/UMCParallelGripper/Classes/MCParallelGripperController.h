@@ -50,7 +50,9 @@ private:
 	void Update_NONE(float Value);
 
 	/* Update function for the linear driver */
-	void Update_LinearDriver(float Value);
+	void Update_LinearDriver_X(float Value);
+	void Update_LinearDriver_Y(float Value);
+	void Update_LinearDriver_Z(float Value);
 
 private:
 	// Left finger constraint
