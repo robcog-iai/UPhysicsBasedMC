@@ -7,8 +7,10 @@
 #include "Components/ActorComponent.h"
 #include "MCGraspController.generated.h"
 
-
-UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
+/**
+ * Skeletal grasp controller
+ */
+UCLASS( ClassGroup=(MC), meta=(BlueprintSpawnableComponent, DisplayName = "MC Grasp Controller"))
 class UMCGRASP_API UMCGraspController : public UActorComponent
 {
 	GENERATED_BODY()
@@ -20,11 +22,32 @@ public:
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
-
-public:	
-	// Called every frame
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-
 		
-	
+private:
+	// Update the grasp
+	void Update(float Value);
+
+private:
+	// Input axis name
+	UPROPERTY(EditAnywhere, Category = "Grasp Controller")
+	FName InputAxisName;
+
+	// Angular drive mode
+	UPROPERTY(EditAnywhere, Category = "Grasp Controller")
+	TEnumAsByte<EAngularDriveMode::Type> AngularDriveMode;
+
+	// Spring value to apply to the angular drive (Position strength)
+	UPROPERTY(EditAnywhere, Category = "Grasp Controller", meta = (ClampMin = 0))
+	float Spring;
+
+	// Damping value to apply to the angular drive (Velocity strength) 
+	UPROPERTY(EditAnywhere, Category = "Grasp Controller", meta = (ClampMin = 0))
+	float Damping;
+
+	// Limit of the force that the angular drive can apply
+	UPROPERTY(EditAnywhere, Category = "Grasp Controller", meta = (ClampMin = 0))
+	float ForceLimit;
+
+	// Skeletal mesh of the owner
+	class USkeletalMeshComponent* SkeletalMesh;
 };

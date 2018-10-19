@@ -70,19 +70,19 @@ private:
 
 	/* Driver */
 	// Proportional gain
-	UPROPERTY(EditAnywhere, Category = "Parallel Gripper|PID Driver")
+	UPROPERTY(EditAnywhere, Category = "Parallel Gripper|PID Driver", meta = (ClampMin = 0))
 	float P;
 
 	// Integral gain
-	UPROPERTY(EditAnywhere, Category = "Parallel Gripper|PID Driver")
+	UPROPERTY(EditAnywhere, Category = "Parallel Gripper|PID Driver", meta = (ClampMin = 0))
 	float I;
 
 	// Derivative gain
-	UPROPERTY(EditAnywhere, Category = "Parallel Gripper|PID Driver")
+	UPROPERTY(EditAnywhere, Category = "Parallel Gripper|PID Driver", meta = (ClampMin = 0))
 	float D;
 
 	// Maximum output
-	UPROPERTY(EditAnywhere, Category = "Parallel Gripper|PID Driver")
+	UPROPERTY(EditAnywhere, Category = "Parallel Gripper|PID Driver", meta = (ClampMin = 0))
 	float Max;
 
 	// Parallel grasp controller (take the input from user and maps it to the gripper)
