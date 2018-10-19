@@ -44,17 +44,12 @@ private:
 	void SetupPhysics(UStaticMeshComponent* StaticMeshComponent);
 
 private:
-	// Use external actors for finger meshes, else add static mesh components
-	// TODO implement this
-	UPROPERTY(EditAnywhere, Category = "Parallel Gripper")
-	bool bUseExternalActorsForFingers;
-
 	// Left finger static mesh
-	UPROPERTY(EditAnywhere, Category = "Parallel Gripper", meta= (editcondition = "bUseExternalActorsForFingers"))
+	UPROPERTY(EditAnywhere, Category = "Parallel Gripper")
 	AStaticMeshActor* LeftFinger;
 
 	// Right finger static mesh
-	UPROPERTY(EditAnywhere, Category = "Parallel Gripper", meta = (editcondition = "bUseExternalActorsForFingers"))
+	UPROPERTY(EditAnywhere, Category = "Parallel Gripper")
 	AStaticMeshActor* RightFinger;
 
 	// Left finger constraint

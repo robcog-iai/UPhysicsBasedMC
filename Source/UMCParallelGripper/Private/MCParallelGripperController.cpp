@@ -69,18 +69,33 @@ void UMCParallelGripperController::SetupInputBindings(UInputComponent* InIC, con
 // force = spring * (targetPosition - position) + damping * (targetVelocity - velocity)
 void UMCParallelGripperController::SetupLinearDrive(float Spring, float Damping, float ForceLimit)
 {
-	// TODO hardcoded for X-axis movement, and direction
-	// Set movement axis
-	LeftConstraint->SetLinearPositionDrive(true, false, false);
-	RightConstraint->SetLinearPositionDrive(true, false, false);
-	
 	// Set linear driver parameters, it is a proportional derivative (PD) drive, 
 	// where force = spring * (targetPosition - position) + damping * (targetVelocity - velocity)
 	LeftConstraint->SetLinearDriveParams(Spring, Damping, ForceLimit);
 	RightConstraint->SetLinearDriveParams(Spring, Damping, ForceLimit);
-	
-	// Bind update functions
-	UpdateFunctionPointer = &UMCParallelGripperController::Update_LinearDriver;
+
+	// Set axis movement and bind update function
+	if (LeftConstraint->ConstraintInstance.GetLinearXMotion() == ELinearConstraintMotion::LCM_Limited &&
+		RightConstraint->ConstraintInstance.GetLinearXMotion() == ELinearConstraintMotion::LCM_Limited)
+	{
+		LeftConstraint->SetLinearPositionDrive(true, false, false);
+		RightConstraint->SetLinearPositionDrive(true, false, false);
+		UpdateFunctionPointer = &UMCParallelGripperController::Update_LinearDriver_X;
+	}
+	else if (LeftConstraint->ConstraintInstance.GetLinearYMotion() == ELinearConstraintMotion::LCM_Limited &&
+		RightConstraint->ConstraintInstance.GetLinearYMotion() == ELinearConstraintMotion::LCM_Limited)
+	{
+		LeftConstraint->SetLinearPositionDrive(false, true, false);
+		RightConstraint->SetLinearPositionDrive(false, true, false);
+		UpdateFunctionPointer = &UMCParallelGripperController::Update_LinearDriver_X;
+	}
+	else if (LeftConstraint->ConstraintInstance.GetLinearZMotion() == ELinearConstraintMotion::LCM_Limited &&
+		RightConstraint->ConstraintInstance.GetLinearZMotion() == ELinearConstraintMotion::LCM_Limited)
+	{
+		LeftConstraint->SetLinearPositionDrive(false, false, true);
+		RightConstraint->SetLinearPositionDrive(false, false, true);
+		UpdateFunctionPointer = &UMCParallelGripperController::Update_LinearDriver_X;
+	}
 }
 
 // Update function bound to the input
@@ -95,7 +110,7 @@ void UMCParallelGripperController::Update_NONE(float Value)
 }
 
 /* Update function for the linear driver */
-void UMCParallelGripperController::Update_LinearDriver(float Value)
+void UMCParallelGripperController::Update_LinearDriver_X(float Value)
 {
 	// Value is normalized x=[0,1]
 	// Mapping function is:
@@ -112,4 +127,42 @@ void UMCParallelGripperController::Update_LinearDriver(float Value)
 	// Apply target command
 	LeftConstraint->SetLinearPositionTarget(FVector(LeftTarget, 0.f, 0.f));
 	RightConstraint->SetLinearPositionTarget(FVector(RightTarget, 0.f, 0.f));
+}
+
+void UMCParallelGripperController::Update_LinearDriver_Y(float Value)
+{
+	// Value is normalized x=[0,1]
+	// Mapping function is:
+	// f(x) = (1-x)*MinLim + x*MaxLim; 
+	// since the limits are symmetrical, MinLim = -MaxLim, the function becomes:
+	// f(x) = (1-x)*-MaxLim + x*MaxLim => f(x) = (x-1)MaxLim + x*MaxLim
+
+	// Left target becomes
+	const float LeftTarget = ((Value - 1.f) * LeftLimit) + (Value * LeftLimit);
+
+	// Right target is mirrored, hence a multiplication by -1 is needed
+	const float RightTarget = ((1.f - Value) * RightLimit) - (Value * RightLimit);
+
+	// Apply target command
+	LeftConstraint->SetLinearPositionTarget(FVector(0.f, LeftTarget, 0.f));
+	RightConstraint->SetLinearPositionTarget(FVector(0.f, RightTarget, 0.f));
+}
+
+void UMCParallelGripperController::Update_LinearDriver_Z(float Value)
+{
+	// Value is normalized x=[0,1]
+	// Mapping function is:
+	// f(x) = (1-x)*MinLim + x*MaxLim; 
+	// since the limits are symmetrical, MinLim = -MaxLim, the function becomes:
+	// f(x) = (1-x)*-MaxLim + x*MaxLim => f(x) = (x-1)MaxLim + x*MaxLim
+
+	// Left target becomes
+	const float LeftTarget = ((Value - 1.f) * LeftLimit) + (Value * LeftLimit);
+
+	// Right target is mirrored, hence a multiplication by -1 is needed
+	const float RightTarget = ((1.f - Value) * RightLimit) - (Value * RightLimit);
+
+	// Apply target command
+	LeftConstraint->SetLinearPositionTarget(FVector(0.f, 0.f, LeftTarget));
+	RightConstraint->SetLinearPositionTarget(FVector(0.f, 0.f, RightTarget));
 }

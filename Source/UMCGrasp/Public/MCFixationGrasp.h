@@ -7,6 +7,16 @@
 #include "Components/SphereComponent.h"
 #include "MCFixationGrasp.generated.h"
 
+// Forward declaration
+class AStaticMeshActor;
+class ASkeletalMeshActor;
+
+/** Notify when an object is grasped */
+DECLARE_MULTICAST_DELEGATE_ThreeParams(FMCGraspBegin, uint32 /*MyId*/, uint32 /*OtherId*/, float /*Time*/);
+
+/** Notify when an object is released */
+DECLARE_MULTICAST_DELEGATE_ThreeParams(FMCGraspEnd, uint32 /*MyId*/, uint32 /*OtherId*/, float /*Time*/);
+
 /**
  * Sphere area that fixates objects to the owner according to some rules
  */
@@ -24,17 +34,20 @@ protected:
 	virtual void BeginPlay() override;
 
 private:
-	// Init controller
-	void Init();
-
 	// Bind user inputs
 	void SetupInputBindings(UInputComponent* InIC);
 
-	// Try to fixate overlapping object to parent
-	void FixateGrasp();
+	// Try to grasp (fixate) the overlapping object to parent
+	void Grasp();
 
-	// Free fixated object from parent
-	void ReleaseGrasp();
+	// Release the grasp (fixation)
+	void Release();
+
+	// Check if the object can be grasped (not too heavy/large)
+	bool CanObjectBeGrasped(AStaticMeshActor* InObject);
+
+	// Fixate the given object to parent
+	bool Fixate(AStaticMeshActor* InObject);
 
 	// Event called when something starts to overlaps this component
 	UFUNCTION()
@@ -52,16 +65,23 @@ private:
 		UPrimitiveComponent* OtherComp,
 		int32 OtherBodyIndex);
 
+public:
+	// Event called when grasp occurs
+	FMCGraspBegin OnGraspBegin;
+
+	// Event called when grasp ends
+	FMCGraspEnd OnGraspEnd;
+
 private:
 	// Weld bodies (meshes) on fixation
 	UPROPERTY(EditAnywhere, Category = "Fixation Grasp")
 	bool bWeldBodies;
 
-	// Weight (kg) limit that can be grasped (fixated)
+	// Weight (kg) limit that can be grasped
 	UPROPERTY(EditAnywhere, Category = "Fixation Grasp")
 	float WeightLimit;
 	
-	// Volume (liter) limit that can be grasped (fixated)
+	// Volume (cm^3) limit that can be grasped (1000cm^3 = 1 Liter)
 	UPROPERTY(EditAnywhere, Category = "Fixation Grasp")
 	float VolumeLimit;
 
@@ -69,16 +89,10 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Fixation Grasp")
 	FName InputActionName;
 
-	// Pointer to the parent as a skeletal mesh actor
-	class ASkeletalMeshActor* ParentAsSkelMA;
-
-	// Pointer to the parent as a static mesh actor
-	class AStaticMeshActor* ParentAsSMA;
-
 	// Pointer to the grasped component (nullptr if nothing is grasped)
-	class AStaticMeshActor* GraspedActor;
+	AStaticMeshActor* GraspedObject;
 
 	// Potential objects that can be grasped, currently overlapping the sphere
-	TArray<class AStaticMeshActor*> ObjectsInSphereArea;
+	TArray<AStaticMeshActor*> ObjectsInSphereArea;
 
 };
