@@ -94,5 +94,4 @@ private:
 
 	// Potential objects that can be grasped, currently overlapping the sphere
 	TArray<AStaticMeshActor*> ObjectsInSphereArea;
-
 };
