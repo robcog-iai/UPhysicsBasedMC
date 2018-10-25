@@ -6,6 +6,8 @@
 #include "Engine/StaticMeshActor.h"
 #include "Kismet/GameplayStatics.h"
 
+#define MC_RELEASE_VEL_BOOST 1.5f
+
 // Default constructor
 UMCFixationGrasp::UMCFixationGrasp()
 {	
@@ -20,6 +22,7 @@ UMCFixationGrasp::UMCFixationGrasp()
 	SetGenerateOverlapEvents(true);
 
 	// Default values
+	HandType = EMCGraspHandType::Left;
 	InputActionName = "LeftFixate";
 	bWeldBodies = true;
 	WeightLimit = 15.0f;
@@ -44,6 +47,31 @@ void UMCFixationGrasp::BeginPlay()
 	OnComponentBeginOverlap.AddDynamic(this, &UMCFixationGrasp::OnOverlapBegin);
 	OnComponentEndOverlap.AddDynamic(this, &UMCFixationGrasp::OnOverlapEnd);
 }
+
+#if WITH_EDITOR
+// Called when a property is changed in the editor
+void UMCFixationGrasp::PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent)
+{
+	Super::PostEditChangeProperty(PropertyChangedEvent);
+
+	// Get the changed property name
+	FName PropertyName = (PropertyChangedEvent.Property != NULL) ?
+		PropertyChangedEvent.Property->GetFName() : NAME_None;
+
+	// Set the left / right constraint actors
+	if (PropertyName == GET_MEMBER_NAME_CHECKED(UMCFixationGrasp, HandType))
+	{
+		if (HandType == EMCGraspHandType::Left)
+		{
+			InputActionName = "LeftFixate";
+		}
+		else if (HandType == EMCGraspHandType::Right)
+		{
+			InputActionName = "RightFixate";
+		}
+	}
+}
+#endif // WITH_EDITOR
 
 // Bind user inputs
 void UMCFixationGrasp::SetupInputBindings(UInputComponent* InIC)
@@ -93,7 +121,7 @@ void UMCFixationGrasp::Release()
 
 			// Enable physics with and apply current hand velocity, clear pointer to object
 			SMC->SetSimulatePhysics(true);
-			SMC->SetPhysicsLinearVelocity(CachedVelocity);
+			SMC->SetPhysicsLinearVelocity(CachedVelocity * MC_RELEASE_VEL_BOOST);
 
 			// Enable and update overlaps
 			SetGenerateOverlapEvents(true);

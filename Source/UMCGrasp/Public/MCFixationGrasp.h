@@ -11,6 +11,16 @@
 class AStaticMeshActor;
 class ASkeletalMeshActor;
 
+/**
+* Hand type
+*/
+UENUM()
+enum class EMCGraspHandType : uint8
+{
+	Left					UMETA(DisplayName = "Left"),
+	Right					UMETA(DisplayName = "Right"),
+};
+
 /** Notify when an object is grasped */
 DECLARE_MULTICAST_DELEGATE_ThreeParams(FMCGraspBegin, uint32 /*MyId*/, uint32 /*OtherId*/, float /*Time*/);
 
@@ -32,6 +42,11 @@ public:
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
+
+#if WITH_EDITOR
+	// Called when a property is changed in the editor
+	virtual void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override;
+#endif // WITH_EDITOR
 
 private:
 	// Bind user inputs
@@ -73,6 +88,10 @@ public:
 	FMCGraspEnd OnGraspEnd;
 
 private:
+	// Hand type, to listen to the right inputs
+	UPROPERTY(EditAnywhere, Category = "Fixation Grasp")
+	EMCGraspHandType HandType;
+
 	// Weld bodies (meshes) on fixation
 	UPROPERTY(EditAnywhere, Category = "Fixation Grasp")
 	bool bWeldBodies;

@@ -23,6 +23,7 @@ UMCParallelGripper::UMCParallelGripper()
 	UMCParallelGripper::SetupConstraint(RightFingerConstraint);
 
 	// Default values
+	HandType = EMCPGHandType::Left;
 	InputAxisName = "LeftGrasp";
 	ControlType = EMCGripperControlType::LinearDrive;
 
@@ -140,6 +141,17 @@ void UMCParallelGripper::PostEditChangeProperty(struct FPropertyChangedEvent& Pr
 			RightFingerConstraint->ConstraintActor1 = nullptr;
 			RightFingerConstraint->ConstraintActor2 = nullptr;
 			RightFingerConstraint->SetWorldTransform(GetOwner()->GetTransform());
+		}
+	}
+	else if (PropertyName == GET_MEMBER_NAME_CHECKED(UMCParallelGripper, HandType))
+	{
+		if (HandType == EMCPGHandType::Left)
+		{
+			InputAxisName = "LeftGrasp";
+		}
+		else if (HandType == EMCPGHandType::Right)
+		{
+			InputAxisName = "RightGrasp";
 		}
 	}
 }

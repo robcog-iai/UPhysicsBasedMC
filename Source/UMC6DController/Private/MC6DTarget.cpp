@@ -3,6 +3,9 @@
 
 #include "MC6DTarget.h"
 #include "MC6DOffset.h"
+#if WITH_EDITOR
+#include "XRMotionControllerBase.h"
+#endif // WITH_EDITOR
 
 // Sets default values for this component's properties
 UMC6DTarget::UMC6DTarget()
@@ -15,13 +18,15 @@ UMC6DTarget::UMC6DTarget()
 	// Set ticking group 
 	//PrimaryComponentTick.TickGroup = ETickingGroup::TG_PrePhysics;
 
-#if WITH_EDITORONLY_DATA
+#if WITH_EDITOR
 	bDisplayDeviceModel = true;
 	DisplayModelSource = FName("SteamVR");
 	bHiddenInGame = true;
-#endif // WITH_EDITORONLY_DATA
+	MotionSource = FXRMotionControllerBase::LeftHandSourceId;
+#endif // WITH_EDITOR
 
 	// Default values
+	HandType = EMC6DHandType::Left;
 	bUseSkeletalMesh = true;
 	bApplyToAllSkeletalBodies = false;
 	bUseStaticMesh = false;
@@ -194,6 +199,17 @@ void UMC6DTarget::PostEditChangeProperty(struct FPropertyChangedEvent& PropertyC
 		else
 		{
 			bUseSkeletalMesh = true;
+		}
+	}
+	else if (PropertyName == GET_MEMBER_NAME_CHECKED(UMC6DTarget, HandType))
+	{
+		if (HandType == EMC6DHandType::Left)
+		{
+			MotionSource = FXRMotionControllerBase::LeftHandSourceId;
+		}
+		else if (HandType == EMC6DHandType::Right)
+		{
+			MotionSource = FXRMotionControllerBase::RightHandSourceId;
 		}
 	}
 }

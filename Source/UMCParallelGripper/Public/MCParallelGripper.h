@@ -12,6 +12,17 @@
 #include "MCParallelGripper.generated.h"
 
 /**
+* Hand type
+*/
+UENUM()
+enum class EMCPGHandType : uint8
+{
+	Left					UMETA(DisplayName = "Left"),
+	Right					UMETA(DisplayName = "Right"),
+};
+
+
+/**
  * Actor component setting up a parallel gripper constraints and its controller
  */
 UCLASS( ClassGroup=(MC), meta=(BlueprintSpawnableComponent, DisplayName = "MC Parallel Gripper" ) )
@@ -44,6 +55,10 @@ private:
 	void SetupPhysics(UStaticMeshComponent* StaticMeshComponent);
 
 private:
+	// Hand type
+	UPROPERTY(EditAnywhere, Category = "Parallel Gripper")
+	EMCPGHandType HandType;
+
 	// Left finger static mesh
 	UPROPERTY(EditAnywhere, Category = "Parallel Gripper")
 	AStaticMeshActor* LeftFinger;

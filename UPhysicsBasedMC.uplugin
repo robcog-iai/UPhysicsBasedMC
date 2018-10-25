@@ -15,6 +15,11 @@
 	"Installed": false,
 	"Modules": [
 		{
+			"Name": "UMCPlayer",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		},
+		{
 			"Name": "UMC6DController",
 			"Type": "Runtime",
 			"LoadingPhase": "Default"
