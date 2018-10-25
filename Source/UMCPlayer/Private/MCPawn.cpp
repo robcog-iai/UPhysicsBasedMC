@@ -1,11 +1,11 @@
 // Copyright 2018, Institute for Artificial Intelligence - University of Bremen
 // Author: Andrei Haidu (http://haidu.eu)
 
-#include "MCPlayer.h"
+#include "MCPawn.h"
 
 
 // Sets default values
-AMCPlayer::AMCPlayer()
+AMCPawn::AMCPawn()
 {
  	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
@@ -23,21 +23,21 @@ AMCPlayer::AMCPlayer()
 }
 
 // Called when the game starts or when spawned
-void AMCPlayer::BeginPlay()
+void AMCPawn::BeginPlay()
 {
 	Super::BeginPlay();
 	
 }
 
 // Called every frame
-void AMCPlayer::Tick(float DeltaTime)
+void AMCPawn::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
 }
 
 // Called to bind functionality to input
-void AMCPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+void AMCPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 

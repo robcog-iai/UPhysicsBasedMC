@@ -6,16 +6,16 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
 #include "Camera/CameraComponent.h"
-#include "MCPlayer.generated.h"
+#include "MCPawn.generated.h"
 
-UCLASS(ClassGroup = (MC), meta = (DisplayName = "MC Player"))
-class UMC6DCONTROLLER_API AMCPlayer : public APawn
+UCLASS(ClassGroup = (MC), meta = (DisplayName = "MC Pawn"))
+class UMCPLAYER_API AMCPawn : public APawn
 {
 	GENERATED_BODY()
 
 public:
 	// Sets default values for this pawn's properties
-	AMCPlayer();
+	AMCPawn();
 
 protected:
 	// Called when the game starts or when spawned

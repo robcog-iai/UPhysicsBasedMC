@@ -12,6 +12,16 @@
 #include "MC6DTarget.generated.h"
 
 /**
+* Hand type
+*/
+UENUM()
+enum class EMC6DHandType : uint8
+{
+	Left					UMETA(DisplayName = "Left"),
+	Right					UMETA(DisplayName = "Right"),
+};
+
+/**
  * 6D physics based movement applied to the skeletal or static mesh pointed to
  */
 UCLASS(ClassGroup=(MC), meta=(BlueprintSpawnableComponent, DisplayName = "MC 6D Target"), hidecategories = (Physics, Collision, Lighting))
@@ -40,6 +50,10 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 private:
+	// Hand type
+	UPROPERTY(EditAnywhere, Category = "Movement Control")
+	EMC6DHandType HandType;
+
 	// Control a skeletal mesh
 	UPROPERTY(EditAnywhere, Category = "Movement Control")
 	bool bUseSkeletalMesh;
