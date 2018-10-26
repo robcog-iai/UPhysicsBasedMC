@@ -41,10 +41,6 @@
 	  "Enabled": true
 	},
 	{
-	  "Name": "USemLog",
-	  "Enabled": true
-	},
-	{
 	  "Name": "UUtils",
 	  "Enabled": true
 	}

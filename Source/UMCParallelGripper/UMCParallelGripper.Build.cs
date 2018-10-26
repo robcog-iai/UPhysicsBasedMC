@@ -51,12 +51,6 @@ public class UMCParallelGripper : ModuleRules
 			}
 			);
 
-		// Flag to use the semantic logger
-		PublicDefinitions.Add("WITH_SEMLOG=1");
-
-        // Flag for multipalyer
-        PublicDefinitions.Add("WITH_MULTIPLAYER=0");
-
         DynamicallyLoadedModuleNames.AddRange(
 			new string[]
 			{
