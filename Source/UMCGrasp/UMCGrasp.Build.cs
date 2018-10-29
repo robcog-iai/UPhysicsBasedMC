@@ -44,7 +44,6 @@ public class UMCGrasp : ModuleRules
 				"Engine",
 				"Slate",
 				"SlateCore",
-				"USemLog",
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);

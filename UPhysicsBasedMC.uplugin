@@ -39,10 +39,6 @@
 	{
 	  "Name": "UPIDController",
 	  "Enabled": true
-	},
-	{
-	  "Name": "UUtils",
-	  "Enabled": true
 	}
   ]
 }
