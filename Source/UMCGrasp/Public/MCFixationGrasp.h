@@ -15,7 +15,7 @@ class ASkeletalMeshActor;
 * Hand type
 */
 UENUM()
-enum class EMCGraspHandType : uint8
+enum class EMCFixationGraspHandType : uint8
 {
 	Left					UMETA(DisplayName = "Left"),
 	Right					UMETA(DisplayName = "Right"),
@@ -90,7 +90,7 @@ public:
 private:
 	// Hand type, to listen to the right inputs
 	UPROPERTY(EditAnywhere, Category = "Fixation Grasp")
-	EMCGraspHandType HandType;
+	EMCFixationGraspHandType HandType;
 
 	// Weld bodies (meshes) on fixation
 	UPROPERTY(EditAnywhere, Category = "Fixation Grasp")

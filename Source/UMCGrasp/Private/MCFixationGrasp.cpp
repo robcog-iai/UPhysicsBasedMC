@@ -22,7 +22,7 @@ UMCFixationGrasp::UMCFixationGrasp()
 	SetGenerateOverlapEvents(true);
 
 	// Default values
-	HandType = EMCGraspHandType::Left;
+	HandType = EMCFixationGraspHandType::Left;
 	InputActionName = "LeftFixate";
 	bWeldBodies = true;
 	WeightLimit = 15.0f;
@@ -61,11 +61,11 @@ void UMCFixationGrasp::PostEditChangeProperty(struct FPropertyChangedEvent& Prop
 	// Set the left / right constraint actors
 	if (PropertyName == GET_MEMBER_NAME_CHECKED(UMCFixationGrasp, HandType))
 	{
-		if (HandType == EMCGraspHandType::Left)
+		if (HandType == EMCFixationGraspHandType::Left)
 		{
 			InputActionName = "LeftFixate";
 		}
-		else if (HandType == EMCGraspHandType::Right)
+		else if (HandType == EMCFixationGraspHandType::Right)
 		{
 			InputActionName = "RightFixate";
 		}
