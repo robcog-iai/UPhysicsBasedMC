@@ -13,6 +13,7 @@ UMCGraspController::UMCGraspController()
 	PrimaryComponentTick.bCanEverTick = false;
 
 	// Default parameters
+	HandType = EMCGraspHandType::Left;
 	InputAxisName = "LeftGrasp";
 
 	// Driver parameters
@@ -56,6 +57,31 @@ void UMCGraspController::BeginPlay()
 		}
 	}
 }
+
+#if WITH_EDITOR
+// Called when a property is changed in the editor
+void UMCGraspController::PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent)
+{
+	Super::PostEditChangeProperty(PropertyChangedEvent);
+
+	// Get the changed property name
+	FName PropertyName = (PropertyChangedEvent.Property != NULL) ?
+		PropertyChangedEvent.Property->GetFName() : NAME_None;
+
+	// Set the left / right constraint actors
+	if (PropertyName == GET_MEMBER_NAME_CHECKED(UMCGraspController, HandType))
+	{
+		if (HandType == EMCGraspHandType::Left)
+		{
+			InputAxisName = "LeftGrasp";
+		}
+		else if (HandType == EMCGraspHandType::Right)
+		{
+			InputAxisName = "RightGrasp";
+		}
+	}
+}
+#endif // WITH_EDITOR
 
 // Update the grasp
 void UMCGraspController::Update(float Value)

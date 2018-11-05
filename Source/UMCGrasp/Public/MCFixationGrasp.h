@@ -15,17 +15,17 @@ class ASkeletalMeshActor;
 * Hand type
 */
 UENUM()
-enum class EMCGraspHandType : uint8
+enum class EMCFixationGraspHandType : uint8
 {
 	Left					UMETA(DisplayName = "Left"),
 	Right					UMETA(DisplayName = "Right"),
 };
 
 /** Notify when an object is grasped */
-DECLARE_MULTICAST_DELEGATE_ThreeParams(FMCGraspBegin, uint32 /*MyId*/, uint32 /*OtherId*/, float /*Time*/);
+DECLARE_MULTICAST_DELEGATE_ThreeParams(FMCGraspBegin, UObject* /*Self*/, UObject* /*Other*/, float /*Time*/);
 
 /** Notify when an object is released */
-DECLARE_MULTICAST_DELEGATE_ThreeParams(FMCGraspEnd, uint32 /*MyId*/, uint32 /*OtherId*/, float /*Time*/);
+DECLARE_MULTICAST_DELEGATE_ThreeParams(FMCGraspEnd, UObject* /*Self*/, UObject* /*Other*/, float /*Time*/);
 
 /**
  * Sphere area that fixates objects to the owner according to some rules
@@ -90,7 +90,7 @@ public:
 private:
 	// Hand type, to listen to the right inputs
 	UPROPERTY(EditAnywhere, Category = "Fixation Grasp")
-	EMCGraspHandType HandType;
+	EMCFixationGraspHandType HandType;
 
 	// Weld bodies (meshes) on fixation
 	UPROPERTY(EditAnywhere, Category = "Fixation Grasp")

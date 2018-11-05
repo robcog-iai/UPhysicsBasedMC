@@ -8,6 +8,16 @@
 #include "MCGraspController.generated.h"
 
 /**
+* Hand type
+*/
+UENUM()
+enum class EMCGraspHandType : uint8
+{
+	Left					UMETA(DisplayName = "Left"),
+	Right					UMETA(DisplayName = "Right"),
+};
+
+/**
  * Skeletal grasp controller
  */
 UCLASS( ClassGroup=(MC), meta=(BlueprintSpawnableComponent, DisplayName = "MC Grasp Controller"))
@@ -22,12 +32,21 @@ public:
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
+
+#if WITH_EDITOR
+	// Called when a property is changed in the editor
+	virtual void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override;
+#endif // WITH_EDITOR
 		
 private:
 	// Update the grasp
 	void Update(float Value);
 
 private:
+	// Hand type, to listen to the right inputs
+	UPROPERTY(EditAnywhere, Category = "Fixation Grasp")
+	EMCGraspHandType HandType;
+
 	// Input axis name
 	UPROPERTY(EditAnywhere, Category = "Grasp Controller")
 	FName InputAxisName;

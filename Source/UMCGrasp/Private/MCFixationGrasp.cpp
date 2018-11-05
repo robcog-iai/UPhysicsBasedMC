@@ -22,7 +22,7 @@ UMCFixationGrasp::UMCFixationGrasp()
 	SetGenerateOverlapEvents(true);
 
 	// Default values
-	HandType = EMCGraspHandType::Left;
+	HandType = EMCFixationGraspHandType::Left;
 	InputActionName = "LeftFixate";
 	bWeldBodies = true;
 	WeightLimit = 15.0f;
@@ -61,11 +61,11 @@ void UMCFixationGrasp::PostEditChangeProperty(struct FPropertyChangedEvent& Prop
 	// Set the left / right constraint actors
 	if (PropertyName == GET_MEMBER_NAME_CHECKED(UMCFixationGrasp, HandType))
 	{
-		if (HandType == EMCGraspHandType::Left)
+		if (HandType == EMCFixationGraspHandType::Left)
 		{
 			InputActionName = "LeftFixate";
 		}
-		else if (HandType == EMCGraspHandType::Right)
+		else if (HandType == EMCFixationGraspHandType::Right)
 		{
 			InputActionName = "RightFixate";
 		}
@@ -95,7 +95,7 @@ void UMCFixationGrasp::Grasp()
 			if (UMCFixationGrasp::Fixate(SMA))
 			{
 				// Broadcast starting of grasp event
-				OnGraspBegin.Broadcast(GetOwner()->GetUniqueID(), GraspedObject->GetUniqueID(), GetWorld()->GetTimeSeconds());
+				OnGraspBegin.Broadcast(GetOwner(), GraspedObject, GetWorld()->GetTimeSeconds());
 
 				// Clear objects in sphere
 				ObjectsInSphereArea.Empty();
@@ -128,7 +128,7 @@ void UMCFixationGrasp::Release()
 			UpdateOverlaps();
 
 			// Broadcast ending of grasp event
-			OnGraspEnd.Broadcast(GetOwner()->GetUniqueID(), GraspedObject->GetUniqueID(), GetWorld()->GetTimeSeconds());
+			OnGraspEnd.Broadcast(GetOwner(), GraspedObject, GetWorld()->GetTimeSeconds());
 			
 			// Clear fixate object reference
 			GraspedObject = nullptr;
