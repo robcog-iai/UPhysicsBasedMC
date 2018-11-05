@@ -22,10 +22,10 @@ enum class EMCFixationGraspHandType : uint8
 };
 
 /** Notify when an object is grasped */
-DECLARE_MULTICAST_DELEGATE_ThreeParams(FMCGraspBegin, uint32 /*MyId*/, uint32 /*OtherId*/, float /*Time*/);
+DECLARE_MULTICAST_DELEGATE_ThreeParams(FMCGraspBegin, UObject* /*Self*/, UObject* /*Other*/, float /*Time*/);
 
 /** Notify when an object is released */
-DECLARE_MULTICAST_DELEGATE_ThreeParams(FMCGraspEnd, uint32 /*MyId*/, uint32 /*OtherId*/, float /*Time*/);
+DECLARE_MULTICAST_DELEGATE_ThreeParams(FMCGraspEnd, UObject* /*Self*/, UObject* /*Other*/, float /*Time*/);
 
 /**
  * Sphere area that fixates objects to the owner according to some rules
