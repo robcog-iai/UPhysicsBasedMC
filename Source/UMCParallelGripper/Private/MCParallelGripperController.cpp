@@ -30,16 +30,7 @@ void UMCParallelGripperController::Init(EMCGripperControlType ControlType,
 	RightLimit = RightConstraint->ConstraintInstance.GetLinearLimit();
 
 	// Set the user input bindings
-	if(UWorld* World = LeftFingerConstraint->GetWorld())
-	{
-		if (APlayerController* PC = UGameplayStatics::GetPlayerController(World, 0))
-		{
-			if (UInputComponent* IC = PC->InputComponent)
-			{
-				UMCParallelGripperController::SetupInputBindings(IC, InputAxisName);
-			}
-		}
-	}
+	UMCParallelGripperController::SetupInputBindings(InputAxisName);
 
 	// Initialize control types
 	switch (ControlType)
@@ -60,9 +51,16 @@ void UMCParallelGripperController::Init(EMCGripperControlType ControlType,
 }
 
 // Bind user input to function
-void UMCParallelGripperController::SetupInputBindings(UInputComponent* InIC, const FName& InputAxisName)
+void UMCParallelGripperController::SetupInputBindings(const FName& InputAxisName)
 {
-	InIC->BindAxis(InputAxisName, this, &UMCParallelGripperController::Update);
+	// Set user input bindings
+	if (APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0))
+	{
+		if (UInputComponent* IC = PC->InputComponent)
+		{
+			IC->BindAxis(InputAxisName, this, &UMCParallelGripperController::Update);
+		}
+	}
 }
 
 // Setup the controller for linear drive (PD controller)
@@ -87,21 +85,21 @@ void UMCParallelGripperController::SetupLinearDrive(float Spring, float Damping,
 	{
 		LeftConstraint->SetLinearPositionDrive(false, true, false);
 		RightConstraint->SetLinearPositionDrive(false, true, false);
-		UpdateFunctionPointer = &UMCParallelGripperController::Update_LinearDriver_X;
+		UpdateFunctionPointer = &UMCParallelGripperController::Update_LinearDriver_Y;
 	}
 	else if (LeftConstraint->ConstraintInstance.GetLinearZMotion() == ELinearConstraintMotion::LCM_Limited &&
 		RightConstraint->ConstraintInstance.GetLinearZMotion() == ELinearConstraintMotion::LCM_Limited)
 	{
 		LeftConstraint->SetLinearPositionDrive(false, false, true);
 		RightConstraint->SetLinearPositionDrive(false, false, true);
-		UpdateFunctionPointer = &UMCParallelGripperController::Update_LinearDriver_X;
+		UpdateFunctionPointer = &UMCParallelGripperController::Update_LinearDriver_Z;
 	}
 }
 
 // Update function bound to the input
 void UMCParallelGripperController::Update(float Value)
 {
-	(this->*UpdateFunctionPointer)(Value);	
+	(this->*UpdateFunctionPointer)(Value);
 }
 
 /* Default update function */
@@ -138,10 +136,10 @@ void UMCParallelGripperController::Update_LinearDriver_Y(float Value)
 	// f(x) = (1-x)*-MaxLim + x*MaxLim => f(x) = (x-1)MaxLim + x*MaxLim
 
 	// Left target becomes
-	const float LeftTarget = ((Value - 1.f) * LeftLimit) + (Value * LeftLimit);
+	const float LeftTarget = ((1.f - Value) * LeftLimit) - (Value * LeftLimit);
 
 	// Right target is mirrored, hence a multiplication by -1 is needed
-	const float RightTarget = ((1.f - Value) * RightLimit) - (Value * RightLimit);
+	const float RightTarget = ((Value - 1.f) * RightLimit) + (Value * RightLimit);
 
 	// Apply target command
 	LeftConstraint->SetLinearPositionTarget(FVector(0.f, LeftTarget, 0.f));
