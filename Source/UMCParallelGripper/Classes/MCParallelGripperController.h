@@ -30,7 +30,7 @@ public:
 
 private:
 	// Bind user inputs
-	void SetupInputBindings(UInputComponent* InIC, const FName& InputAxisName);
+	void SetupInputBindings(const FName& InputAxisName);
 
 	// Setup the controller for linear drive (PD controller)
 	// force = spring * (targetPosition - position) + damping * (targetVelocity - velocity)
