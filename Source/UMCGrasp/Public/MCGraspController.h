@@ -44,7 +44,7 @@ private:
 
 private:
 	// Hand type, to listen to the right inputs
-	UPROPERTY(EditAnywhere, Category = "Fixation Grasp")
+	UPROPERTY(EditAnywhere, Category = "Grasp Controller")
 	EMCGraspHandType HandType;
 
 	// Input axis name
