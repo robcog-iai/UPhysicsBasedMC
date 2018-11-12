@@ -80,29 +80,29 @@ private:
 	EMC6DControlType ControlType;
 
 	// Location PID controller values
-	UPROPERTY(EditAnywhere, Category = "Movement Control|Location")
+	UPROPERTY(EditAnywhere, Category = "Movement Control|Location", meta = (ClampMin = 0))
 	float PLoc;
 
-	UPROPERTY(EditAnywhere, Category = "Movement Control|Location")
+	UPROPERTY(EditAnywhere, Category = "Movement Control|Location", meta = (ClampMin = 0))
 	float ILoc;
 
-	UPROPERTY(EditAnywhere, Category = "Movement Control|Location")
+	UPROPERTY(EditAnywhere, Category = "Movement Control|Location", meta = (ClampMin = 0))
 	float DLoc;
 
-	UPROPERTY(EditAnywhere, Category = "Movement Control|Location")
+	UPROPERTY(EditAnywhere, Category = "Movement Control|Location", meta = (ClampMin = 0))
 	float MaxLoc;
 
 	// Rotation PID controller values
-	UPROPERTY(EditAnywhere, Category = "Movement Control|Rotation")
+	UPROPERTY(EditAnywhere, Category = "Movement Control|Rotation", meta = (ClampMin = 0))
 	float PRot;
 
-	UPROPERTY(EditAnywhere, Category = "Movement Control|Rotation")
+	UPROPERTY(EditAnywhere, Category = "Movement Control|Rotation", meta = (ClampMin = 0))
 	float IRot;
 
-	UPROPERTY(EditAnywhere, Category = "Movement Control|Rotation")
+	UPROPERTY(EditAnywhere, Category = "Movement Control|Rotation", meta = (ClampMin = 0))
 	float DRot;
 
-	UPROPERTY(EditAnywhere, Category = "Movement Control|Rotation")
+	UPROPERTY(EditAnywhere, Category = "Movement Control|Rotation", meta = (ClampMin = 0))
 	float MaxRot;
 
 	// Update fallback function binding

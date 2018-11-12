@@ -169,8 +169,8 @@ void UMCParallelGripper::SetupConstraint(UPhysicsConstraintComponent* Constraint
 	Constraint->SetAngularSwing1Limit(ACM_Locked, 0.f);
 	Constraint->SetAngularSwing2Limit(ACM_Locked, 0.f);
 	Constraint->SetAngularTwistLimit(ACM_Locked, 0.f);
-	Constraint->SetLinearXLimit(LCM_Limited, 3.5f);
-	Constraint->SetLinearYLimit(LCM_Locked, 0.f);
+	Constraint->SetLinearXLimit(LCM_Locked, 0.f);
+	Constraint->SetLinearYLimit(LCM_Limited, 3.5f);
 	Constraint->SetLinearZLimit(LCM_Locked, 0.f);
 	Constraint->SetDisableCollision(true);
 }

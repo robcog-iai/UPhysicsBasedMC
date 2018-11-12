@@ -92,6 +92,10 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Fixation Grasp")
 	EMCFixationGraspHandType HandType;
 
+	// Input action name
+	UPROPERTY(EditAnywhere, Category = "Fixation Grasp")
+	FName InputActionName;
+
 	// Weld bodies (meshes) on fixation
 	UPROPERTY(EditAnywhere, Category = "Fixation Grasp")
 	bool bWeldBodies;
@@ -104,9 +108,13 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Fixation Grasp")
 	float VolumeLimit;
 
-	// Input action name
+	// Ignore list of actors
 	UPROPERTY(EditAnywhere, Category = "Fixation Grasp")
-	FName InputActionName;
+	TSet<AActor*> ActorIgnoreList;
+
+	// Ignore list of components
+	UPROPERTY(EditAnywhere, Category = "Fixation Grasp")
+	TSet<UPrimitiveComponent*> ComponentIgnoreList;
 
 	// Pointer to the grasped component (nullptr if nothing is grasped)
 	AStaticMeshActor* GraspedObject;

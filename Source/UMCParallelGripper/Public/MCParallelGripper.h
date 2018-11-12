@@ -59,6 +59,10 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Parallel Gripper")
 	EMCPGHandType HandType;
 
+	// Input axis name
+	UPROPERTY(EditAnywhere, Category = "Parallel Gripper")
+	FName InputAxisName;
+
 	// Left finger static mesh
 	UPROPERTY(EditAnywhere, Category = "Parallel Gripper")
 	AStaticMeshActor* LeftFinger;
@@ -78,10 +82,6 @@ private:
 	// Control type
 	UPROPERTY(EditAnywhere, Category = "Parallel Gripper")
 	EMCGripperControlType ControlType;
-
-	// Input axis name
-	UPROPERTY(EditAnywhere, Category = "Parallel Gripper")
-	FName InputAxisName;
 
 	/* Driver */
 	// Proportional gain

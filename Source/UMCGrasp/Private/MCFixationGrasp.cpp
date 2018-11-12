@@ -197,6 +197,11 @@ void UMCFixationGrasp::OnOverlapBegin(UPrimitiveComponent* OverlappedComp,
 	bool bFromSweep,
 	const FHitResult& SweepResult)
 {
+	if (ActorIgnoreList.Contains(OtherActor) || ComponentIgnoreList.Contains(OtherComp))
+	{
+		return;
+	}
+
 	if (AStaticMeshActor* OtherAsSMA = Cast<AStaticMeshActor>(OtherActor))
 	{
 		ObjectsInSphereArea.Emplace(OtherAsSMA);
@@ -209,6 +214,11 @@ void UMCFixationGrasp::OnOverlapEnd(UPrimitiveComponent* OverlappedComp,
 	UPrimitiveComponent* OtherComp,
 	int32 OtherBodyIndex)
 {
+	if (ActorIgnoreList.Contains(OtherActor) || ComponentIgnoreList.Contains(OtherComp))
+	{
+		return;
+	}
+
 	// Remove actor from array (if present)
 	if (AStaticMeshActor* OtherAsSMA = Cast<AStaticMeshActor>(OtherActor))
 	{
