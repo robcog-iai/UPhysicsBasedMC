@@ -30,6 +30,7 @@ public:
 
 private:
 	// Motion controller root component (camera and motion controllers will be relative to this)
+	UPROPERTY(EditAnywhere, Category="MC")
 	USceneComponent* MCRoot;
 
 	// VR Camera
