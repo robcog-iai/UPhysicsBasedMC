@@ -47,7 +47,7 @@ void UMCGraspController::BeginPlay()
 			}
 
 			// Set user input bindings
-			if (APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0))
+			if (APlayerController* PC = GetWorld()->GetFirstPlayerController())
 			{
 				if (UInputComponent* IC = PC->InputComponent)
 				{

@@ -2,7 +2,6 @@
 // Author: Andrei Haidu (http://haidu.eu)
 
 #include "MCParallelGripperController.h"
-#include "Kismet/GameplayStatics.h"
 
 // Default constructor
 UMCParallelGripperController::UMCParallelGripperController()
@@ -54,7 +53,7 @@ void UMCParallelGripperController::Init(EMCGripperControlType ControlType,
 void UMCParallelGripperController::SetupInputBindings(const FName& InputAxisName)
 {
 	// Set user input bindings
-	if (APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0))
+	if (APlayerController* PC = GetWorld()->GetFirstPlayerController())
 	{
 		if (UInputComponent* IC = PC->InputComponent)
 		{
