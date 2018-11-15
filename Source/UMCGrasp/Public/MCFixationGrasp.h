@@ -50,7 +50,7 @@ protected:
 
 private:
 	// Bind user inputs
-	void SetupInputBindings(UInputComponent* InIC);
+	void SetupInputBindings();
 
 	// Try to grasp (fixate) the overlapping object to parent
 	void Grasp();

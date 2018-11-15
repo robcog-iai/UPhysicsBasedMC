@@ -4,7 +4,6 @@
 #include "MCFixationGrasp.h"
 #include "Animation/SkeletalMeshActor.h"
 #include "Engine/StaticMeshActor.h"
-#include "Kismet/GameplayStatics.h"
 
 #define MC_RELEASE_VEL_BOOST 1.5f
 
@@ -35,13 +34,7 @@ void UMCFixationGrasp::BeginPlay()
 	Super::BeginPlay();
 
 	// Bind user input
-	if (APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0))
-	{
-		if (UInputComponent* IC = PC->InputComponent)
-		{
-			UMCFixationGrasp::SetupInputBindings(IC);
-		}
-	}
+	UMCFixationGrasp::SetupInputBindings();
 
 	// Bind overlap functions
 	OnComponentBeginOverlap.AddDynamic(this, &UMCFixationGrasp::OnOverlapBegin);
@@ -74,10 +67,16 @@ void UMCFixationGrasp::PostEditChangeProperty(struct FPropertyChangedEvent& Prop
 #endif // WITH_EDITOR
 
 // Bind user inputs
-void UMCFixationGrasp::SetupInputBindings(UInputComponent* InIC)
+void UMCFixationGrasp::SetupInputBindings()
 {
-	InIC->BindAction(InputActionName, IE_Pressed, this, &UMCFixationGrasp::Grasp);
-	InIC->BindAction(InputActionName, IE_Released, this, &UMCFixationGrasp::Release);
+	if (APlayerController* PC = GetWorld()->GetFirstPlayerController())
+	{
+		if (UInputComponent* IC = PC->InputComponent)
+		{
+			IC->BindAction(InputActionName, IE_Pressed, this, &UMCFixationGrasp::Grasp);
+			IC->BindAction(InputActionName, IE_Released, this, &UMCFixationGrasp::Release);
+		}
+	}
 }
 
 // Try to fixate overlapping object to parent
