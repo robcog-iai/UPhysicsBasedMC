@@ -101,5 +101,6 @@ private:
 	float Max;
 
 	// Parallel grasp controller (take the input from user and maps it to the gripper)
+	UPROPERTY() // Avoid GC
 	UMCParallelGripperController* PGController;
 };
