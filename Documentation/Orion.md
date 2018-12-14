@@ -6,9 +6,9 @@ This is a short guide on how to setup Ikinema Orion for the purpose of this proj
 
 * First you log into the Ikinema homepage. After logging in you will see a list of their software at the top. Click on **Ikinema Orion** and download the installer. 
 
-* The installer will ask you what you want to install. Macke sure **Orion Streamer**, which is the software you bought a license key for, is checked. 
+* The installer will ask you what you want to install. Macke sure **Orion Streamer** is checked. 
 
-* Also unfold **IKINEMA VRPN Unreal plug-in** and select the UE versions you want to download plugins for. 
+* Also unfold **IKINEMA VRPN Unreal plug-in** and select the UE versions you want to download plugins for. If your current version of UE is not yet supported, just select the latest version. It will complain when starting your project later on, but probably still work.  
 
 * You can uncheck **IKINEMA VRPN Unity plug-in** and **IKINEMA 3D Assets**. The last contains a skeletal mesh that is already included in this plugin. 
 If you need the .fbx or a female version you can also keep it checked. 
@@ -31,10 +31,36 @@ If you need the .fbx or a female version you can also keep it checked.
 
 * Disconnecting the trackers, restarting SteamVR and reconnecting them worked eventually. Also make sure that in Orion the correct marker setup is selected. (see **Calibrating Orion**)
 
+## Streaming into UE
+
+* To receive data in the Unreal Engine we need the **OrionStream** plugin. Copy it from your Orion installation folder into your projects plugin fodler. Make sure to use the right version of the plugin.
+
+* This plugin's content folder already contains a skeletal mesh and 3 animated blueprints for it. Inside these ABPs the **Orion Stream** node is used to receive data from Orion and move the mesh. 
+
+![](./Images/OrionStreamNode.png "Orion Stream")
+
+* Additionally the scale of certain bones is set to 0. This is done so they don't interfere with the players view later on. 
+
+* In your VRPawn you simply add a skeletal mesh component and set it to the IKinemaMale mesh. Select one of the ABPs as an animation and turn it so it is facing the camera direction. 
+
+* If later on the mesh is facing the wrong way just turn the skeletal mesh component. 
+
 ## Calibrating Orion
+
+* Once you start Orion you will see the following window. Press **Viewport** to open a preview of what Orion is currently streaming. 
 
 ![](./Images/OrionUI.png "Orion UI")
 
-## Streaming into UE4
+* Make sure to always select the right marker set after starting Orion, since it will reset after you close it. For 3 Vive trackers select **HMD + Hand Controller**. Note that the third vive tracker can't be seen on the preview picture since it is attached to the back. 
 
-![](./Images/OrionStreamNode.png "Orion Stream")
+* For 5 Vive trackers select a setup where 2 additional trackers are attached to the elbows. This improves arm tracking, but isn't necessary since tracking is already pretty good to begin with. 
+
+* If you don't need live data you can stream some of their prerecorded data by switching from **live** to **replay** under **options**.
+
+* To calibrate Orion you press the play button. Afterwards put on the HMD. In the Vives default VR environmet you can see a coordinate system on the floor. Walk into the ceter of it.
+
+* You will also see a small arrow on the floor. It shows you which direction you have to look. Once you are in the right position assume a t-pose and press the trigger button on one of the controllers. A mesh representing you movement should now appear in Orion's preview window.
+
+* This whole process is done so the UE and Orion coordinate sytems are aligned. As a byproduct it also helps using your playspace optimally. 
+
+* You can now start your unreal project in VR and the mesh should follow your movement. 
