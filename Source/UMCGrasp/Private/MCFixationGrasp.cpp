@@ -4,6 +4,9 @@
 #include "MCFixationGrasp.h"
 #include "Animation/SkeletalMeshActor.h"
 #include "Engine/StaticMeshActor.h"
+#include "GameFramework/PlayerController.h"
+#include "Components/InputComponent.h"
+#include "Components/StaticMeshComponent.h"
 
 #define MC_RELEASE_VEL_BOOST 1.5f
 

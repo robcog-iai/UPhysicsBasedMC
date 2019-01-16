@@ -2,6 +2,7 @@
 // Author: Andrei Haidu (http://haidu.eu)
 
 #include "MCGraspController.h"
+#include "Components/SkeletalMeshComponent.h"
 
 #define MC_MAX_ANGULAR_TARGET 45.f
 

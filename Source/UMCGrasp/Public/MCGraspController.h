@@ -5,6 +5,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "PhysicsEngine/ConstraintDrives.h"
 #include "MCGraspController.generated.h"
 
 /**

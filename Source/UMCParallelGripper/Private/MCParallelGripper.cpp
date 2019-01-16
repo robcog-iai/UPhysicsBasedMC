@@ -2,6 +2,9 @@
 // Author: Andrei Haidu (http://haidu.eu)
 
 #include "MCParallelGripper.h"
+#include "GameFramework/PlayerController.h"
+#include "Components/InputComponent.h"
+#include "Components/StaticMeshComponent.h"
 
 // Sets default values for this component's properties
 UMCParallelGripper::UMCParallelGripper()
