@@ -6,7 +6,7 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "PhysicsEngine/ConstraintDrives.h"
-#include "MCGraspController.generated.h"
+#include "MCSimpleGraspController.generated.h"
 
 /**
 * Hand type
@@ -22,13 +22,13 @@ enum class EMCGraspHandType : uint8
  * Skeletal grasp controller
  */
 UCLASS( ClassGroup=(MC), meta=(BlueprintSpawnableComponent, DisplayName = "MC Grasp Controller"))
-class UMCGRASP_API UMCGraspController : public UActorComponent
+class UMCGRASP_API UMCSimpleGraspController : public UActorComponent
 {
 	GENERATED_BODY()
 
 public:	
 	// Sets default values for this component's properties
-	UMCGraspController();
+	UMCSimpleGraspController();
 
 protected:
 	// Called when the game starts

@@ -1,13 +1,13 @@
 // Copyright 2018, Institute for Artificial Intelligence - University of Bremen
 // Author: Andrei Haidu (http://haidu.eu)
 
-#include "MCGraspController.h"
+#include "MCSimpleGraspController.h"
 #include "Components/SkeletalMeshComponent.h"
 
 #define MC_MAX_ANGULAR_TARGET 45.f
 
 // Sets default values for this component's properties
-UMCGraspController::UMCGraspController()
+UMCSimpleGraspController::UMCSimpleGraspController()
 {
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
@@ -25,7 +25,7 @@ UMCGraspController::UMCGraspController()
 }
 
 // Called when the game starts
-void UMCGraspController::BeginPlay()
+void UMCSimpleGraspController::BeginPlay()
 {
 	Super::BeginPlay();
 
@@ -52,7 +52,7 @@ void UMCGraspController::BeginPlay()
 			{
 				if (UInputComponent* IC = PC->InputComponent)
 				{
-					IC->BindAxis(InputAxisName, this, &UMCGraspController::Update);
+					IC->BindAxis(InputAxisName, this, &UMCSimpleGraspController::Update);
 				}
 			}
 		}
@@ -61,7 +61,7 @@ void UMCGraspController::BeginPlay()
 
 #if WITH_EDITOR
 // Called when a property is changed in the editor
-void UMCGraspController::PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent)
+void UMCSimpleGraspController::PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent)
 {
 	Super::PostEditChangeProperty(PropertyChangedEvent);
 
@@ -70,7 +70,7 @@ void UMCGraspController::PostEditChangeProperty(struct FPropertyChangedEvent& Pr
 		PropertyChangedEvent.Property->GetFName() : NAME_None;
 
 	// Set the left / right constraint actors
-	if (PropertyName == GET_MEMBER_NAME_CHECKED(UMCGraspController, HandType))
+	if (PropertyName == GET_MEMBER_NAME_CHECKED(UMCSimpleGraspController, HandType))
 	{
 		if (HandType == EMCGraspHandType::Left)
 		{
@@ -85,7 +85,7 @@ void UMCGraspController::PostEditChangeProperty(struct FPropertyChangedEvent& Pr
 #endif // WITH_EDITOR
 
 // Update the grasp
-void UMCGraspController::Update(float Value)
+void UMCSimpleGraspController::Update(float Value)
 {	
 	// Apply target to fingers
 	for (auto& ConstraintInstance : SkeletalMesh->Constraints)
