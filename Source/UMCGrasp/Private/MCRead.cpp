@@ -66,7 +66,7 @@ TArray<UMCGraspDataAsset*> UMCRead::OnRegistryLoaded()
 
 	FARFilter Filter;
 	Filter.ClassNames = { TEXT("MCGraspDataAsset")};
-	Filter.PackagePaths.Add("/URealisticGrasping/Grasps");
+	Filter.PackagePaths.Add("/UPhysicsBasedMC/Grasps");
 
 	TArray<FAssetData> AssetList;
 
