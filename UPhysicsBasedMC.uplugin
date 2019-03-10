@@ -33,6 +33,10 @@
 			"Name": "UMCParallelGripper",
 			"Type": "Runtime",
 			"LoadingPhase": "Default"
+		},
+        {
+			"Name": "UMCRealisticGraspEditor",
+			"Type": "Editor"
 		}
 	],
   "Plugins": [
