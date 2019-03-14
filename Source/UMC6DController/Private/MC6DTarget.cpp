@@ -72,7 +72,7 @@ void UMC6DTarget::BeginPlay()
 	// Disable tick by default
 	// TODO / ISSUE why does this have to be manually disabled
 	// even if PrimaryComponentTick.bStartWithTickEnabled = false;
-	// this does not happen with USLVisManager.cpp
+	// this does not happen with USLVisLegacyManager.cpp
 	SetComponentTickEnabled(false);
 
 	// Check if owner has a valid static/skeletal mesh

@@ -21,7 +21,7 @@ enum class EMCGraspHandType : uint8
 /**
  * Skeletal grasp controller
  */
-UCLASS( ClassGroup=(MC), meta=(BlueprintSpawnableComponent, DisplayName = "MC Grasp Controller"))
+UCLASS( ClassGroup=(MC), meta=(BlueprintSpawnableComponent, DisplayName = "MC Simple Grasp Controller"))
 class UMCGRASP_API UMCSimpleGraspController : public UActorComponent
 {
 	GENERATED_BODY()
