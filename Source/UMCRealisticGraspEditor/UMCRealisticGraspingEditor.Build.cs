@@ -2,9 +2,9 @@
 
 using UnrealBuildTool;
 
-public class UMCRealisticGraspEditor : ModuleRules
+public class UMCRealisticGraspingEditor : ModuleRules
 {
-	public UMCRealisticGraspEditor(ReadOnlyTargetRules Target) : base(Target)
+	public UMCRealisticGraspingEditor(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
         bEnableUndefinedIdentifierWarnings = false;
