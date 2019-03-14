@@ -21,10 +21,6 @@ public:
 	UPROPERTY(VisibleAnywhere)
 	FString AnimationName;
 
-	//The name for the used skeletal mesh 
-	UPROPERTY(VisibleAnywhere)
-	FString SkeletalName;
-
 	//All Bone informations
 	UPROPERTY(VisibleAnywhere)
 	TArray<FString> BoneNames;

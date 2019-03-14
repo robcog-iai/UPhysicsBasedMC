@@ -114,9 +114,6 @@ public:
 	//The name for this Animation
 	FString AnimationName;
 
-	//The name for the used skeletal mesh 
-	FString SkeletalName;
-
 	//All Bone informations
 	TArray<FString> BoneNames;
 

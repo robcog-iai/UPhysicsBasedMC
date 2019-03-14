@@ -12,7 +12,7 @@ FMCAnimationData UMCRead::ReadFile(const FString& SkeletalMeshName, const FStrin
 
 	for (UMCGraspDataAsset* DataAsset : LoadAllAssets())
 	{
-		if (DataAsset->SkeletalName == SkeletalMeshName && DataAsset->AnimationName == Name)
+		if (DataAsset->AnimationName == Name)
 		{
 			DataStruct = ConvertAssetToStruct(DataAsset);
 			break;
@@ -27,7 +27,6 @@ FMCAnimationData UMCRead::ConvertAssetToStruct(const UMCGraspDataAsset* DataAsse
 	FMCAnimationData DataStruct = FMCAnimationData();
 
 	DataStruct.AnimationName = DataAsset->AnimationName;
-	DataStruct.SkeletalName = DataAsset->SkeletalName;
 	for (FString BoneName : DataAsset->BoneNames)
 	{
 		DataStruct.BoneNames.Add(BoneName);
@@ -38,24 +37,6 @@ FMCAnimationData UMCRead::ConvertAssetToStruct(const UMCGraspDataAsset* DataAsse
 	}
 
 	return DataStruct;
-}
-
-
-TArray<FString> UMCRead::ReadNames(const FString& SkeletalMeshName)
-{
-	TArray<FString> Files;
-
-	TArray<UMCGraspDataAsset*> DataAssets = LoadAllAssets();
-
-	for(UMCGraspDataAsset* DataAsset : DataAssets)
-	{
-		if (DataAsset->SkeletalName == SkeletalMeshName)
-		{
-			Files.Add(DataAsset->AnimationName);
-		}
-	}
-
-	return Files;
 }
 
 TArray<UMCGraspDataAsset*> UMCRead::LoadAllAssets()

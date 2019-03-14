@@ -21,7 +21,6 @@ UObject* UMCGraspDataAssetFactory::CreateGraspDataAsset(UClass* InClass, UObject
 	UMCGraspDataAsset* DataAsset = NewObject<UMCGraspDataAsset>(InParent, InName, Flags);
 
 	DataAsset->AnimationName = DataStruct.AnimationName;
-	DataAsset->SkeletalName = DataStruct.SkeletalName;
 	for (FString BoneName : DataStruct.BoneNames)
 	{
 		DataAsset->BoneNames.Add(BoneName);
