@@ -6,17 +6,17 @@
 #include "Components/ActorComponent.h"
 #include "MCAnimationDataStructure.h"
 #include "Runtime/Engine/Classes/Animation/SkeletalMeshActor.h"
-#include "MCGraspingController.generated.h"
+#include "MCGraspExecuter.generated.h"
 
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class UMCGRASP_API UMCGraspingController : public UActorComponent
+class UMCGRASP_API UMCGraspExecuter : public UActorComponent
 {
 	GENERATED_BODY()
 
 public:	
 	// Sets default values for this component's properties
-	UMCGraspingController();
+	UMCGraspExecuter();
 
 protected:
 	// Called when the game starts
