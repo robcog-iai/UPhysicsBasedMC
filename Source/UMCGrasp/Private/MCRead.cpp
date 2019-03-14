@@ -14,22 +14,32 @@ FMCAnimationData UMCRead::ReadFile(const FString& SkeletalMeshName, const FStrin
 	{
 		if (DataAsset->SkeletalName == SkeletalMeshName && DataAsset->AnimationName == Name)
 		{
-			DataStruct.AnimationName = DataAsset->AnimationName;
-			DataStruct.SkeletalName = DataAsset->SkeletalName;
-			for (FString BoneName : DataAsset->BoneNames)
-			{
-				DataStruct.BoneNames.Add(BoneName);
-			}
-			for (FMCEpisodeData Episode : DataAsset->PositionEpisode)
-			{
-				DataStruct.AddNewPositionData(Episode);
-			}
+			DataStruct = ConvertAssetToStruct(DataAsset);
 			break;
 		}
 	}
 
 	return DataStruct;
 }
+
+FMCAnimationData UMCRead::ConvertAssetToStruct(const UMCGraspDataAsset* DataAsset)
+{
+	FMCAnimationData DataStruct = FMCAnimationData();
+
+	DataStruct.AnimationName = DataAsset->AnimationName;
+	DataStruct.SkeletalName = DataAsset->SkeletalName;
+	for (FString BoneName : DataAsset->BoneNames)
+	{
+		DataStruct.BoneNames.Add(BoneName);
+	}
+	for (FMCEpisodeData Episode : DataAsset->PositionEpisode)
+	{
+		DataStruct.AddNewPositionData(Episode);
+	}
+
+	return DataStruct;
+}
+
 
 TArray<FString> UMCRead::ReadNames(const FString& SkeletalMeshName)
 {

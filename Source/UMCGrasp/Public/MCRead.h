@@ -22,6 +22,8 @@ public:
 	*/
 	static FMCAnimationData ReadFile(const FString& SkeletalMeshName, const FString& Name);
 
+	static FMCAnimationData ConvertAssetToStruct(const UMCGraspDataAsset* DataAsset);
+
 	/*
 	This function reads all posibility animations for one skeleton 
 	(e.g it reads all animations in GameDir/GraspAnimations/SkeletalMeshName/...)
