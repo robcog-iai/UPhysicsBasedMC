@@ -1,10 +1,10 @@
 // Copyright 2018, Institute for Artificial Intelligence - University of Bremen
 
-#include "MCGraspingController.h"
+#include "MCGraspExecuter.h"
 
 
 // Sets default values for this component's properties
-UMCGraspingController::UMCGraspingController()
+UMCGraspExecuter::UMCGraspExecuter()
 {
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
@@ -15,7 +15,7 @@ UMCGraspingController::UMCGraspingController()
 
 
 // Called when the game starts
-void UMCGraspingController::BeginPlay()
+void UMCGraspExecuter::BeginPlay()
 {
 	Super::BeginPlay();
 	if (ASkeletalMeshActor* TempHand = Cast<ASkeletalMeshActor>(GetOwner()))
@@ -42,14 +42,14 @@ void UMCGraspingController::BeginPlay()
 
 
 // Called every frame
-void UMCGraspingController::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+void UMCGraspExecuter::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 	// ...
 }
 
-void UMCGraspingController::UpdateGrasp(const float Input)
+void UMCGraspExecuter::UpdateGrasp(const float Input)
 {
 
 	if (GraspingData.GetNumberOfEpisodes() <= 1)
@@ -101,7 +101,7 @@ void UMCGraspingController::UpdateGrasp(const float Input)
 	}
 }
 
-void UMCGraspingController::StopGrasping()
+void UMCGraspExecuter::StopGrasping()
 {
 	// Stop Grasp
 	FMCEpisodeData Save = GraspingData.GetPositionDataWithIndex(0);
@@ -114,7 +114,7 @@ void UMCGraspingController::StopGrasping()
 	bIsGrasping = false;
 }
 
-void UMCGraspingController::LerpHandOrientation(FMCEpisodeData* Target, FMCEpisodeData Initial, FMCEpisodeData Closed, const float Input)
+void UMCGraspExecuter::LerpHandOrientation(FMCEpisodeData* Target, FMCEpisodeData Initial, FMCEpisodeData Closed, const float Input)
 {
 	TArray<FString> TempArray;
 	Initial.GetMap()->GenerateKeyArray(TempArray);
@@ -125,7 +125,7 @@ void UMCGraspingController::LerpHandOrientation(FMCEpisodeData* Target, FMCEpiso
 	}
 }
 
-void UMCGraspingController::DriveToHandOrientationTarget(FMCEpisodeData* Target) 
+void UMCGraspExecuter::DriveToHandOrientationTarget(FMCEpisodeData* Target)
 {
 	FConstraintInstance* Constraint = nullptr;
 	TArray<FString> TempArray;
@@ -138,7 +138,7 @@ void UMCGraspingController::DriveToHandOrientationTarget(FMCEpisodeData* Target)
 	}
 }
 
-FConstraintInstance* UMCGraspingController::BoneNameToConstraint(FString BoneName) {
+FConstraintInstance* UMCGraspExecuter::BoneNameToConstraint(FString BoneName) {
 	FConstraintInstance* Constraint = nullptr;
 	UActorComponent* component = Hand->GetComponentByClass(USkeletalMeshComponent::StaticClass());
 	USkeletalMeshComponent* skeletalComponent = Cast<USkeletalMeshComponent>(component);
@@ -168,7 +168,7 @@ FConstraintInstance* UMCGraspingController::BoneNameToConstraint(FString BoneNam
 	return Constraint;
 }
 
-void UMCGraspingController::SetGraspingData(FMCAnimationData Data) {
+void UMCGraspExecuter::SetGraspingData(FMCAnimationData Data) {
 	// if player is grasping put new grasp in queue, else change grasp immediately
 	if (bIsGrasping)
 	{
