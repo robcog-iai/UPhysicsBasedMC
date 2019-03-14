@@ -11,24 +11,21 @@
 void UMCWrite::WriteFile(const FMCAnimationData& DataStruct)
 {
 	// If asset alread exists, edit it
-	if (UMCRead::ReadNames(DataStruct.SkeletalName).Contains(DataStruct.AnimationName))
+	for (UMCGraspDataAsset* DataAsset : UMCRead::LoadAllAssets())
 	{
-		for (UMCGraspDataAsset* DataAsset : UMCRead::LoadAllAssets())
+		if (DataAsset->AnimationName == DataStruct.AnimationName)
 		{
-			if (DataAsset->SkeletalName == DataStruct.SkeletalName && DataAsset->AnimationName == DataStruct.AnimationName)
+			DataAsset->BoneNames = TArray<FString>();
+			for (FString BoneName : DataStruct.BoneNames)
 			{
-				DataAsset->BoneNames = TArray<FString>();
-				for (FString BoneName : DataStruct.BoneNames)
-				{
-					DataAsset->BoneNames.Add(BoneName);
-				}
-				DataAsset->PositionEpisode = TArray<FMCEpisodeData>();
-				for (FMCEpisodeData Episode : DataStruct.PositionEpisode)
-				{
-					DataAsset->PositionEpisode.Add(Episode);
-				}
-				break;
+				DataAsset->BoneNames.Add(BoneName);
 			}
+			DataAsset->PositionEpisode = TArray<FMCEpisodeData>();
+			for (FMCEpisodeData Episode : DataStruct.PositionEpisode)
+			{
+				DataAsset->PositionEpisode.Add(Episode);
+			}
+			return;
 		}
 	}
 

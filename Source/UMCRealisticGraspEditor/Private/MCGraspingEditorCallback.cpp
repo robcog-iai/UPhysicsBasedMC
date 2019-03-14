@@ -308,7 +308,6 @@ void UMCGraspingEditorCallback::CreateAnimationData(TMap<FString, FRotator> Epis
 	{
 		NewGraspAnimationData.BoneNames.Add(Elem.Key);
 	}
-	NewGraspAnimationData.SkeletalName = DebugMeshComponent->SkeletalMesh->GetFName().ToString();
 }
 
 void UMCGraspingEditorCallback::ChangeBoneRotationsTo(FString GraspingStyle, int EpisodeToEdit)

@@ -129,6 +129,5 @@ void AAMCGraspingStyleManager::CreateAnimationData(TMap<FString, FRotator> StepD
 	{
 		AnimationData.BoneNames.Add(Elem.Key);
 	}
-	AnimationData.SkeletalName = SelectedMesh->GetSkeletalMeshComponent()->SkeletalMesh->GetFName().ToString();
 }
 
