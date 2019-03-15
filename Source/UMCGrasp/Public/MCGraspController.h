@@ -27,9 +27,33 @@ protected:
 	virtual void BeginPlay() override;
 
 public:	
-	// Called every frame
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+
+	virtual void InitializeComponent();
 
 	UPROPERTY(EditAnywhere)
 	TArray<UMCGraspDataAsset*> EquippedGrasps;
+
+	UPROPERTY(EditAnywhere)
+	FName GraspAction;
+
+	UPROPERTY(EditAnywhere)
+	FName NextGraspAction;
+
+	UPROPERTY(EditAnywhere)
+	FName PreviousGraspAction;
+
+	void ApplyForce(const float Input);
+
+	void NextGrasp();
+
+	void PreviousGrasp();
+
+private:
+
+	//Grasping controller for the left and right hand
+	UMCGraspExecuter* GraspExecuter;
+
+	void SetupInputBindings();
+
+	int CurrentGrasp = 0;
 };
