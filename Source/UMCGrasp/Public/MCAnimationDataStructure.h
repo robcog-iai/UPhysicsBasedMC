@@ -12,9 +12,11 @@ struct FMCBoneData
 	GENERATED_BODY()
 
 	// The bonespace rotation after the calculation
+	UPROPERTY(VisibleAnywhere)
 	FRotator AngularDriveInput;
 
 	// The bonespace rotation before the calculation
+	UPROPERTY(VisibleAnywhere)
 	FRotator BoneSpace;
 
 	// Default ctor
@@ -97,8 +99,8 @@ public:
 		return &PositionData;
 	}
 
-private:
 	//map with all data for all fingers
+	UPROPERTY(VisibleAnywhere)
 	TMap<FString, FMCBoneData> PositionData;
 
 };
