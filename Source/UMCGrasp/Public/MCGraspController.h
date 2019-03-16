@@ -13,6 +13,16 @@
 #include "MCGraspController.generated.h"
 
 
+/**
+* Hand type
+*/
+UENUM()
+enum class EMCRealisticGraspHandType : uint8
+{
+	Left					UMETA(DisplayName = "Left"),
+	Right					UMETA(DisplayName = "Right"),
+};
+
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class UMCGRASP_API UMCGraspController : public UActorComponent
 {
@@ -25,6 +35,11 @@ public:
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
+
+#if WITH_EDITOR
+	// Called when a property is changed in the editor
+	virtual void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override;
+#endif // WITH_EDITOR
 
 public:	
 
@@ -59,6 +74,10 @@ public:
 
 	UPROPERTY(EditAnywhere)
 	float ForceLimit = 0;
+
+	// Hand type, to listen to the right inputs
+	UPROPERTY(EditAnywhere)
+	EMCRealisticGraspHandType HandType;
 
 private:
 
