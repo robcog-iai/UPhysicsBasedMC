@@ -9,6 +9,12 @@ UMCGraspController::UMCGraspController()
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
 	bWantsInitializeComponent = true;
+
+	// Default parameters
+	HandType = EMCRealisticGraspHandType::Left;
+	GraspAction = "LeftGrasp";
+	NextGraspAction = "LeftNext";
+	PreviousGraspAction = "LeftPrevious";
 }
 
 
@@ -22,6 +28,35 @@ void UMCGraspController::BeginPlay()
 		SetupInputBindings();
 	}
 }
+
+#if WITH_EDITOR
+// Called when a property is changed in the editor
+void UMCGraspController::PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent)
+{
+	Super::PostEditChangeProperty(PropertyChangedEvent);
+
+	// Get the changed property name
+	FName PropertyName = (PropertyChangedEvent.Property != NULL) ?
+		PropertyChangedEvent.Property->GetFName() : NAME_None;
+
+	// Set the left / right constraint actors
+	if (PropertyName == GET_MEMBER_NAME_CHECKED(UMCGraspController, HandType))
+	{
+		if (HandType == EMCRealisticGraspHandType::Left)
+		{
+			GraspAction = "LeftGrasp";
+			NextGraspAction = "LeftNext";
+			PreviousGraspAction = "LeftPrevious";
+		}
+		else if (HandType == EMCRealisticGraspHandType::Right)
+		{
+			GraspAction = "RightGrasp";
+			NextGraspAction = "RightNext";
+			PreviousGraspAction = "RightPrevious";
+		}
+	}
+}
+#endif // WITH_EDITOR
 
 void UMCGraspController::InitializeComponent()
 {
