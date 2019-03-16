@@ -27,10 +27,9 @@ void UMCGraspExecuter::InitiateExecuter(ASkeletalMeshActor* Parent, const float&
 	{
 		//sets up the constraints so they can be moved 
 		for (FConstraintInstance* NewConstraint : SkelComp->Constraints) {
-			NewConstraint->SetAngularPositionDrive(true, true);
-			NewConstraint->SetOrientationDriveTwistAndSwing(false, false);
 			NewConstraint->SetAngularVelocityDriveTwistAndSwing(false, false);
 			NewConstraint->SetAngularVelocityDriveSLERP(false);
+			NewConstraint->SetOrientationDriveTwistAndSwing(false, false);
 			NewConstraint->SetOrientationDriveSLERP(true);
 			NewConstraint->SetAngularDriveParams(Spring, Damping, ForceLimit);
 		}
