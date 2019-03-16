@@ -6,58 +6,51 @@
 // Sets default values for this component's properties
 UMCGraspExecuter::UMCGraspExecuter()
 {
-	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
-	// off to improve performance if you don't need them.
-	PrimaryComponentTick.bCanEverTick = true;
 
-	// ...
 }
 
 
 // Called when the game starts
-void UMCGraspExecuter::BeginPlay()
+void UMCGraspExecuter::InitiateExecuter(ASkeletalMeshActor* Parent, const float& inSpringBase, const float& inSpringMultiplier, const float& inDamping, const float& inForceLimit)
 {
-	Super::BeginPlay();
-	if (ASkeletalMeshActor* TempHand = Cast<ASkeletalMeshActor>(GetOwner()))
+	Hand = Parent;
+	SpringBase = inSpringBase;
+	SpringMultiplier = inSpringMultiplier;
+	Damping = inDamping;
+	ForceLimit = inForceLimit;
+
+	USkeletalMeshComponent* const SkelComp = Hand->GetSkeletalMeshComponent();
+	SkelComp->SetSimulatePhysics(true);
+	SkelComp->SetEnableGravity(false);
+
+	if (SkelComp->GetPhysicsAsset())
 	{
-		Hand = TempHand;
-		USkeletalMeshComponent* const SkelComp = Hand->GetSkeletalMeshComponent();
-		SkelComp->SetSimulatePhysics(true);
-		SkelComp->SetEnableGravity(false);
-
-
-		float SpringTemp = 9000.0f;
-		float DampingTemp = 1000.0f;
-		float ForceLimitTemp = 0.0f;
-		if (SkelComp->GetPhysicsAsset())
-		{
-			// Hand joint velocity drive
-			SkelComp->SetAllMotorsAngularPositionDrive(true, true);
-
-			// Set drive parameters
-			SkelComp->SetAllMotorsAngularDriveParams(SpringTemp, DampingTemp, ForceLimitTemp);
+		//sets up the constraints so they can be moved 
+		for (FConstraintInstance* NewConstraint : SkelComp->Constraints) {
+			NewConstraint->SetAngularPositionDrive(true, true);
+			NewConstraint->SetOrientationDriveTwistAndSwing(false, false);
+			NewConstraint->SetAngularVelocityDriveTwistAndSwing(false, false);
+			NewConstraint->SetAngularVelocityDriveSLERP(false);
+			NewConstraint->SetOrientationDriveSLERP(true);
+			NewConstraint->SetAngularDriveParams(Spring, Damping, ForceLimit);
 		}
 	}
-}
-
-
-// Called every frame
-void UMCGraspExecuter::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
-{
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-	// ...
+	bIsInitiated = true;
 }
 
 void UMCGraspExecuter::UpdateGrasp(const float Input)
 {
+	if (!bIsInitiated)
+	{
+		return;
+	}
 
 	if (GraspingData.GetNumberOfEpisodes() <= 1)
 	{
 		return;
 	}
 
-	Spring = 9000 * (1 + Input);
+	Spring = SpringBase * (SpringMultiplier + Input);
 
 	// Checks if input is relevant
 	if (Input > 0.001)
@@ -143,24 +136,10 @@ FConstraintInstance* UMCGraspExecuter::BoneNameToConstraint(FString BoneName) {
 	UActorComponent* component = Hand->GetComponentByClass(USkeletalMeshComponent::StaticClass());
 	USkeletalMeshComponent* skeletalComponent = Cast<USkeletalMeshComponent>(component);
 
-	//sets up the constraints so they can be moved 
-	if (!bBonesConstraintsSetUp) {
-		for (FConstraintInstance* NewConstraint : skeletalComponent->Constraints) {
-			if (NewConstraint->ConstraintBone1.ToString() == BoneName) {
-				NewConstraint->SetOrientationDriveTwistAndSwing(false, false);
-				NewConstraint->SetAngularVelocityDriveTwistAndSwing(false, false);
-				NewConstraint->SetAngularVelocityDriveSLERP(false);
-				NewConstraint->SetOrientationDriveSLERP(true);
-				NewConstraint->SetAngularDriveParams(Spring, 1000, 0);
-			}
-		}
-		bBonesConstraintsSetUp = true;
-	}
-
 	//finds the constraint responsible for moving this bone
 	for (FConstraintInstance* NewConstraint : skeletalComponent->Constraints) 
 	{
-		NewConstraint->SetAngularDriveParams(Spring, 1000, 0);
+		NewConstraint->SetAngularDriveParams(Spring, Damping, ForceLimit);
 		if (NewConstraint->ConstraintBone1.ToString() == BoneName) {
 			Constraint = NewConstraint;
 		}

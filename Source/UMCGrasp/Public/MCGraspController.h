@@ -48,9 +48,21 @@ public:
 
 	void PreviousGrasp();
 
+	UPROPERTY(EditAnywhere)
+	float SpringBase = 9000;
+
+	UPROPERTY(EditAnywhere)
+	float SpringMultiplier = 1;
+
+	UPROPERTY(EditAnywhere)
+	float Damping = 1000;
+
+	UPROPERTY(EditAnywhere)
+	float ForceLimit = 0;
+
 private:
 
-	//Grasping controller for the left and right hand
+	UPROPERTY()
 	UMCGraspExecuter* GraspExecuter;
 
 	void SetupInputBindings();

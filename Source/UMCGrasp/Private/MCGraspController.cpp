@@ -31,8 +31,8 @@ void UMCGraspController::InitializeComponent()
 	if (ASkeletalMeshActor* ParentActor = Cast<ASkeletalMeshActor>(GetOwner()))
 	{
 		//Create our grasping controllers for the left and right hand and register it
-		GraspExecuter = NewObject<UMCGraspExecuter>(GetOwner(), UMCGraspExecuter::StaticClass(), TEXT("GraspExecuter"));
-		GraspExecuter->RegisterComponent();
+		GraspExecuter = NewObject<UMCGraspExecuter>();
+		GraspExecuter->InitiateExecuter(ParentActor, SpringBase, SpringMultiplier, Damping, ForceLimit);
 		if (EquippedGrasps.Num() > 0)
 		{
 			GraspExecuter->SetGraspingData(UMCRead::ConvertAssetToStruct(EquippedGrasps[CurrentGrasp]));
