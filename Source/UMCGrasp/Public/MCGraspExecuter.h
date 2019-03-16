@@ -3,34 +3,26 @@
 #pragma once
 
 #include "Engine.h"
-#include "Components/ActorComponent.h"
 #include "MCAnimationDataStructure.h"
 #include "Runtime/Engine/Classes/Animation/SkeletalMeshActor.h"
 #include "MCGraspExecuter.generated.h"
 
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class UMCGRASP_API UMCGraspExecuter : public UActorComponent
+class UMCGRASP_API UMCGraspExecuter : public UObject
 {
 	GENERATED_BODY()
 
 public:	
 	// Sets default values for this component's properties
 	UMCGraspExecuter();
-
-protected:
-	// Called when the game starts
-	virtual void BeginPlay() override;
-
-public:	
-	// Called every frame
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+	
+	void InitiateExecuter(ASkeletalMeshActor* Parent, const float& inSpringBase, const float& inSpringMultiplier, const float& inDamping, const float& inForceLimit);
 
 	/*
 	Loads the data of grasps into the grasping controller
 	@param Data - data to load
 	*/
-	UFUNCTION()
 	void SetGraspingData(FMCAnimationData Data);
 
 	/*
@@ -77,9 +69,6 @@ private:
 	// Current grasp loaded into hand
 	FMCAnimationData GraspingData;
 
-	// If bone constraints are set up the right way
-	bool bBonesConstraintsSetUp;
-
 	// Spring value to be used for constraints
 	// Makes angular motors more powerfull depending on how much the grasping button is pushed down
 	float Spring;
@@ -92,4 +81,14 @@ private:
 	bool bIsInQueue;
 
 	ASkeletalMeshActor* Hand;
+
+	bool bIsInitiated;
+
+	float SpringBase = 9000;
+
+	float SpringMultiplier = 1;
+
+	float Damping = 1000;
+
+	float ForceLimit = 0;
 };
