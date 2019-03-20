@@ -26,12 +26,10 @@ void UMCGraspExecuter::InitiateExecuter(ASkeletalMeshActor* Parent, const float&
 	if (SkelComp->GetPhysicsAsset())
 	{
 		//sets up the constraints so they can be moved 
-		for (FConstraintInstance* NewConstraint : SkelComp->Constraints) {
-			NewConstraint->SetAngularVelocityDriveTwistAndSwing(false, false);
-			NewConstraint->SetAngularVelocityDriveSLERP(false);
-			NewConstraint->SetOrientationDriveTwistAndSwing(false, false);
-			NewConstraint->SetOrientationDriveSLERP(true);
-			NewConstraint->SetAngularDriveParams(Spring, Damping, ForceLimit);
+		for (FConstraintInstance* Constraint : SkelComp->Constraints) {
+			Constraint->SetAngularVelocityDriveTwistAndSwing(false, false);
+			Constraint->SetAngularVelocityDriveSLERP(true);
+			Constraint->SetAngularDriveParams(Spring, Damping, ForceLimit);
 		}
 	}
 	bIsInitiated = true;
@@ -125,12 +123,14 @@ void UMCGraspExecuter::DriveToHandOrientationTarget(FMCEpisodeData* Target)
 	for (FString s : TempArray) {
 		Constraint = BoneNameToConstraint(s);
 		if (Constraint) {
+			Constraint->SetAngularDriveParams(Spring, Damping, ForceLimit);
 			Constraint->SetAngularOrientationTarget(Target->GetMap()->Find(s)->AngularDriveInput.Quaternion());
 		}
 	}
 }
 
-FConstraintInstance* UMCGraspExecuter::BoneNameToConstraint(FString BoneName) {
+FConstraintInstance* UMCGraspExecuter::BoneNameToConstraint(FString BoneName)
+{
 	FConstraintInstance* Constraint = nullptr;
 	UActorComponent* component = Hand->GetComponentByClass(USkeletalMeshComponent::StaticClass());
 	USkeletalMeshComponent* skeletalComponent = Cast<USkeletalMeshComponent>(component);
@@ -138,7 +138,6 @@ FConstraintInstance* UMCGraspExecuter::BoneNameToConstraint(FString BoneName) {
 	//finds the constraint responsible for moving this bone
 	for (FConstraintInstance* NewConstraint : skeletalComponent->Constraints) 
 	{
-		NewConstraint->SetAngularDriveParams(Spring, Damping, ForceLimit);
 		if (NewConstraint->ConstraintBone1.ToString() == BoneName) {
 			Constraint = NewConstraint;
 		}
