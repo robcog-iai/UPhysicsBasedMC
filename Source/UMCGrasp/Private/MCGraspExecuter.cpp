@@ -18,6 +18,7 @@ void UMCGraspExecuter::InitiateExecuter(ASkeletalMeshActor* Parent, const float&
 	SpringMultiplier = inSpringMultiplier;
 	Damping = inDamping;
 	ForceLimit = inForceLimit;
+	Spring = SpringBase;
 
 	USkeletalMeshComponent* const SkelComp = Hand->GetSkeletalMeshComponent();
 	SkelComp->SetSimulatePhysics(true);
@@ -26,11 +27,14 @@ void UMCGraspExecuter::InitiateExecuter(ASkeletalMeshActor* Parent, const float&
 	if (SkelComp->GetPhysicsAsset())
 	{
 		//sets up the constraints so they can be moved 
-		for (FConstraintInstance* Constraint : SkelComp->Constraints) {
+		for (FConstraintInstance* Constraint : SkelComp->Constraints)
+		{
 			Constraint->SetAngularSwing1Limit(ACM_Free, 0);
 			Constraint->SetAngularSwing2Limit(ACM_Free, 0);
 			Constraint->SetAngularTwistLimit(ACM_Free, 0);
 			Constraint->SetAngularDriveMode(EAngularDriveMode::SLERP);
+			Constraint->SetAngularVelocityDriveTwistAndSwing(false, false);
+			Constraint->SetAngularVelocityDriveSLERP(true);
 			Constraint->SetAngularDriveParams(Spring, Damping, ForceLimit);
 		}
 	}
@@ -49,7 +53,12 @@ void UMCGraspExecuter::UpdateGrasp(const float Input)
 		return;
 	}
 
-	Spring = SpringBase * (SpringMultiplier + Input);
+	if (bFirstUpdate)
+	{
+		FMCFrame Save = GraspingData.GetPositionDataWithIndex(0);
+		DriveToHandOrientationTarget(&Save);
+		bFirstUpdate = false;
+	}
 
 	// Checks if input is relevant
 	if (Input > 0.001)
@@ -57,6 +66,10 @@ void UMCGraspExecuter::UpdateGrasp(const float Input)
 		if (!bIsGrasping) {
 			bIsGrasping = true;
 		}
+
+		// SpringBase value is the minimum spring value and gets multiplied by a fraction of the SpringMultiplier 
+		// depending on how far the button was pressed
+		Spring = SpringBase * ((SpringMultiplier * Input) + 1);
 
 		// Calculations for moving in multiple steps
 		// StepSize defines how much of the 0-1 input is between each step
@@ -96,6 +109,7 @@ void UMCGraspExecuter::UpdateGrasp(const float Input)
 void UMCGraspExecuter::StopGrasping()
 {
 	// Stop Grasp
+	Spring = SpringBase;
 	FMCFrame Save = GraspingData.GetPositionDataWithIndex(0);
 	DriveToHandOrientationTarget(&Save);
 	if (bIsInQueue)
