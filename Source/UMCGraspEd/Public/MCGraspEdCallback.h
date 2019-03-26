@@ -96,6 +96,7 @@ public:
 	*/
 	void SetStartingBoneRotations(TMap<FString, FTransform> BoneRotations);
 
+	void FillStartingRotatorsInComponentSpace();
 
 private:
 
@@ -104,7 +105,6 @@ private:
 
 	void ShowMessageBox(FText Title, FText Message);
 
-	void FillStartingRotatorsInComponentSpace();
 	void FillStartLocations();
 
 	//Applies FingerData for different indices.
@@ -116,7 +116,6 @@ private:
 	FReply OnSaveButtonClicked();
 
 	//Start locations / rotations in different spaces.
-	TMap<FString, FQuat> StartRotators;
 	TMap<FString, FVector> StartLocations;
 	TMap<FString, FQuat> StartRotatorsComponentSpace;
 	TMap<FString, FTransform> StartingBoneRotations;
