@@ -1,9 +1,9 @@
 // Copyright 1998-2017 Epic Games, Inc. All Rights Reserved.
 
-#include "MCRealisticGraspingEditor.h"
-#include "MCGraspingEditorStyle.h"
-#include "MCGraspingEditorCommands.h"
-#include "MCGraspingEditorCallback.h"
+#include "UMCGraspEd.h"
+#include "MCGraspEdStyle.h"
+#include "MCGraspEdCommands.h"
+#include "MCGraspEdCallback.h"
 #include "PersonaModule.h"
 #include "IPersonaPreviewScene.h"
 #include "IPersonaToolkit.h"
@@ -14,16 +14,15 @@
 #include "ISkeletonEditor.h"
 #include "Editor/UnrealEd/Classes/Animation/DebugSkelMeshComponent.h"
 #include "ISkeletonEditorModule.h"
-#define WIN32_LEAN_AND_MEAN
 #include "Editor/AnimGraph/Classes/AnimPreviewInstance.h"
 
-#define LOCTEXT_NAMESPACE "FUMCRealisticGraspingEditorModule"
+#define LOCTEXT_NAMESPACE "FUMCGraspEd"
 
-void FUMCRealisticGraspingEditorModule::StartupModule()
+void FUMCGraspEd::StartupModule()
 {
 	// This code will execute after your module is loaded into memory; the exact timing is specified in the .uplugin file per-module
-	UMCGraspingEditorStyle::Initialize();
-	UMCGraspingEditorStyle::ReloadTextures();
+	UMCGraspEdStyle::Initialize();
+	UMCGraspEdStyle::ReloadTextures();
 
 	//Initializes the drop down menu.
 	InitializeUIButtons();
@@ -38,81 +37,80 @@ void FUMCRealisticGraspingEditorModule::StartupModule()
 	OnPreviewSceneCreatedDelegate = PersonaModule.OnPreviewSceneCreated().AddLambda([this](const TSharedRef<IPersonaPreviewScene>& param) { this->OnPreviewCreation(param); });
 }
 
-void FUMCRealisticGraspingEditorModule::ShutdownModule()
+void FUMCGraspEd::ShutdownModule()
 {
 	// This function may be called during shutdown to clean up your module.  For modules that support dynamic reloading,
 	// we call this function before unloading the module.
 
-	UMCGraspingEditorCommands::Unregister();
+	UMCGraspEdCommands::Unregister();
 }
 
-void FUMCRealisticGraspingEditorModule::InitializeUIButtons()
+void FUMCGraspEd::InitializeUIButtons()
 {
-	UMCGraspingEditorCommands::Register();
-	EditorCallback = UMCGraspingEditorCallback();
-	EditorCallback.ReadFingerTypes();
+	UMCGraspEdCommands::Register();
+	EditorCallback = UMCGraspEdCallback();
 	PluginCommandListCreateSection = MakeShareable(new FUICommandList);
 	PluginCommandListEditSection = MakeShareable(new FUICommandList);
-	const UMCGraspingEditorCommands& Commands = UMCGraspingEditorCommands::Get();
+	const UMCGraspEdCommands& Commands = UMCGraspEdCommands::Get();
 
 	//Commands for the "Create grasp" button
 	PluginCommandListCreateSection->MapAction(
 		Commands.CreateGraspingStyle,
-		FExecuteAction::CreateRaw(this, &FUMCRealisticGraspingEditorModule::ShowSaveGraspingStyleWindow),
+		FExecuteAction::CreateRaw(this, &FUMCGraspEd::ShowSaveGraspingStyleWindow),
 		FCanExecuteAction()
 	);
 
 	PluginCommandListCreateSection->MapAction(
 		Commands.SaveGraspingPosition,
-		FExecuteAction::CreateRaw(this, &FUMCRealisticGraspingEditorModule::SaveBoneDatasAsEpisode),
+		FExecuteAction::CreateRaw(this, &FUMCGraspEd::SaveBoneDatasAsEpisode),
 		FCanExecuteAction()
 	);
 
 	PluginCommandListCreateSection->MapAction(
 		Commands.DiscardNewGraspingStyle,
-		FExecuteAction::CreateRaw(this, &FUMCRealisticGraspingEditorModule::DiscardAllEpisodes),
+		FExecuteAction::CreateRaw(this, &FUMCGraspEd::DiscardAllEpisodes),
 		FCanExecuteAction()
 	);
 
 	PluginCommandListCreateSection->MapAction(
 		Commands.ShowCreateHelp,
-		FExecuteAction::CreateRaw(this, &FUMCRealisticGraspingEditorModule::ShowCreateHelp),
+		FExecuteAction::CreateRaw(this, &FUMCGraspEd::ShowCreateHelp),
 		FCanExecuteAction()
 	);
 
 	//Commands for the "Edit grasp" button
 	PluginCommandListEditSection->MapAction(
 		Commands.LoadGraspingStyle,
-		FExecuteAction::CreateRaw(this, &FUMCRealisticGraspingEditorModule::EditLoadedGraspingStyle),
+		FExecuteAction::CreateRaw(this, &FUMCGraspEd::EditLoadedGraspingStyle),
 		FCanExecuteAction()
 	);
 
 	PluginCommandListEditSection->MapAction(
 		Commands.EditGraspingPosition,
-		FExecuteAction::CreateRaw(this, &FUMCRealisticGraspingEditorModule::ShowEpisodeEditWindow),
+		FExecuteAction::CreateRaw(this, &FUMCGraspEd::ShowEpisodeEditWindow),
 		FCanExecuteAction()
 	);
 
 	PluginCommandListEditSection->MapAction(
 		Commands.ShowNextEpisode,
-		FExecuteAction::CreateRaw(this, &FUMCRealisticGraspingEditorModule::ShowNextEpisode),
+		FExecuteAction::CreateRaw(this, &FUMCGraspEd::ShowNextEpisode),
 		FCanExecuteAction()
 	);
 
 	PluginCommandListEditSection->MapAction(
 		Commands.ShowPreviousEpisode,
-		FExecuteAction::CreateRaw(this, &FUMCRealisticGraspingEditorModule::ShowPreviousEpisode),
+		FExecuteAction::CreateRaw(this, &FUMCGraspEd::ShowPreviousEpisode),
 		FCanExecuteAction()
 	);
 
 	PluginCommandListEditSection->MapAction(
 		Commands.ShowEditHelp,
-		FExecuteAction::CreateRaw(this, &FUMCRealisticGraspingEditorModule::ShowEditHelp),
+		FExecuteAction::CreateRaw(this, &FUMCGraspEd::ShowEditHelp),
 		FCanExecuteAction()
 	);
 }
 
-void FUMCRealisticGraspingEditorModule::CreateButton()
+void FUMCGraspEd::CreateButton()
 {
 	//Load the ISkeletalMeshEditorModule and add a new button to its menu bar.
 	ISkeletalMeshEditorModule& SkeletalMeshEditorModule =
@@ -124,26 +122,26 @@ void FUMCRealisticGraspingEditorModule::CreateButton()
 		"Asset",
 		EExtensionHook::After,
 		PluginCommandListCreateSection,
-		FToolBarExtensionDelegate::CreateRaw(this, &FUMCRealisticGraspingEditorModule::AddCreateOptions)
+		FToolBarExtensionDelegate::CreateRaw(this, &FUMCGraspEd::AddCreateOptions)
 	);
 	//Creates the "Edit grasp" button
 	ToolbarExtender->AddToolBarExtension(
 		"Asset",
 		EExtensionHook::After,
 		PluginCommandListEditSection,
-		FToolBarExtensionDelegate::CreateRaw(this, &FUMCRealisticGraspingEditorModule::AddEditOptions)
+		FToolBarExtensionDelegate::CreateRaw(this, &FUMCGraspEd::AddEditOptions)
 	);
 	
 	SkeletalMeshEditorModule.GetToolBarExtensibilityManager()->AddExtender(ToolbarExtender);
 }
 
 
-TSharedRef<SWidget> FUMCRealisticGraspingEditorModule::CreateOptionMenu()
+TSharedRef<SWidget> FUMCGraspEd::CreateOptionMenu()
 {
 	//Creates all of the drop down entries of the "Create grasp" button.
 	FMenuBuilder CreateBuilder(false, PluginCommandListCreateSection.ToSharedRef());
 	
-	const UMCGraspingEditorCommands& Commands = UMCGraspingEditorCommands::Get();
+	const UMCGraspEdCommands& Commands = UMCGraspEdCommands::Get();
 	CreateBuilder.BeginSection("Create grasp");
 	{
 		CreateBuilder.AddMenuEntry(Commands.CreateGraspingStyle);
@@ -156,11 +154,11 @@ TSharedRef<SWidget> FUMCRealisticGraspingEditorModule::CreateOptionMenu()
 	return CreateBuilder.MakeWidget();
 }
 
-TSharedRef<SWidget> FUMCRealisticGraspingEditorModule::EditOptionMenu()
+TSharedRef<SWidget> FUMCGraspEd::EditOptionMenu()
 {
 	//Creates all of the drop down entries of the "Edit grasp" button.
 	FMenuBuilder EditBuilder(false, PluginCommandListEditSection.ToSharedRef());
-	const UMCGraspingEditorCommands& Commands = UMCGraspingEditorCommands::Get();
+	const UMCGraspEdCommands& Commands = UMCGraspEdCommands::Get();
 	EditBuilder.BeginSection("Edit grasps");
 	{
 		EditBuilder.AddMenuEntry(Commands.LoadGraspingStyle);
@@ -174,38 +172,38 @@ TSharedRef<SWidget> FUMCRealisticGraspingEditorModule::EditOptionMenu()
 	return EditBuilder.MakeWidget();
 }
 
-void FUMCRealisticGraspingEditorModule::AddCreateOptions(FToolBarBuilder & Builder)
+void FUMCGraspEd::AddCreateOptions(FToolBarBuilder & Builder)
 {
-	UMCGraspingEditorCommands GraspingEditorCommands;
+	UMCGraspEdCommands GraspingEditorCommands;
 
 	//Adds the drop down menu to the button.
 	Builder.AddComboButton(
 		FUIAction(),
-		FOnGetContent::CreateRaw(this, &FUMCRealisticGraspingEditorModule::CreateOptionMenu),
+		FOnGetContent::CreateRaw(this, &FUMCGraspEd::CreateOptionMenu),
 		LOCTEXT("Create", "Create grasp"),
 		LOCTEXT("Create_Tooltip", "Options to create a grasping style"),
-		FSlateIcon(UMCGraspingEditorStyle::GetStyleSetName(), "GraspingEditor.DebugOptionToolBar"),
+		FSlateIcon(UMCGraspEdStyle::GetStyleSetName(), "GraspingEditor.DebugOptionToolBar"),
 		false
 	);
 }
 
-void FUMCRealisticGraspingEditorModule::AddEditOptions(FToolBarBuilder & Builder)
+void FUMCGraspEd::AddEditOptions(FToolBarBuilder & Builder)
 {
-	UMCGraspingEditorCommands GraspingEditorCommands;
+	UMCGraspEdCommands GraspingEditorCommands;
 
 	//Adds the drop down menu to the button.
 	Builder.AddComboButton(
 		FUIAction(),
-		FOnGetContent::CreateRaw(this, &FUMCRealisticGraspingEditorModule::EditOptionMenu),
+		FOnGetContent::CreateRaw(this, &FUMCGraspEd::EditOptionMenu),
 		LOCTEXT("Edit", "Edit grasp"),
 		LOCTEXT("Edit_Tooltip", "Options to edit an existing grasping style"),
-		FSlateIcon(UMCGraspingEditorStyle::GetStyleSetName(), "GraspingEditor.DebugOptionToolBar"),
+		FSlateIcon(UMCGraspEdStyle::GetStyleSetName(), "GraspingEditor.DebugOptionToolBar"),
 		false
 	);
 }
 
 
-void FUMCRealisticGraspingEditorModule::OnPreviewCreation(const TSharedRef<IPersonaPreviewScene>& InPreviewScene)
+void FUMCGraspEd::OnPreviewCreation(const TSharedRef<IPersonaPreviewScene>& InPreviewScene)
 {
 	//When a preview scene is created get its DebugMeshComponent and also reset the EditorCallBack
 	TSharedRef<IPersonaToolkit> PersonaToolKitRef = InPreviewScene.Get().GetPersonaToolkit();
@@ -213,7 +211,7 @@ void FUMCRealisticGraspingEditorModule::OnPreviewCreation(const TSharedRef<IPers
 	EditorCallback.Reset();
 }
 
-void FUMCRealisticGraspingEditorModule::ShowEpisodeEditWindow()
+void FUMCGraspEd::ShowEpisodeEditWindow()
 {
 	EditorCallback.SetPreviewMeshComponent(DebugMeshComponent);
 	TArray<FName> BoneNames;
@@ -230,14 +228,14 @@ void FUMCRealisticGraspingEditorModule::ShowEpisodeEditWindow()
 	EditorCallback.ShowEpisodeEditWindow();
 }
 
-void FUMCRealisticGraspingEditorModule::WriteEpisodesToFile()
+void FUMCGraspEd::WriteEpisodesToFile()
 {
 	//Writes all currently recorded episodes to a .ini file
 	EditorCallback.SetPreviewMeshComponent(DebugMeshComponent);
 	EditorCallback.WriteEpisodesToFile();
 }
 
-void FUMCRealisticGraspingEditorModule::ShowSaveGraspingStyleWindow()
+void FUMCGraspEd::ShowSaveGraspingStyleWindow()
 {
 	//Shows a window where you can enter a new for a newly created grasping stlye
 	EditorCallback.SetPreviewMeshComponent(DebugMeshComponent);
@@ -245,48 +243,48 @@ void FUMCRealisticGraspingEditorModule::ShowSaveGraspingStyleWindow()
 
 }
 
-void FUMCRealisticGraspingEditorModule::SaveBoneDatasAsEpisode()
+void FUMCGraspEd::SaveBoneDatasAsEpisode()
 {
 	//Saves the current mesh position as an episode
 	EditorCallback.SetPreviewMeshComponent(DebugMeshComponent);
 	EditorCallback.SaveBoneDatasAsEpisode();
 }
 
-void FUMCRealisticGraspingEditorModule::EditLoadedGraspingStyle()
+void FUMCGraspEd::EditLoadedGraspingStyle()
 {
 	//Overwrites the loaded step for a grasping stlye with the currently displayed hand position
 	EditorCallback.SetPreviewMeshComponent(DebugMeshComponent);
 	EditorCallback.EditLoadedGraspingStyle();
 }
 
-void FUMCRealisticGraspingEditorModule::ShowCreateHelp()
+void FUMCGraspEd::ShowCreateHelp()
 {
 	//Shows help for the "Create grasp" button
 	FString Message = "Create new grasping style out of saved episodes :\nCreates a new grasping style with the saved episodes. \nYou need to have at least 2 episodes to create a new grasp. \nThe new grasp will be saved in the GraspAnimations folder of your project.\n\nSave current hand position as episode :\nSaves the hand position currently displayed as an episode. \n\nDiscard all saved episodes :\nDiscards all your previously saved episodes.";
 	EditorCallback.ShowInstructions(Message);
 }
 
-void FUMCRealisticGraspingEditorModule::ShowEditHelp()
+void FUMCGraspEd::ShowEditHelp()
 {
 	//Shows help for the "Edit grasp" button
 	FString Message = "Overwrite loaded Episode :\nAfter you load in a grasp this button will replace the Episode currently loaded with the hand position currently displayed.\n\nLoad grasping style :\nLoads a grasping at a specific Episode. The name of the grasp has to exist in the GraspAnimations folder and the grasp also has to have the specific episode.\n\nShow next episode :\nShows the next episode depending on the currently displayed episode. This action will change the episode to overwrite you set in Load grasping style.\n\nShow previous episode :\nShows the previous episode depending on the currently displayed episode. This action will change the episode to overwrite you set in Load grasping style.\n\n";
 	EditorCallback.ShowInstructions(Message);
 }
 
-void FUMCRealisticGraspingEditorModule::DiscardAllEpisodes()
+void FUMCGraspEd::DiscardAllEpisodes()
 {
 	//Discards all currently recorded episodes
 	EditorCallback.DiscardAllEpisodes();
 }
 
-void FUMCRealisticGraspingEditorModule::ShowNextEpisode()
+void FUMCGraspEd::ShowNextEpisode()
 {
 	//Shows the next episode depending on the one currently displayed
 	EditorCallback.SetPreviewMeshComponent(DebugMeshComponent);
 	EditorCallback.ShowEpisode(true);
 }
 
-void FUMCRealisticGraspingEditorModule::ShowPreviousEpisode()
+void FUMCGraspEd::ShowPreviousEpisode()
 {
 	//Shows the previous episode depending on the one currently displayed
 	EditorCallback.SetPreviewMeshComponent(DebugMeshComponent);
@@ -296,4 +294,4 @@ void FUMCRealisticGraspingEditorModule::ShowPreviousEpisode()
 
 #undef LOCTEXT_NAMESPACE
 	
-IMPLEMENT_MODULE(FUMCRealisticGraspingEditorModule, URealisticGrasping)
+IMPLEMENT_MODULE(FUMCGraspEd, URealisticGrasping)

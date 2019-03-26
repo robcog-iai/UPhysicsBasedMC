@@ -11,7 +11,7 @@
 /**
  * This Class is used to read animations into files
  */
-class UMCGRASP_API UMCRead
+class UMCGRASP_API UMCGraspAnimReader
 {
 public:
 	/*

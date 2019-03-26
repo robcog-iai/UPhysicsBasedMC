@@ -6,7 +6,7 @@
 #include "Components/ActorComponent.h"
 #include "MCGraspDataAsset.h"
 #include "MCAnimationDataStructure.h"
-#include "MCRead.h"
+#include "MCGraspAnimReader.h"
 #include "MCGraspExecuter.h"
 #include "Engine/Engine.h"
 #include "Runtime/Engine/Classes/Animation/SkeletalMeshActor.h"

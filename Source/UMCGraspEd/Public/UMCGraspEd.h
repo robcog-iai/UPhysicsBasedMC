@@ -9,13 +9,13 @@
 #include "Runtime/Core/Public/Templates/SharedPointer.h"
 #include "Runtime/Slate/Public/Framework/MultiBox/MultiBoxBuilder.h"
 #include "Editor/UnrealEd/Classes/Animation/DebugSkelMeshComponent.h"
-#include "MCGraspingEditorCallback.h"
+#include "MCGraspEdCallback.h"
 #include "PersonaModule.h"
 #include "IPersonaPreviewScene.h"
 #include "IPersonaToolkit.h"
 #include <functional>
 
-class FUMCRealisticGraspingEditorModule : public IModuleInterface
+class FUMCGraspEd : public IModuleInterface
 {
 public:
 
@@ -52,7 +52,7 @@ private:
 	void ShowNextEpisode();
 	void ShowPreviousEpisode();
 
-	UMCGraspingEditorCallback EditorCallback;
+	UMCGraspEdCallback EditorCallback;
 
 	FDelegateHandle OnPreviewSceneCreatedDelegate;
 

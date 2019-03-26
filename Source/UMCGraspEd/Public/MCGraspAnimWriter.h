@@ -11,7 +11,7 @@
 /**
  * This Class is used to write animations into files
  */
-class UMCWrite
+class UMCGraspAnimWriter
 {
 public:
 

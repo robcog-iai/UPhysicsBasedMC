@@ -1,12 +1,12 @@
 // Copyright 2018, Institute for Artificial Intelligence - University of Bremen
 
-#include "MCRead.h"
+#include "MCGraspAnimReader.h"
 #include "ConfigCacheIni.h"
 #include "Runtime/CoreUObject/Public/UObject/Package.h"
 #include "Runtime/AssetRegistry/Public/AssetRegistryModule.h"
 #include "Runtime/Engine/Classes/Engine/ObjectLibrary.h"
 
-FMCAnimationData UMCRead::ReadFile(const FString& SkeletalMeshName, const FString& Name)
+FMCAnimationData UMCGraspAnimReader::ReadFile(const FString& SkeletalMeshName, const FString& Name)
 {
 	FMCAnimationData DataStruct = FMCAnimationData();
 
@@ -22,7 +22,7 @@ FMCAnimationData UMCRead::ReadFile(const FString& SkeletalMeshName, const FStrin
 	return DataStruct;
 }
 
-FMCAnimationData UMCRead::ConvertAssetToStruct(const UMCGraspDataAsset* DataAsset)
+FMCAnimationData UMCGraspAnimReader::ConvertAssetToStruct(const UMCGraspDataAsset* DataAsset)
 {
 	FMCAnimationData DataStruct = FMCAnimationData();
 
@@ -39,7 +39,7 @@ FMCAnimationData UMCRead::ConvertAssetToStruct(const UMCGraspDataAsset* DataAsse
 	return DataStruct;
 }
 
-TArray<UMCGraspDataAsset*> UMCRead::LoadAllAssets()
+TArray<UMCGraspDataAsset*> UMCGraspAnimReader::LoadAllAssets()
 {
 	FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>(FName("AssetRegistry"));
 	IAssetRegistry& AssetRegistry = AssetRegistryModule.Get();
@@ -50,7 +50,7 @@ TArray<UMCGraspDataAsset*> UMCRead::LoadAllAssets()
 	return OnRegistryLoaded();
 }
 
-TArray<UMCGraspDataAsset*> UMCRead::OnRegistryLoaded()
+TArray<UMCGraspDataAsset*> UMCGraspAnimReader::OnRegistryLoaded()
 {
 	FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>(FName("AssetRegistry"));
 	IAssetRegistry& AssetRegistry = AssetRegistryModule.Get();

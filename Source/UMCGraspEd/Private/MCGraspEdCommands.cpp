@@ -1,10 +1,10 @@
 // Copyright 2018, Institute for Artificial Intelligence - University of Bremen
 
-#include "MCGraspingEditorCommands.h"
+#include "MCGraspEdCommands.h"
 
 #define LOCTEXT_NAMESPACE "FGraspingEditorModule"
 
-void UMCGraspingEditorCommands::RegisterCommands() {
+void UMCGraspEdCommands::RegisterCommands() {
 	// Register all the UI elements
 
 	UI_COMMAND(CreateGraspingStyle, "Create new grasping style out of saved episodes",
