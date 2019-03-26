@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Engine/DataAsset.h"
-#include "MCAnimationDataStructure.h"
+#include "MCGraspAnimStructs.h"
 #include "MCGraspDataAsset.generated.h"
 
 /**
@@ -27,5 +27,5 @@ public:
 
 	//All episodes
 	UPROPERTY(VisibleAnywhere)
-	TArray<FMCEpisodeData> PositionEpisode;
+	TArray<FMCFrame> Frames;
 };

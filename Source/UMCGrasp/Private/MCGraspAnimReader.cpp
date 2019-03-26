@@ -31,7 +31,7 @@ FMCAnimationData UMCGraspAnimReader::ConvertAssetToStruct(const UMCGraspDataAsse
 	{
 		DataStruct.BoneNames.Add(BoneName);
 	}
-	for (FMCEpisodeData Episode : DataAsset->PositionEpisode)
+	for (FMCFrame Episode : DataAsset->Frames)
 	{
 		DataStruct.AddNewPositionData(Episode);
 	}

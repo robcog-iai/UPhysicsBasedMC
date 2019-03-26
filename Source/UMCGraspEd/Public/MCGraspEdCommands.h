@@ -30,4 +30,5 @@ public:
 	TSharedPtr<FUICommandInfo> ShowNextEpisode;
 	TSharedPtr<FUICommandInfo> ShowPreviousEpisode;
 	TSharedPtr<FUICommandInfo> DiscardNewGraspingStyle;
+	TSharedPtr<FUICommandInfo> StartCreatingGrasp;
 };

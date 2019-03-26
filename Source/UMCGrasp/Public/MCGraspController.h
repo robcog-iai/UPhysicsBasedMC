@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "MCGraspDataAsset.h"
-#include "MCAnimationDataStructure.h"
+#include "MCGraspAnimStructs.h"
 #include "MCGraspAnimReader.h"
 #include "MCGraspExecuter.h"
 #include "Engine/Engine.h"

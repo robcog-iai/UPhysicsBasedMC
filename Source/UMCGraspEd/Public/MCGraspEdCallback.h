@@ -7,7 +7,7 @@
 #include "Editor/UnrealEd/Classes/Animation/DebugSkelMeshComponent.h"
 #include "Runtime/Slate/Public/Widgets/Text/STextBlock.h"
 #include "Runtime/Slate/Public/Widgets/Input/SEditableTextBox.h"
-#include "MCAnimationDataStructure.h"
+#include "MCGraspAnimStructs.h"
 
 /**
  * 

@@ -80,7 +80,7 @@ void UMCGraspExecuter::UpdateGrasp(const float Input)
 		float NewInput = StepIteratorCountFloat - (float)StepIteratorCountInt;
 
 		// Manipulate Orientation Drives
-		FMCEpisodeData TargetOrientation;
+		FMCFrame TargetOrientation;
 		LerpHandOrientation(&TargetOrientation, GraspingData.GetPositionDataWithIndex(StepIteratorCountInt), GraspingData.GetPositionDataWithIndex(StepIteratorCountInt + 1), NewInput);
 		DriveToHandOrientationTarget(&TargetOrientation);
 
@@ -97,7 +97,7 @@ void UMCGraspExecuter::UpdateGrasp(const float Input)
 void UMCGraspExecuter::StopGrasping()
 {
 	// Stop Grasp
-	FMCEpisodeData Save = GraspingData.GetPositionDataWithIndex(0);
+	FMCFrame Save = GraspingData.GetPositionDataWithIndex(0);
 	DriveToHandOrientationTarget(&Save);
 	if (bIsInQueue)
 	{
@@ -107,18 +107,18 @@ void UMCGraspExecuter::StopGrasping()
 	bIsGrasping = false;
 }
 
-void UMCGraspExecuter::LerpHandOrientation(FMCEpisodeData* Target, FMCEpisodeData Initial, FMCEpisodeData Closed, const float Input)
+void UMCGraspExecuter::LerpHandOrientation(FMCFrame* Target, FMCFrame Initial, FMCFrame Closed, const float Input)
 {
 	TArray<FString> TempArray;
 	Initial.GetMap()->GenerateKeyArray(TempArray);
 	for (FString s : TempArray) {
 		Target->AddNewBoneData(s, FMath::LerpRange(
-			Initial.GetBoneData(s)->AngularDriveInput,
-			Closed.GetBoneData(s)->AngularDriveInput, Input));
+			Initial.GetBoneData(s)->AngularOrientationTarget,
+			Closed.GetBoneData(s)->AngularOrientationTarget, Input));
 	}
 }
 
-void UMCGraspExecuter::DriveToHandOrientationTarget(FMCEpisodeData* Target)
+void UMCGraspExecuter::DriveToHandOrientationTarget(FMCFrame* Target)
 {
 	FConstraintInstance* Constraint = nullptr;
 	TArray<FString> TempArray;
@@ -127,7 +127,7 @@ void UMCGraspExecuter::DriveToHandOrientationTarget(FMCEpisodeData* Target)
 		Constraint = BoneNameToConstraint(s);
 		if (Constraint) {
 			Constraint->SetAngularDriveParams(Spring, Damping, ForceLimit);
-			Constraint->SetAngularOrientationTarget(Target->GetMap()->Find(s)->AngularDriveInput.Quaternion());
+			Constraint->SetAngularOrientationTarget(Target->GetMap()->Find(s)->AngularOrientationTarget.Quaternion());
 		}
 	}
 }
