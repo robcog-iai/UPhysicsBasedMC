@@ -12,10 +12,10 @@
 /**
  * 
  */
-class UMCGraspingEditorCallback
+class UMCGraspEdCallback
 {
 public:
-	UMCGraspingEditorCallback();
+	UMCGraspEdCallback();
 
 	/*
 	* Shows a window where you can set a grasping style at a specific episode to edit.
@@ -95,11 +95,6 @@ public:
 	* @param BoneRotations A map containing the BoneName as key and its rotation as value.
 	*/
 	void SetStartingBoneRotations(TMap<FString, FTransform> BoneRotations);
-
-	/*
-	* Reads the TypeMap which contains information about the bones and their finger type.
-	*/
-	void ReadFingerTypes();
 
 
 private:

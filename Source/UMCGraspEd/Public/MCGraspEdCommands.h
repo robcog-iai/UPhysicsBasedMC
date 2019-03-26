@@ -4,18 +4,18 @@
 
 #include "CoreMinimal.h"
 #include "Framework/Commands/Commands.h"
-#include "MCGraspingEditorStyle.h"
+#include "MCGraspEdStyle.h"
 /**
  * 
  */
-class UMCGraspingEditorCommands : public TCommands<UMCGraspingEditorCommands>
+class UMCGraspEdCommands : public TCommands<UMCGraspEdCommands>
 {
 public:
-	UMCGraspingEditorCommands() : TCommands<UMCGraspingEditorCommands>(
+	UMCGraspEdCommands() : TCommands<UMCGraspEdCommands>(
 		TEXT("Grasping"), // Context name for fast lookup
 		NSLOCTEXT("Contexts", "Grasping", "Grasping Plugin"), // Localized context name
 		NAME_None, // Parent
-		UMCGraspingEditorStyle::GetStyleSetName()// Icon Style Set
+		UMCGraspEdStyle::GetStyleSetName()// Icon Style Set
 		) {}
 
 	virtual void RegisterCommands() override;

@@ -1,28 +1,28 @@
 // Copyright 2018, Institute for Artificial Intelligence - University of Bremen
 
-#include "MCGraspingEditorStyle.h"
+#include "MCGraspEdStyle.h"
 #include "Styling/SlateStyleRegistry.h"
 #include "Framework/Application/SlateApplication.h"
 #include "SlateGameResources.h"
 #include "IPluginManager.h"
 
-TSharedPtr<FSlateStyleSet> UMCGraspingEditorStyle::StyleInstance = NULL;
+TSharedPtr<FSlateStyleSet> UMCGraspEdStyle::StyleInstance = NULL;
 
-void UMCGraspingEditorStyle::Initialize()
+void UMCGraspEdStyle::Initialize()
 {
 	if (!StyleInstance.IsValid())
 	{
 		return;
 	}
 }
-void UMCGraspingEditorStyle::Shutdown()
+void UMCGraspEdStyle::Shutdown()
 {
 	FSlateStyleRegistry::UnRegisterSlateStyle(*StyleInstance);
 	ensure(StyleInstance.IsUnique());
 	StyleInstance.Reset();
 }
 
-FName UMCGraspingEditorStyle::GetStyleSetName()
+FName UMCGraspEdStyle::GetStyleSetName()
 {
 	static FName StyleSetName(TEXT("GraspingStyle"));
 	return StyleSetName;
@@ -36,7 +36,7 @@ FName UMCGraspingEditorStyle::GetStyleSetName()
 
 const FVector2D Icon40x40(40.0f, 40.0f);
 
-TSharedRef<FSlateStyleSet> UMCGraspingEditorStyle::Create()
+TSharedRef<FSlateStyleSet> UMCGraspEdStyle::Create()
 {
 	TSharedRef<FSlateStyleSet> Style = MakeShareable(new FSlateStyleSet("GraspingStyle"));
 	Style->SetContentRoot(IPluginManager::Get().FindPlugin("URealisticGrasping")->GetBaseDir() / TEXT("Resources"));
@@ -53,7 +53,7 @@ TSharedRef<FSlateStyleSet> UMCGraspingEditorStyle::Create()
 #undef OTF_FONT
 
 
-void UMCGraspingEditorStyle::ReloadTextures()
+void UMCGraspEdStyle::ReloadTextures()
 {
 	if (FSlateApplication::IsInitialized())
 	{
@@ -61,7 +61,7 @@ void UMCGraspingEditorStyle::ReloadTextures()
 	}
 }
 
-const ISlateStyle& UMCGraspingEditorStyle::Get()
+const ISlateStyle& UMCGraspEdStyle::Get()
 {
 	return *StyleInstance;
 }

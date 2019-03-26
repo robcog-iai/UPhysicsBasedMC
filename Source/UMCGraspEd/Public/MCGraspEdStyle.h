@@ -8,7 +8,7 @@
 /**
  * Sets all of the styles for the new added botton.
  */
-class UMCGraspingEditorStyle
+class UMCGraspEdStyle
 {
 public:
 	static void Initialize();

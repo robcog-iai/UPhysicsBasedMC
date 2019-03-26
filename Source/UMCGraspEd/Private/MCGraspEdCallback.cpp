@@ -1,13 +1,11 @@
 // Copyright 2018, Institute for Artificial Intelligence - University of Bremen
 
-#include "MCGraspingEditorCallback.h"
+#include "MCGraspEdCallback.h"
 #include "Core.h"
 #include "Editor.h"
 #include "Runtime/Engine/Classes/Components/SkeletalMeshComponent.h"
-#include "Runtime/Core/Public/Misc/FileHelper.h"
-#include "Runtime/Core/Public/Misc/Paths.h"
-#include "MCRead.h"
-#include "MCWrite.h"
+#include "MCGraspAnimReader.h"
+#include "MCGraspAnimWriter.h"
 #include "MCAnimationDataStructure.h"
 #include "Runtime/Engine/Classes/PhysicsEngine/ConstraintInstance.h"
 #include "Runtime/Slate/Public/Widgets/Input/SEditableText.h"
@@ -22,11 +20,11 @@
 #define LOCTEXT_NAMESPACE "FMCGraspingEditorModule"
 
 
-UMCGraspingEditorCallback::UMCGraspingEditorCallback()
+UMCGraspEdCallback::UMCGraspEdCallback()
 {
 }
 
-void UMCGraspingEditorCallback::ShowEpisodeEditWindow()
+void UMCGraspEdCallback::ShowEpisodeEditWindow()
 {
 	//Creates the edit menu with 2 editable textfields and a button
 	TSharedRef<SWindow> CookbookWindow = SNew(SWindow)
@@ -57,7 +55,7 @@ void UMCGraspingEditorCallback::ShowEpisodeEditWindow()
 				.VAlign(VAlign_Center)
 				[
 					SNew(SButton)
-					.OnClicked_Raw(this, &UMCGraspingEditorCallback::OnEditButtonClicked)
+					.OnClicked_Raw(this, &UMCGraspEdCallback::OnEditButtonClicked)
 					.Content()
 					[
 							SAssignNew(ButtonLabel, STextBlock)
@@ -81,7 +79,7 @@ void UMCGraspingEditorCallback::ShowEpisodeEditWindow()
 	}
 }
 
-void UMCGraspingEditorCallback::ShowSaveGraspingStyleWindow()
+void UMCGraspEdCallback::ShowSaveGraspingStyleWindow()
 {
 	//Creates the save menu with 2 editable textfields and a button
 	TSharedRef<SWindow> CookbookWindow = SNew(SWindow)
@@ -103,7 +101,7 @@ void UMCGraspingEditorCallback::ShowSaveGraspingStyleWindow()
 		.VAlign(VAlign_Center)
 		[
 			SNew(SButton)
-			.OnClicked_Raw(this, &UMCGraspingEditorCallback::OnSaveButtonClicked)
+			.OnClicked_Raw(this, &UMCGraspEdCallback::OnSaveButtonClicked)
 		.Content()
 		[
 			SAssignNew(ButtonLabel, STextBlock)
@@ -127,7 +125,7 @@ void UMCGraspingEditorCallback::ShowSaveGraspingStyleWindow()
 	}
 }
 
-void UMCGraspingEditorCallback::SaveBoneDatasAsEpisode()
+void UMCGraspEdCallback::SaveBoneDatasAsEpisode()
 {
 	TMap<FString, FMCBoneData> NewEpisodeData = TMap<FString, FMCBoneData>();
 	TMap<FString, FRotator> CalculatedBoneRotations;
@@ -197,7 +195,7 @@ void UMCGraspingEditorCallback::SaveBoneDatasAsEpisode()
 	ShowMessageBox(FText::FromString("Saved current position"), FText::FromString("The current hand position was saved. Either add more episodes for the grasp or press Create new grasping style to save all your episodes in a file."));
 }
 
-void UMCGraspingEditorCallback::WriteEpisodesToFile()
+void UMCGraspEdCallback::WriteEpisodesToFile()
 {
 	//You need at least 2 episodes to create a 
 	if (NewGraspAnimationData.GetNumberOfEpisodes() < 2) 
@@ -207,7 +205,7 @@ void UMCGraspingEditorCallback::WriteEpisodesToFile()
 	}
 
 	//Save all episodes under the given name and reset all boolean etc.
-	UMCWrite Write = UMCWrite();
+	UMCGraspAnimWriter Write = UMCGraspAnimWriter();
 	NewGraspAnimationData.AnimationName = NewGraspStyle;
 	Write.WriteFile(NewGraspAnimationData);
 	NewGraspAnimationData = FMCAnimationData();
@@ -216,7 +214,7 @@ void UMCGraspingEditorCallback::WriteEpisodesToFile()
 	ShowMessageBox(FText::FromString("Saved grap"), FText::FromString("Grasp was saved in an .ini file in the GraspAnimations folder."));
 }
 
-void UMCGraspingEditorCallback::EditLoadedGraspingStyle()
+void UMCGraspEdCallback::EditLoadedGraspingStyle()
 {
 	if (CurrentGraspEdited.IsEmpty() || CurrentEditedEpisode == 0)
 	{
@@ -224,7 +222,7 @@ void UMCGraspingEditorCallback::EditLoadedGraspingStyle()
 		return;
 	}
 	
-	FMCAnimationData GraspDataToEdit = UMCRead::ReadFile(DebugMeshComponent->SkeletalMesh->GetFName().ToString(), CurrentGraspEdited);
+	FMCAnimationData GraspDataToEdit = UMCGraspAnimReader::ReadFile(DebugMeshComponent->SkeletalMesh->GetFName().ToString(), CurrentGraspEdited);
 
 	TMap<FString, FMCBoneData> NewEpisodeData = TMap<FString, FMCBoneData>();
 
@@ -267,13 +265,13 @@ void UMCGraspingEditorCallback::EditLoadedGraspingStyle()
 		ShowMessageBox(FText::FromString("Error"), FText::FromString("Could not edit the chosen episode."));
 		return;
 	}
-	UMCWrite::WriteFile(GraspDataToEdit);
+	UMCGraspAnimWriter::WriteFile(GraspDataToEdit);
 	ShowMessageBox(FText::FromString("Edited grasp"), FText::FromString("The grasp was successfuly edited."));
 	//Reloads the saved step.
 	ChangeBoneRotationsTo(CurrentGraspEdited, CurrentEditedEpisode);
 }
 
-TMap<FName, FRotator> UMCGraspingEditorCallback::GetBoneRotations(USkeletalMeshComponent * SkeletalComponent)
+TMap<FName, FRotator> UMCGraspEdCallback::GetBoneRotations(USkeletalMeshComponent * SkeletalComponent)
 {
 	TMap<FName, FRotator> BoneRotations;
 	TArray<FName> BoneNames;
@@ -289,19 +287,12 @@ TMap<FName, FRotator> UMCGraspingEditorCallback::GetBoneRotations(USkeletalMeshC
 	return BoneRotations;
 }
 
-void UMCGraspingEditorCallback::SetPreviewMeshComponent(UDebugSkelMeshComponent * Component)
+void UMCGraspEdCallback::SetPreviewMeshComponent(UDebugSkelMeshComponent * Component)
 {
 	DebugMeshComponent = Component;
 }
 
-void UMCGraspingEditorCallback::ReadFingerTypes()
-{
-	TArray<FString> FingerTypes;
-	FString Path = FPaths::ConvertRelativePathToFull(FPaths::ProjectDir()) + "\\Plugins\\URealisticGrasping\\Config\\TypeMap.txt";
-	const TCHAR* Filepath = *Path;
-	FFileHelper::LoadFileToStringArray(FingerTypes, Filepath);
-}
-void UMCGraspingEditorCallback::CreateAnimationData(TMap<FString, FRotator> EpisodeData)
+void UMCGraspEdCallback::CreateAnimationData(TMap<FString, FRotator> EpisodeData)
 {
 	NewGraspAnimationData.BoneNames = TArray<FString>();
 	for (auto& Elem : EpisodeData)
@@ -310,11 +301,11 @@ void UMCGraspingEditorCallback::CreateAnimationData(TMap<FString, FRotator> Epis
 	}
 }
 
-void UMCGraspingEditorCallback::ChangeBoneRotationsTo(FString GraspingStyle, int EpisodeToEdit)
+void UMCGraspEdCallback::ChangeBoneRotationsTo(FString GraspingStyle, int EpisodeToEdit)
 {
 	DebugMeshComponent->SkeletalMesh->Modify();
 	DebugMeshComponent->PreviewInstance->ResetModifiedBone();
-	FMCAnimationData GraspDataToReadFrom = UMCRead::ReadFile(DebugMeshComponent->SkeletalMesh->GetFName().ToString(), GraspingStyle);
+	FMCAnimationData GraspDataToReadFrom = UMCGraspAnimReader::ReadFile(DebugMeshComponent->SkeletalMesh->GetFName().ToString(), GraspingStyle);
 
 	//Show an error message if one of the parameter are wrong.
 	if (GraspDataToReadFrom.AnimationName == "") {
@@ -343,12 +334,12 @@ void UMCGraspingEditorCallback::ChangeBoneRotationsTo(FString GraspingStyle, int
 	DebugMeshComponent->PreviewInstance->SetForceRetargetBasePose(true);
 }
 
-void UMCGraspingEditorCallback::ShowInstructions(FString Message)
+void UMCGraspEdCallback::ShowInstructions(FString Message)
 {
 	ShowMessageBox(FText::FromString("Help"), FText::FromString(Message));
 }
 
-void UMCGraspingEditorCallback::PlayOneEpisode(TMap<FString, FVector> BoneStartLocations, FMCAnimationData PlayData, int Index)
+void UMCGraspEdCallback::PlayOneEpisode(TMap<FString, FVector> BoneStartLocations, FMCAnimationData PlayData, int Index)
 {
 	DebugMeshComponent->SkeletalMesh->Modify();
 
@@ -362,16 +353,16 @@ void UMCGraspingEditorCallback::PlayOneEpisode(TMap<FString, FVector> BoneStartL
 	DebugMeshComponent->PreviewInstance->SetForceRetargetBasePose(true);
 }
 
-void UMCGraspingEditorCallback::DiscardAllEpisodes()
+void UMCGraspEdCallback::DiscardAllEpisodes()
 {
 	NewGraspAnimationData = FMCAnimationData();
 	Reset();
 	ShowMessageBox(FText::FromString("Discard successful"), FText::FromString("All your recorded Episodes are discarded."));
 }
 
-void UMCGraspingEditorCallback::ShowEpisode(bool bForward)
+void UMCGraspEdCallback::ShowEpisode(bool bForward)
 {
-	FMCAnimationData HandAnimationData = UMCRead::ReadFile(DebugMeshComponent->SkeletalMesh->GetFName().ToString(), CurrentGraspEdited);
+	FMCAnimationData HandAnimationData = UMCGraspAnimReader::ReadFile(DebugMeshComponent->SkeletalMesh->GetFName().ToString(), CurrentGraspEdited);
 	int MaxEpisode = HandAnimationData.GetNumberOfEpisodes() - 1;
 	DebugMeshComponent->SkeletalMesh->Modify();
 	int BoneNamesIndex = 0;
@@ -414,7 +405,7 @@ void UMCGraspingEditorCallback::ShowEpisode(bool bForward)
 	PlayOneEpisode(BoneStartLocations, HandAnimationData, CurrentEditedEpisode);
 }
 
-void UMCGraspingEditorCallback::Reset()
+void UMCGraspEdCallback::Reset()
 {
 	StartRotatorsSet = false;
 	StartRotators.Empty();
@@ -427,12 +418,12 @@ void UMCGraspingEditorCallback::Reset()
 	bFirstCreatedEpisodeData = false;
 }
 
-void UMCGraspingEditorCallback::SetStartingBoneRotations(TMap<FString, FTransform> BoneRotations)
+void UMCGraspEdCallback::SetStartingBoneRotations(TMap<FString, FTransform> BoneRotations)
 {
 	StartingBoneRotations = BoneRotations;
 }
 
-void UMCGraspingEditorCallback::ShowMessageBox(FText Title, FText Message)
+void UMCGraspEdCallback::ShowMessageBox(FText Title, FText Message)
 {
 	FMessageDialog* Instructions = new FMessageDialog();
 
@@ -440,7 +431,7 @@ void UMCGraspingEditorCallback::ShowMessageBox(FText Title, FText Message)
 	Instructions->Debugf(Message,&Title);
 }
 
-void UMCGraspingEditorCallback::FillStartingRotatorsInComponentSpace()
+void UMCGraspEdCallback::FillStartingRotatorsInComponentSpace()
 {
 	//Gets all rotations of the bones in components space.
 	for (FConstraintInstance* NewConstraint : DebugMeshComponent->Constraints)
@@ -453,7 +444,7 @@ void UMCGraspingEditorCallback::FillStartingRotatorsInComponentSpace()
 	}
 }
 
-void UMCGraspingEditorCallback::ApplyFingerDataForStartingIndex(FMCAnimationData PlayData)
+void UMCGraspEdCallback::ApplyFingerDataForStartingIndex(FMCAnimationData PlayData)
 {
 	FMCEpisodeData FingerDataStartingIndex = PlayData.GetPositionDataWithIndex(0);
 	TMap<FString, FMCBoneData>* FingerDataMapStartingIndex = FingerDataStartingIndex.GetMap();
@@ -470,7 +461,7 @@ void UMCGraspingEditorCallback::ApplyFingerDataForStartingIndex(FMCAnimationData
 	}
 }
 
-void UMCGraspingEditorCallback::ApplyFingerDataForIndex(FMCAnimationData PlayData, int Index)
+void UMCGraspEdCallback::ApplyFingerDataForIndex(FMCAnimationData PlayData, int Index)
 {
 	FMCEpisodeData FingerData = PlayData.GetPositionDataWithIndex(Index);
 	TMap<FString, FMCBoneData>* FingerDataMap = FingerData.GetMap();
@@ -487,7 +478,7 @@ void UMCGraspingEditorCallback::ApplyFingerDataForIndex(FMCAnimationData PlayDat
 	}
 }
 
-void UMCGraspingEditorCallback::FillStartLocations()
+void UMCGraspEdCallback::FillStartLocations()
 {
 	//Gets the current starting locations if the DebugMeshComponent
 	TArray<FName> BoneNames;
@@ -500,7 +491,7 @@ void UMCGraspingEditorCallback::FillStartLocations()
 	}
 }
 
-FReply UMCGraspingEditorCallback::OnEditButtonClicked()
+FReply UMCGraspEdCallback::OnEditButtonClicked()
 {
 	CurrentGraspEdited = GraspingStyleBox->GetText().ToString();
 	FText EpisodeToEdit = EpisodeBox->GetText();
@@ -511,7 +502,7 @@ FReply UMCGraspingEditorCallback::OnEditButtonClicked()
 	return FReply::Handled();
 }
 
-FReply UMCGraspingEditorCallback::OnSaveButtonClicked()
+FReply UMCGraspEdCallback::OnSaveButtonClicked()
 {
 	NewGraspStyle = NewGraspingStyleNameBox->GetText().ToString();
 

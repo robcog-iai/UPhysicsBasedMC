@@ -70,7 +70,7 @@ void UMCGraspController::InitializeComponent()
 		GraspExecuter->InitiateExecuter(ParentActor, SpringBase, SpringMultiplier, Damping, ForceLimit);
 		if (EquippedGrasps.Num() > 0)
 		{
-			GraspExecuter->SetGraspingData(UMCRead::ConvertAssetToStruct(EquippedGrasps[CurrentGrasp]));
+			GraspExecuter->SetGraspingData(UMCGraspAnimReader::ConvertAssetToStruct(EquippedGrasps[CurrentGrasp]));
 		}
 	}
 }
@@ -106,7 +106,7 @@ void UMCGraspController::NextGrasp()
 			CurrentGrasp++;
 		}
 
-		GraspExecuter->SetGraspingData(UMCRead::ConvertAssetToStruct(EquippedGrasps[CurrentGrasp]));
+		GraspExecuter->SetGraspingData(UMCGraspAnimReader::ConvertAssetToStruct(EquippedGrasps[CurrentGrasp]));
 	}
 }
 
@@ -122,6 +122,6 @@ void UMCGraspController::PreviousGrasp()
 			CurrentGrasp--;
 		}
 
-		GraspExecuter->SetGraspingData(UMCRead::ConvertAssetToStruct(EquippedGrasps[CurrentGrasp]));
+		GraspExecuter->SetGraspingData(UMCGraspAnimReader::ConvertAssetToStruct(EquippedGrasps[CurrentGrasp]));
 	}
 }
