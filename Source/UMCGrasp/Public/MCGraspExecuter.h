@@ -86,9 +86,11 @@ private:
 
 	float SpringBase = 9000;
 
-	float SpringMultiplier = 1;
+	float SpringMultiplier = 5;
 
 	float Damping = 1000;
 
 	float ForceLimit = 0;
+
+	bool bFirstUpdate = true;
 };

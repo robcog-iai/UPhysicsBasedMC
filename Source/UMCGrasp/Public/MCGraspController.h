@@ -67,7 +67,7 @@ public:
 	float SpringBase = 9000;
 
 	UPROPERTY(EditAnywhere)
-	float SpringMultiplier = 1;
+	float SpringMultiplier = 5;
 
 	UPROPERTY(EditAnywhere)
 	float Damping = 1000;
