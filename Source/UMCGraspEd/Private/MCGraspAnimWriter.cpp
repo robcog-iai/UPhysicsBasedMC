@@ -20,10 +20,10 @@ void UMCGraspAnimWriter::WriteFile(const FMCAnimationData& DataStruct)
 			{
 				DataAsset->BoneNames.Add(BoneName);
 			}
-			DataAsset->PositionEpisode = TArray<FMCEpisodeData>();
-			for (FMCEpisodeData Episode : DataStruct.PositionEpisode)
+			DataAsset->Frames = TArray<FMCFrame>();
+			for (FMCFrame Episode : DataStruct.Frames)
 			{
-				DataAsset->PositionEpisode.Add(Episode);
+				DataAsset->Frames.Add(Episode);
 			}
 			return;
 		}

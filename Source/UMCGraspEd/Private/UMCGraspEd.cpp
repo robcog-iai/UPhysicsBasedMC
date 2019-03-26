@@ -53,7 +53,7 @@ void FUMCGraspEd::InitializeUIButtons()
 	PluginCommandListEditSection = MakeShareable(new FUICommandList);
 	const UMCGraspEdCommands& Commands = UMCGraspEdCommands::Get();
 
-	//Commands for the "Create grasp" button
+	//Commands for the "New Grasp Animation " button
 	PluginCommandListCreateSection->MapAction(
 		Commands.CreateGraspingStyle,
 		FExecuteAction::CreateRaw(this, &FUMCGraspEd::ShowSaveGraspingStyleWindow),
@@ -78,16 +78,16 @@ void FUMCGraspEd::InitializeUIButtons()
 		FCanExecuteAction()
 	);
 
-	//Commands for the "Edit grasp" button
+	//Commands for the "Edit Grasp Animation" button
 	PluginCommandListEditSection->MapAction(
 		Commands.LoadGraspingStyle,
-		FExecuteAction::CreateRaw(this, &FUMCGraspEd::EditLoadedGraspingStyle),
+		FExecuteAction::CreateRaw(this, &FUMCGraspEd::ShowEpisodeEditWindow),
 		FCanExecuteAction()
-	);
+	); 
 
 	PluginCommandListEditSection->MapAction(
 		Commands.EditGraspingPosition,
-		FExecuteAction::CreateRaw(this, &FUMCGraspEd::ShowEpisodeEditWindow),
+		FExecuteAction::CreateRaw(this, &FUMCGraspEd::EditLoadedGraspingStyle),
 		FCanExecuteAction()
 	);
 
@@ -117,14 +117,14 @@ void FUMCGraspEd::CreateButton()
 		FModuleManager::Get().LoadModuleChecked<ISkeletalMeshEditorModule>("SkeletonEditor");
 	// Add toolbar entry
 	TSharedPtr<FExtender> ToolbarExtender = MakeShareable(new FExtender);
-	//Creates the "Create grasp" button
+	//Creates the "New Grasp Animation" button
 	ToolbarExtender->AddToolBarExtension(
 		"Asset",
 		EExtensionHook::After,
 		PluginCommandListCreateSection,
 		FToolBarExtensionDelegate::CreateRaw(this, &FUMCGraspEd::AddCreateOptions)
 	);
-	//Creates the "Edit grasp" button
+	//Creates the "Edit Grasp Animation" button
 	ToolbarExtender->AddToolBarExtension(
 		"Asset",
 		EExtensionHook::After,
@@ -138,14 +138,14 @@ void FUMCGraspEd::CreateButton()
 
 TSharedRef<SWidget> FUMCGraspEd::CreateOptionMenu()
 {
-	//Creates all of the drop down entries of the "Create grasp" button.
+	//Creates all of the drop down entries of the "New Grasp Animation" button.
 	FMenuBuilder CreateBuilder(false, PluginCommandListCreateSection.ToSharedRef());
 	
 	const UMCGraspEdCommands& Commands = UMCGraspEdCommands::Get();
-	CreateBuilder.BeginSection("Create grasp");
+	CreateBuilder.BeginSection("New Grasp Animation");
 	{
-		CreateBuilder.AddMenuEntry(Commands.CreateGraspingStyle);
 		CreateBuilder.AddMenuEntry(Commands.SaveGraspingPosition);
+		CreateBuilder.AddMenuEntry(Commands.CreateGraspingStyle);
 		CreateBuilder.AddMenuEntry(Commands.DiscardNewGraspingStyle);
 		CreateBuilder.AddMenuEntry(Commands.ShowCreateHelp);
 	}
@@ -156,10 +156,10 @@ TSharedRef<SWidget> FUMCGraspEd::CreateOptionMenu()
 
 TSharedRef<SWidget> FUMCGraspEd::EditOptionMenu()
 {
-	//Creates all of the drop down entries of the "Edit grasp" button.
+	//Creates all of the drop down entries of the "Edit Grasp Animation" button.
 	FMenuBuilder EditBuilder(false, PluginCommandListEditSection.ToSharedRef());
 	const UMCGraspEdCommands& Commands = UMCGraspEdCommands::Get();
-	EditBuilder.BeginSection("Edit grasps");
+	EditBuilder.BeginSection("Edit Grasp Animation");
 	{
 		EditBuilder.AddMenuEntry(Commands.LoadGraspingStyle);
 		EditBuilder.AddMenuEntry(Commands.EditGraspingPosition);
@@ -180,8 +180,8 @@ void FUMCGraspEd::AddCreateOptions(FToolBarBuilder & Builder)
 	Builder.AddComboButton(
 		FUIAction(),
 		FOnGetContent::CreateRaw(this, &FUMCGraspEd::CreateOptionMenu),
-		LOCTEXT("Create", "Create grasp"),
-		LOCTEXT("Create_Tooltip", "Options to create a grasping style"),
+		LOCTEXT("Create", "New Grasp Animation"),
+		LOCTEXT("Create_Tooltip", "Options to create a grasp animation"),
 		FSlateIcon(UMCGraspEdStyle::GetStyleSetName(), "GraspingEditor.DebugOptionToolBar"),
 		false
 	);
@@ -195,8 +195,8 @@ void FUMCGraspEd::AddEditOptions(FToolBarBuilder & Builder)
 	Builder.AddComboButton(
 		FUIAction(),
 		FOnGetContent::CreateRaw(this, &FUMCGraspEd::EditOptionMenu),
-		LOCTEXT("Edit", "Edit grasp"),
-		LOCTEXT("Edit_Tooltip", "Options to edit an existing grasping style"),
+		LOCTEXT("Edit", "Edit Grasp Animation"),
+		LOCTEXT("Edit_Tooltip", "Options to edit an existing grasp animation"),
 		FSlateIcon(UMCGraspEdStyle::GetStyleSetName(), "GraspingEditor.DebugOptionToolBar"),
 		false
 	);

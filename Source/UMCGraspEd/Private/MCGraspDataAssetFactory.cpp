@@ -25,9 +25,9 @@ UObject* UMCGraspDataAssetFactory::CreateGraspDataAsset(UClass* InClass, UObject
 	{
 		DataAsset->BoneNames.Add(BoneName);
 	}
-	for(FMCEpisodeData Episode : DataStruct.PositionEpisode)
+	for(FMCFrame Episode : DataStruct.Frames)
 	{
-		DataAsset->PositionEpisode.Add(Episode);
+		DataAsset->Frames.Add(Episode);
 	}
 
 	FEditorDelegates::OnAssetPostImport.Broadcast(this, DataAsset);

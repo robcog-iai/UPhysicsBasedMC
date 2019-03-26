@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "MCAnimationDataStructure.generated.h"
+#include "MCGraspAnimStructs.generated.h"
 
 //This Struct represents one bone with all their values
 USTRUCT()
@@ -11,97 +11,98 @@ struct FMCBoneData
 {
 	GENERATED_BODY()
 
-	// The bonespace rotation after the calculation
+	/** Input value for a constraints angular drive motor.*/
 	UPROPERTY(VisibleAnywhere)
-	FRotator AngularDriveInput;
+	FRotator AngularOrientationTarget;
 
-	// The bonespace rotation before the calculation
+	/** Temporary array of local-space (relative to parent bone) rotation for each bone. 
+	Is used to load Animation back into editor.*/
 	UPROPERTY(VisibleAnywhere)
-	FRotator BoneSpace;
+	FRotator BoneSpaceRotation;
 
 	// Default ctor
 	FMCBoneData() {}
 
-	// Ctor with AngularDriveInput
-	FMCBoneData(const FRotator& InAngularDriveInput) : AngularDriveInput(InAngularDriveInput)
+	// Ctor with AngularOrientationTarget
+	FMCBoneData(const FRotator& InAngularDriveInput) : AngularOrientationTarget(InAngularDriveInput)
 	{}
 
 	// Ctor with 
 	FMCBoneData(const FRotator& InAngularDriveInput, const FRotator& InBoneSpace)
-		: AngularDriveInput(InAngularDriveInput), BoneSpace(InBoneSpace)
+		: AngularOrientationTarget(InAngularDriveInput), BoneSpaceRotation(InBoneSpace)
 	{}
 
 	//Create the operator == to check for equality
 	FORCEINLINE bool operator==(const FMCBoneData &arg1) const
 	{
 		//Checks if the values are equal
-		return (arg1.BoneSpace == BoneSpace && arg1.AngularDriveInput == AngularDriveInput);
+		return (arg1.BoneSpaceRotation == BoneSpaceRotation && arg1.AngularOrientationTarget == AngularOrientationTarget);
 	}
 };
 
 //This structure represents one Episode with all their finger datas
 USTRUCT()
-struct FMCEpisodeData
+struct FMCFrame
 {
 	GENERATED_USTRUCT_BODY()
 public:
 	//Standard constructor
-	FMCEpisodeData()
+	FMCFrame()
 	{
-		PositionData = TMap<FString, FMCBoneData>();
+		BonesData = TMap<FString, FMCBoneData>();
 	}
 
 	//Checks for equality
-	FORCEINLINE bool operator==(const FMCEpisodeData &arg1) const
+	FORCEINLINE bool operator==(const FMCFrame &arg1) const
 	{
 		//Go through all FingerDatas and check for equality
-		for (auto Elem : PositionData)
+		for (auto Elem : BonesData)
 		{
 			//Checks if the other struct contains data for the current key
-			bool bContains = arg1.PositionData.Contains(Elem.Key);
+			bool bContains = arg1.BonesData.Contains(Elem.Key);
 			if (!bContains) return false;
 
 			//Checks for equality
 			const FMCBoneData ConstData = Elem.Value;
-			bContains = *arg1.PositionData.Find(Elem.Key) == ConstData;
+			bContains = *arg1.BonesData.Find(Elem.Key) == ConstData;
 			if (!bContains) return false;
 		}
 		return true;
 	}
 	
 	//Constructor to set all finger datas directly
-	FMCEpisodeData(const TMap<FString, FMCBoneData>& Map)
+	FMCFrame(const TMap<FString, FMCBoneData>& Map)
 	{
-		PositionData = Map;
+		BonesData = Map;
 	}
 
 	//function to set all finger data
 	void SetAllData(const TMap<FString, FMCBoneData> & NewMap)
 	{
-		PositionData = NewMap;
+		BonesData = NewMap;
 	}
 
 	//sets one data for a finger
 	void AddNewBoneData(const FString& Name, const FMCBoneData& Data)
 	{
-		PositionData.Add(Name, Data);
+		BonesData.Add(Name, Data);
 	}
 
 	//returns one finger data
 	FMCBoneData* GetBoneData(const FString& Name)
 	{
-		return PositionData.Find(Name);
+		return BonesData.Find(Name);
 	}
 
 	//Function that returns the complete map with all fingers and their datas.
 	TMap<FString, FMCBoneData>* GetMap()
 	{
-		return &PositionData;
+		return &BonesData;
 	}
 
 	//map with all data for all fingers
 	UPROPERTY(VisibleAnywhere)
-	TMap<FString, FMCBoneData> PositionData;
+	TMap<FString, FMCBoneData> BonesData;
 
 };
 
@@ -120,34 +121,34 @@ public:
 	TArray<FString> BoneNames;
 
 	//All episodes
-	TArray<FMCEpisodeData> PositionEpisode;
+	TArray<FMCFrame> Frames;
 
 	//Standard constructor
 	FMCAnimationData()
 	{
-		PositionEpisode = TArray<FMCEpisodeData>();
+		Frames = TArray<FMCFrame>();
 		BoneNames = TArray<FString>();
 	}
 
 	//adds a new episode
-	void AddNewPositionData(const FMCEpisodeData& Data)
+	void AddNewPositionData(const FMCFrame& Data)
 	{
-		PositionEpisode.Add(Data);
+		Frames.Add(Data);
 	}
 
 	
 	//returns the number of episodes in this animation
 	int GetNumberOfEpisodes()
 	{
-		return PositionEpisode.Num();
+		return Frames.Num();
 	}
 
 	//replaces one Episode with another one
-	bool ReplaceEpisode(const FMCEpisodeData& OldData, const FMCEpisodeData& NewData)
+	bool ReplaceEpisode(const FMCFrame& OldData, const FMCFrame& NewData)
 	{
 		int32 Index = RemoveEpisode(OldData);
 		if (Index < 0) return false;
-		int32 IndexNew = PositionEpisode.Insert(NewData, Index);
+		int32 IndexNew = Frames.Insert(NewData, Index);
 
 		//Checks if it was added to the right position
 		return Index == IndexNew;
@@ -159,26 +160,26 @@ public:
 		//Checks if the index is valid and also if the number of bones that are saved in BoneFingerNames
 		//are equal with the new map (if not then there are missing bones)
 		if (RemoveIndex < GetNumberOfEpisodes() && BoneData.Num() != BoneNames.Num()) return false;
-		PositionEpisode.RemoveAt(RemoveIndex);
+		Frames.RemoveAt(RemoveIndex);
 		return AddOneEpisode(BoneData, RemoveIndex);
 	}
 
 	//removes one episode
-	int32 RemoveEpisode(const FMCEpisodeData& OldData)
+	int32 RemoveEpisode(const FMCFrame& OldData)
 	{
 		//Checks if the data exists 
-		if (!PositionEpisode.Contains(OldData)) return -1;
+		if (!Frames.Contains(OldData)) return -1;
 
-		int32 Index = PositionEpisode.IndexOfByKey(OldData);
-		PositionEpisode.RemoveAt(Index);
+		int32 Index = Frames.IndexOfByKey(OldData);
+		Frames.RemoveAt(Index);
 		return Index;
 	}
 
 	//returns one episode for a specific index
-	FMCEpisodeData GetPositionDataWithIndex(const int& Index)
+	FMCFrame GetPositionDataWithIndex(const int& Index)
 	{
-		if (Index >= PositionEpisode.Num() || Index < 0) return FMCEpisodeData();
-		return PositionEpisode[Index];
+		if (Index >= Frames.Num() || Index < 0) return FMCFrame();
+		return Frames[Index];
 	}
 
 	//Adds a new episode
@@ -202,18 +203,18 @@ public:
 	bool AddOneEpisode(const TMap<FString, FMCBoneData>& BoneData, const int32& Index)
 	{
 		//Create a new episode for all fingers
-		FMCEpisodeData EpisodeData = FMCEpisodeData();
+		FMCFrame EpisodeData = FMCFrame();
 		EpisodeData.SetAllData(BoneData);
 
 		//If the Index is not -1 insert this episode to this position
-		if (Index >= 0 && Index <= PositionEpisode.Num())
+		if (Index >= 0 && Index <= Frames.Num())
 		{
-			PositionEpisode.Insert(EpisodeData,Index);
+			Frames.Insert(EpisodeData,Index);
 		}
 		else
 		{
 			//Add the episode to the end
-			PositionEpisode.Add(EpisodeData);
+			Frames.Add(EpisodeData);
 		}
 		return true;
 	}

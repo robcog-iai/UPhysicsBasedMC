@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "MCAnimationDataStructure.h"
+#include "MCGraspAnimStructs.h"
 #include "Runtime/Core/Public/HAL/PlatformFilemanager.h"
 #include "Runtime/Core/Public/Misc/LocalTimestampDirectoryVisitor.h"
 #include "CoreMinimal.h"

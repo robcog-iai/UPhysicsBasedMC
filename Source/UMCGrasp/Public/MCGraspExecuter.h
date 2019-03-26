@@ -3,7 +3,7 @@
 #pragma once
 
 #include "Engine.h"
-#include "MCAnimationDataStructure.h"
+#include "MCGraspAnimStructs.h"
 #include "Runtime/Engine/Classes/Animation/SkeletalMeshActor.h"
 #include "MCGraspExecuter.generated.h"
 
@@ -41,14 +41,14 @@ private:
 	@param Closed - final hand state if input was 1 
 	@param Input - number from 0-1 that indicates how far the grasping trigger is being pushed down
 	*/
-	void LerpHandOrientation(FMCEpisodeData* Target, FMCEpisodeData Initial, FMCEpisodeData Closed, const float Input);
+	void LerpHandOrientation(FMCFrame* Target, FMCFrame Initial, FMCFrame Closed, const float Input);
 
 	/*
 	Calls DriveToFingerOrientationTarget for every finger.
 	@param Target - the target position that has been calculated by lerp
 	@param Hand - the AGraspingHand to move
 	*/
-	void DriveToHandOrientationTarget(FMCEpisodeData* Target);
+	void DriveToHandOrientationTarget(FMCFrame* Target);
 
 	/*
 	Finds out which constraint belongs to which bone and sets them up  so we cann move them
