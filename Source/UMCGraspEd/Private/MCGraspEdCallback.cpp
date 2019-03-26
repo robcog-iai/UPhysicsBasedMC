@@ -127,6 +127,11 @@ void UMCGraspEdCallback::ShowSaveGraspingStyleWindow()
 
 void UMCGraspEdCallback::SaveBoneDatasAsEpisode()
 {
+	if (!StartRotatorsSet) 
+	{
+		return;
+	}
+
 	TMap<FString, FMCBoneData> NewEpisodeData = TMap<FString, FMCBoneData>();
 	TMap<FString, FRotator> CalculatedBoneRotations;
 
@@ -167,36 +172,23 @@ void UMCGraspEdCallback::SaveBoneDatasAsEpisode()
 		FQuat QuatBone2 = DebugMeshComponent->GetBoneQuaternion(NewConstraint->ConstraintBone2, EBoneSpaces::ComponentSpace);
 
 		//save the start rotations of all the bones
-		if (!StartRotatorsSet)
-		{
-			StartRotators.Add(NewConstraint->ConstraintBone1.ToString(), QuatBone1);
-			StartRotators.Add(NewConstraint->ConstraintBone2.ToString(), QuatBone2);
-			NewBoneData.AngularOrientationTarget = FRotator(0, 0, 0);
-			CalculatedBoneRotations.Add(NewConstraint->ConstraintBone1.ToString(), FRotator(0, 0, 0));
-		}
-		else 
-		{
-			//calculate how much bone1's roation has changed relative to the start 
-			FTransform Transform1Difference = FTransform(QuatBone1).GetRelativeTransform(FTransform(*StartRotators.Find(NewConstraint->ConstraintBone1.ToString())));
-			FQuat Quat1Difference = Transform1Difference.GetRotation();
-			FTransform Transform2Difference = FTransform(QuatBone2).GetRelativeTransform(FTransform(*StartRotators.Find(NewConstraint->ConstraintBone2.ToString())));
-			FQuat Quat2Difference = Transform2Difference.GetRotation();
-			//substract the change in bone2's rotation, so movements of parent bones are filtered out of bone1's rotation 
-			FQuat Quat = Quat1Difference * Quat2Difference.Inverse();
-			NewBoneData.AngularOrientationTarget = Quat.Rotator();
+		//calculate how much bone1's roation has changed relative to the start 
+		FTransform Transform1Difference = FTransform(QuatBone1).GetRelativeTransform(FTransform(*StartRotatorsComponentSpace.Find(NewConstraint->ConstraintBone1.ToString())));
+		FQuat Quat1Difference = Transform1Difference.GetRotation();
+		FTransform Transform2Difference = FTransform(QuatBone2).GetRelativeTransform(FTransform(*StartRotatorsComponentSpace.Find(NewConstraint->ConstraintBone2.ToString())));
+		FQuat Quat2Difference = Transform2Difference.GetRotation();
+		//substract the change in bone2's rotation, so movements of parent bones are filtered out of bone1's rotation 
+		FQuat Quat = Quat1Difference * Quat2Difference.Inverse();
+		NewBoneData.AngularOrientationTarget = Quat.Rotator();
 
-			UE_LOG(LogTemp, Warning, TEXT("AngularOrientationTarget: %s"), *NewBoneData.AngularOrientationTarget.ToString());
+		UE_LOG(LogTemp, Warning, TEXT("Name: %s"), *NewConstraint->ConstraintBone1.ToString());
+		UE_LOG(LogTemp, Warning, TEXT("AngularOrientationTarget: %s"), *NewBoneData.AngularOrientationTarget.ToString());
+		UE_LOG(LogTemp, Warning, TEXT("ComponentSpace: %s"), *DebugMeshComponent->GetBoneQuaternion(NewConstraint->ConstraintBone1, EBoneSpaces::ComponentSpace).Rotator().ToString());
+		UE_LOG(LogTemp, Warning, TEXT("WorldSpace: %s"), *DebugMeshComponent->GetBoneQuaternion(NewConstraint->ConstraintBone1, EBoneSpaces::WorldSpace).Rotator().ToString());
 
-			CalculatedBoneRotations.Add(NewConstraint->ConstraintBone1.ToString(), (Quat.Rotator()));
-		}
+		CalculatedBoneRotations.Add(NewConstraint->ConstraintBone1.ToString(), (Quat.Rotator()));
+
 		NewEpisodeData.Add(NewConstraint->ConstraintBone1.ToString(), NewBoneData);
-	}
-
-
-	//Checks if there are already starting rotations set.
-	if (!StartRotatorsSet)
-	{
-		StartRotatorsSet = true;
 	}
 
 	//Checks if there is a need to create a new animation data.
@@ -247,12 +239,12 @@ void UMCGraspEdCallback::EditLoadedGraspingStyle()
 	TArray<FTransform> BoneSpaceTransforms = DebugMeshComponent->BoneSpaceTransforms;
 	TArray<FName> BoneNames;
 	DebugMeshComponent->GetBoneNames(BoneNames);
-	TMap<FString, FRotator> CurrentBoneSpaceTransforms;
+	TMap<FString, FRotator> CurrentBoneSpaceRotations;
 	int Index = 0;
 	//Saves the current bone rotations as bone space. Its needed to load in an episode since only bone space is displayed in a preview.
 	for (FTransform BoneTransform : BoneSpaceTransforms) 
 	{
-		CurrentBoneSpaceTransforms.Add(BoneNames[Index].ToString(), BoneTransform.GetRotation().Rotator());
+		CurrentBoneSpaceRotations.Add(BoneNames[Index].ToString(), BoneTransform.GetRotation().Rotator());
 		Index++;
 	}
 	//go over each constraint in the skeleton. bone1 is the one affected by it 
@@ -262,7 +254,7 @@ void UMCGraspEdCallback::EditLoadedGraspingStyle()
 		//get the rotation of bones
 		FQuat QuatBone1 = DebugMeshComponent->GetBoneQuaternion(NewConstraint->ConstraintBone1, EBoneSpaces::ComponentSpace);
 		FQuat QuatBone2 = DebugMeshComponent->GetBoneQuaternion(NewConstraint->ConstraintBone2, EBoneSpaces::ComponentSpace);
-		FRotator *FoundRotation = CurrentBoneSpaceTransforms.Find(NewConstraint->ConstraintBone1.ToString());
+		FRotator *FoundRotation = CurrentBoneSpaceRotations.Find(NewConstraint->ConstraintBone1.ToString());
 		NewBoneData.BoneSpaceRotation = *FoundRotation;
 
 		//calculate how much bone1's roation has changed relative to the start 
@@ -274,7 +266,6 @@ void UMCGraspEdCallback::EditLoadedGraspingStyle()
 		FQuat Quat = Quat1Difference * Quat2Difference.Inverse();
 		NewBoneData.AngularOrientationTarget = Quat.Rotator();
 		NewEpisodeData.Add(NewConstraint->ConstraintBone1.ToString(), NewBoneData);
-		
 	}
 
 	//Show an error message if the episode could not get overwritten.
@@ -426,7 +417,6 @@ void UMCGraspEdCallback::ShowEpisode(bool bForward)
 void UMCGraspEdCallback::Reset()
 {
 	StartRotatorsSet = false;
-	StartRotators.Empty();
 	StartLocations.Empty();
 	StartRotatorsComponentSpace.Empty();
 	StartingBoneRotations.Empty();
@@ -460,6 +450,7 @@ void UMCGraspEdCallback::FillStartingRotatorsInComponentSpace()
 		StartRotatorsComponentSpace.Add(NewConstraint->ConstraintBone1.ToString(), QuatBone1);
 		StartRotatorsComponentSpace.Add(NewConstraint->ConstraintBone2.ToString(), QuatBone2);
 	}
+	StartRotatorsSet = true;
 }
 
 void UMCGraspEdCallback::ApplyFingerDataForStartingIndex(FMCAnimationData PlayData)

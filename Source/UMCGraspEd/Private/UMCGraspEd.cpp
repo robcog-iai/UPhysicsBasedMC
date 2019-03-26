@@ -55,6 +55,12 @@ void FUMCGraspEd::InitializeUIButtons()
 
 	//Commands for the "New Grasp Animation " button
 	PluginCommandListCreateSection->MapAction(
+		Commands.StartCreatingGrasp,
+		FExecuteAction::CreateRaw(this, &FUMCGraspEd::InitializeStartRotations),
+		FCanExecuteAction()
+	);
+
+	PluginCommandListCreateSection->MapAction(
 		Commands.CreateGraspingStyle,
 		FExecuteAction::CreateRaw(this, &FUMCGraspEd::ShowSaveGraspingStyleWindow),
 		FCanExecuteAction()
@@ -144,6 +150,7 @@ TSharedRef<SWidget> FUMCGraspEd::CreateOptionMenu()
 	const UMCGraspEdCommands& Commands = UMCGraspEdCommands::Get();
 	CreateBuilder.BeginSection("New Grasp Animation");
 	{
+		CreateBuilder.AddMenuEntry(Commands.StartCreatingGrasp);
 		CreateBuilder.AddMenuEntry(Commands.SaveGraspingPosition);
 		CreateBuilder.AddMenuEntry(Commands.CreateGraspingStyle);
 		CreateBuilder.AddMenuEntry(Commands.DiscardNewGraspingStyle);
@@ -245,6 +252,12 @@ void FUMCGraspEd::ShowSaveGraspingStyleWindow()
 
 void FUMCGraspEd::SaveBoneDatasAsEpisode()
 {
+	if(!StartRotationsInitialized)
+	{
+		FString Message = "Please press start before creating any frames";
+		EditorCallback.ShowInstructions(Message);
+		return;
+	}
 	//Saves the current mesh position as an episode
 	EditorCallback.SetPreviewMeshComponent(DebugMeshComponent);
 	EditorCallback.SaveBoneDatasAsEpisode();
@@ -291,6 +304,12 @@ void FUMCGraspEd::ShowPreviousEpisode()
 	EditorCallback.ShowEpisode(false);
 }
 
+void FUMCGraspEd::InitializeStartRotations()
+{
+	EditorCallback.SetPreviewMeshComponent(DebugMeshComponent);
+	EditorCallback.FillStartingRotatorsInComponentSpace();
+	StartRotationsInitialized = true;
+}
 
 #undef LOCTEXT_NAMESPACE
 	

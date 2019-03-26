@@ -41,6 +41,7 @@ private:
     void OnPreviewCreation(const TSharedRef<IPersonaPreviewScene>& InPreviewScene);
 
 	//Prepares and calls actions on the EditorCallback
+	void InitializeStartRotations();
 	void ShowEpisodeEditWindow();
 	void WriteEpisodesToFile();
 	void ShowSaveGraspingStyleWindow();
@@ -58,4 +59,6 @@ private:
 
 	//The MeshComponent currently displayed in a preview scene.
 	UDebugSkelMeshComponent* DebugMeshComponent;
+
+	bool StartRotationsInitialized = false;
 };
