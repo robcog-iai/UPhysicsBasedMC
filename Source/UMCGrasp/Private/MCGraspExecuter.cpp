@@ -30,8 +30,7 @@ void UMCGraspExecuter::InitiateExecuter(ASkeletalMeshActor* Parent, const float&
 			Constraint->SetAngularSwing1Limit(ACM_Free, 0);
 			Constraint->SetAngularSwing2Limit(ACM_Free, 0);
 			Constraint->SetAngularTwistLimit(ACM_Free, 0);
-			Constraint->SetAngularVelocityDriveTwistAndSwing(false, false);
-			Constraint->SetAngularVelocityDriveSLERP(true);
+			Constraint->SetAngularDriveMode(EAngularDriveMode::SLERP);
 			Constraint->SetAngularDriveParams(Spring, Damping, ForceLimit);
 		}
 	}

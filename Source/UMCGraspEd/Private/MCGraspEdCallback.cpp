@@ -181,11 +181,6 @@ void UMCGraspEdCallback::SaveBoneDatasAsEpisode()
 		FQuat Quat = Quat1Difference * Quat2Difference.Inverse();
 		NewBoneData.AngularOrientationTarget = Quat.Rotator();
 
-		UE_LOG(LogTemp, Warning, TEXT("Name: %s"), *NewConstraint->ConstraintBone1.ToString());
-		UE_LOG(LogTemp, Warning, TEXT("AngularOrientationTarget: %s"), *NewBoneData.AngularOrientationTarget.ToString());
-		UE_LOG(LogTemp, Warning, TEXT("ComponentSpace: %s"), *DebugMeshComponent->GetBoneQuaternion(NewConstraint->ConstraintBone1, EBoneSpaces::ComponentSpace).Rotator().ToString());
-		UE_LOG(LogTemp, Warning, TEXT("WorldSpace: %s"), *DebugMeshComponent->GetBoneQuaternion(NewConstraint->ConstraintBone1, EBoneSpaces::WorldSpace).Rotator().ToString());
-
 		CalculatedBoneRotations.Add(NewConstraint->ConstraintBone1.ToString(), (Quat.Rotator()));
 
 		NewEpisodeData.Add(NewConstraint->ConstraintBone1.ToString(), NewBoneData);
