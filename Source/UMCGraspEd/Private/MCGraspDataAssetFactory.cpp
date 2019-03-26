@@ -37,7 +37,7 @@ UObject* UMCGraspDataAssetFactory::CreateGraspDataAsset(UClass* InClass, UObject
 
 void UMCGraspDataAssetFactory::AddGraspDataAsset(const FMCAnimationData& DataStruct)
 {
-	FString FinalPackageName = "/UPhysicsBasedMC/Grasps/" + DataStruct.AnimationName;
+	FString FinalPackageName = "/UPhysicsBasedMC/GraspingAnimations/" + DataStruct.AnimationName;
 
 	UPackage* Package = CreatePackage(NULL, *FinalPackageName);
 
