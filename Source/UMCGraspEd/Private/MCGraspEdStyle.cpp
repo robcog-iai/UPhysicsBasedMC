@@ -39,7 +39,7 @@ const FVector2D Icon40x40(40.0f, 40.0f);
 TSharedRef<FSlateStyleSet> UMCGraspEdStyle::Create()
 {
 	TSharedRef<FSlateStyleSet> Style = MakeShareable(new FSlateStyleSet("GraspingStyle"));
-	Style->SetContentRoot(IPluginManager::Get().FindPlugin("URealisticGrasping")->GetBaseDir() / TEXT("Resources"));
+	Style->SetContentRoot(IPluginManager::Get().FindPlugin("UPhysicsBasedMC")->GetBaseDir() / TEXT("Resources"));
 
 	Style->Set("GraspingEditor.ShowInstructions", new IMAGE_BRUSH(TEXT("ButtonIcon_40x"), Icon40x40));
 

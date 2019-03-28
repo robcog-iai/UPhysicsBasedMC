@@ -195,9 +195,9 @@ void UMCGraspEdCallback::SaveBoneDatasAsEpisode()
 	//Show an error message if the new episode could not be added.
 	if (!NewGraspAnimationData.AddNewEpisode(NewEpisodeData)) {
 
-		ShowMessageBox(FText::FromString("Error"), FText::FromString("Could not add a new episode. Close and open the preview scene again and repeat your last steps."));
+		ShowMessageBox(FText::FromString("Error"), FText::FromString("Could not add a new frame. Close and open the preview scene again and repeat your last steps."));
 	}
-	ShowMessageBox(FText::FromString("Saved current position"), FText::FromString("The current hand position was saved. Either add more episodes for the grasp or press Create new grasping style to save all your episodes in a file."));
+	ShowMessageBox(FText::FromString("Saved current position"), FText::FromString("The current hand position was saved. Either add more frames for the grasp or press save to save all your episodes in a DataAsset."));
 }
 
 void UMCGraspEdCallback::WriteEpisodesToFile()
@@ -205,7 +205,7 @@ void UMCGraspEdCallback::WriteEpisodesToFile()
 	//You need at least 2 episodes to create a 
 	if (NewGraspAnimationData.GetNumberOfEpisodes() < 2) 
 	{
-		ShowMessageBox(FText::FromString("Error"), FText::FromString("You did not create enough episodes. A grasping style needs at least 2 episodes."));
+		ShowMessageBox(FText::FromString("Error"), FText::FromString("You did not create enough frames. A grasping animation needs at least 2 frames."));
 		return;
 	}
 
@@ -216,14 +216,14 @@ void UMCGraspEdCallback::WriteEpisodesToFile()
 	NewGraspAnimationData = FMCAnimationData();
 	bFirstCreatedEpisodeData = false;
 
-	ShowMessageBox(FText::FromString("Saved grasp"), FText::FromString("Grasp was saved in an .ini file in the GraspAnimations folder."));
+	ShowMessageBox(FText::FromString("Saved grasp"), FText::FromString("Grasp was saved as a DataAsset into the GraspingAnimations folder."));
 }
 
 void UMCGraspEdCallback::EditLoadedGraspingStyle()
 {
 	if (CurrentGraspEdited.IsEmpty() || CurrentEditedEpisode == 0)
 	{
-		ShowMessageBox(FText::FromString("Error"), FText::FromString("Could not edit grasping style. Either you did not load any grasping style or you are trying to edit the episode 0."));
+		ShowMessageBox(FText::FromString("Error"), FText::FromString("Could not edit grasping animation. Either you did not load any grasping animation or you are trying to edit the frame 0."));
 		return;
 	}
 	
@@ -266,11 +266,11 @@ void UMCGraspEdCallback::EditLoadedGraspingStyle()
 	//Show an error message if the episode could not get overwritten.
 	if (!GraspDataToEdit.ReplaceEpisode(CurrentEditedEpisode, NewEpisodeData))
 	{
-		ShowMessageBox(FText::FromString("Error"), FText::FromString("Could not edit the chosen episode."));
+		ShowMessageBox(FText::FromString("Error"), FText::FromString("Could not edit the chosen frame."));
 		return;
 	}
 	UMCGraspAnimWriter::WriteFile(GraspDataToEdit);
-	ShowMessageBox(FText::FromString("Edited grasp"), FText::FromString("The grasp was successfuly edited."));
+	ShowMessageBox(FText::FromString("Edited grasp"), FText::FromString("The grasp was successfully edited."));
 	//Reloads the saved step.
 	ChangeBoneRotationsTo(CurrentGraspEdited, CurrentEditedEpisode);
 }
@@ -318,7 +318,7 @@ void UMCGraspEdCallback::ChangeBoneRotationsTo(FString GraspingStyle, int Episod
 	}
 
 	if (EpisodeToEdit < 0) {
-		ShowMessageBox(FText::FromString("Error"), FText::FromString("You typed in an episode that does not exists. Change the episode to edit and try again."));
+		ShowMessageBox(FText::FromString("Error"), FText::FromString("You typed in a frame that does not exists. Change the frame to edit and try again."));
 		return;
 	}
 
@@ -361,7 +361,7 @@ void UMCGraspEdCallback::DiscardAllEpisodes()
 {
 	NewGraspAnimationData = FMCAnimationData();
 	Reset();
-	ShowMessageBox(FText::FromString("Discard successful"), FText::FromString("All your recorded Episodes are discarded."));
+	ShowMessageBox(FText::FromString("Discard successful"), FText::FromString("All your recorded frames are discarded."));
 }
 
 void UMCGraspEdCallback::ShowEpisode(bool bForward)
