@@ -188,7 +188,7 @@ void FUMCGraspEd::AddCreateOptions(FToolBarBuilder & Builder)
 		FUIAction(),
 		FOnGetContent::CreateRaw(this, &FUMCGraspEd::CreateOptionMenu),
 		LOCTEXT("Create", "New Grasp Animation"),
-		LOCTEXT("Create_Tooltip", "Options to create a grasp animation"),
+		LOCTEXT("Create_Tooltip", "Options to create a grasping animation"),
 		FSlateIcon(UMCGraspEdStyle::GetStyleSetName(), "GraspingEditor.DebugOptionToolBar"),
 		false
 	);
@@ -203,7 +203,7 @@ void FUMCGraspEd::AddEditOptions(FToolBarBuilder & Builder)
 		FUIAction(),
 		FOnGetContent::CreateRaw(this, &FUMCGraspEd::EditOptionMenu),
 		LOCTEXT("Edit", "Edit Grasp Animation"),
-		LOCTEXT("Edit_Tooltip", "Options to edit an existing grasp animation"),
+		LOCTEXT("Edit_Tooltip", "Options to edit an existing grasping animation"),
 		FSlateIcon(UMCGraspEdStyle::GetStyleSetName(), "GraspingEditor.DebugOptionToolBar"),
 		false
 	);
@@ -216,6 +216,13 @@ void FUMCGraspEd::OnPreviewCreation(const TSharedRef<IPersonaPreviewScene>& InPr
 	TSharedRef<IPersonaToolkit> PersonaToolKitRef = InPreviewScene.Get().GetPersonaToolkit();
 	DebugMeshComponent = PersonaToolKitRef.Get().GetPreviewMeshComponent();
 	EditorCallback.Reset();
+}
+
+void FUMCGraspEd::InitializeStartRotations()
+{
+	EditorCallback.SetPreviewMeshComponent(DebugMeshComponent);
+	EditorCallback.FillStartingRotatorsInComponentSpace();
+	StartRotationsInitialized = true;
 }
 
 void FUMCGraspEd::ShowEpisodeEditWindow()
@@ -273,14 +280,14 @@ void FUMCGraspEd::EditLoadedGraspingStyle()
 void FUMCGraspEd::ShowCreateHelp()
 {
 	//Shows help for the "Create grasp" button
-	FString Message = "Create new grasping style out of saved episodes :\nCreates a new grasping style with the saved episodes. \nYou need to have at least 2 episodes to create a new grasp. \nThe new grasp will be saved in the GraspAnimations folder of your project.\n\nSave current hand position as episode :\nSaves the hand position currently displayed as an episode. \n\nDiscard all saved episodes :\nDiscards all your previously saved episodes.";
+	FString Message = "Start:\nStarts the process of creating a new grasping animation. Always press this first.\n\nAdd Frame:\nSave the current bone positions as a frame/step for the animation. You need atleast 2 frames for an animation.\n\nSave:\nSaves all frames as a DataAsset, that can then be added to a GraspController.\n\nClear All:\nDeletes all frames.\n\n";
 	EditorCallback.ShowInstructions(Message);
 }
 
 void FUMCGraspEd::ShowEditHelp()
 {
 	//Shows help for the "Edit grasp" button
-	FString Message = "Overwrite loaded Episode :\nAfter you load in a grasp this button will replace the Episode currently loaded with the hand position currently displayed.\n\nLoad grasping style :\nLoads a grasping at a specific Episode. The name of the grasp has to exist in the GraspAnimations folder and the grasp also has to have the specific episode.\n\nShow next episode :\nShows the next episode depending on the currently displayed episode. This action will change the episode to overwrite you set in Load grasping style.\n\nShow previous episode :\nShows the previous episode depending on the currently displayed episode. This action will change the episode to overwrite you set in Load grasping style.\n\n";
+	FString Message = "Load Grasp Animation:\nLoads the specified animation at the specified frame.\n\nUpdate Frame:\nUpdates the current frame with the current bone rotations. You can't edit frame 0.\n\nGoto Next Frame:\nGoes to the next frame.\n\nGoto Privious Frame:\nGoes to privious frame.\n\n";
 	EditorCallback.ShowInstructions(Message);
 }
 
@@ -302,13 +309,6 @@ void FUMCGraspEd::ShowPreviousEpisode()
 	//Shows the previous episode depending on the one currently displayed
 	EditorCallback.SetPreviewMeshComponent(DebugMeshComponent);
 	EditorCallback.ShowEpisode(false);
-}
-
-void FUMCGraspEd::InitializeStartRotations()
-{
-	EditorCallback.SetPreviewMeshComponent(DebugMeshComponent);
-	EditorCallback.FillStartingRotatorsInComponentSpace();
-	StartRotationsInitialized = true;
 }
 
 #undef LOCTEXT_NAMESPACE
