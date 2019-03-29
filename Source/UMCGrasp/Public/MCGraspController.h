@@ -23,7 +23,7 @@ enum class EMCRealisticGraspHandType : uint8
 	Right					UMETA(DisplayName = "Right"),
 };
 
-UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
+UCLASS( ClassGroup=(MC), meta=(BlueprintSpawnableComponent, DisplayName = "MC Grasp Controller") )
 class UMCGRASP_API UMCGraspController : public UActorComponent
 {
 	GENERATED_BODY()

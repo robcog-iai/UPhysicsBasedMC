@@ -61,20 +61,20 @@ void FUMCGraspEd::InitializeUIButtons()
 	);
 
 	PluginCommandListCreateSection->MapAction(
-		Commands.CreateGraspingStyle,
-		FExecuteAction::CreateRaw(this, &FUMCGraspEd::ShowSaveGraspingStyleWindow),
+		Commands.CreateGraspAnim,
+		FExecuteAction::CreateRaw(this, &FUMCGraspEd::ShowSaveGraspAnimWindow),
 		FCanExecuteAction()
 	);
 
 	PluginCommandListCreateSection->MapAction(
-		Commands.SaveGraspingPosition,
-		FExecuteAction::CreateRaw(this, &FUMCGraspEd::SaveBoneDatasAsEpisode),
+		Commands.SaveGraspPosition,
+		FExecuteAction::CreateRaw(this, &FUMCGraspEd::SaveBoneDatasAsFrame),
 		FCanExecuteAction()
 	);
 
 	PluginCommandListCreateSection->MapAction(
-		Commands.DiscardNewGraspingStyle,
-		FExecuteAction::CreateRaw(this, &FUMCGraspEd::DiscardAllEpisodes),
+		Commands.DiscardNewGraspAnim,
+		FExecuteAction::CreateRaw(this, &FUMCGraspEd::DiscardAllFrames),
 		FCanExecuteAction()
 	);
 
@@ -86,26 +86,26 @@ void FUMCGraspEd::InitializeUIButtons()
 
 	//Commands for the "Edit Grasp Animation" button
 	PluginCommandListEditSection->MapAction(
-		Commands.LoadGraspingStyle,
-		FExecuteAction::CreateRaw(this, &FUMCGraspEd::ShowEpisodeEditWindow),
+		Commands.LoadGraspAnim,
+		FExecuteAction::CreateRaw(this, &FUMCGraspEd::ShowFrameEditWindow),
 		FCanExecuteAction()
 	); 
 
 	PluginCommandListEditSection->MapAction(
-		Commands.EditGraspingPosition,
-		FExecuteAction::CreateRaw(this, &FUMCGraspEd::EditLoadedGraspingStyle),
+		Commands.EditGraspPosition,
+		FExecuteAction::CreateRaw(this, &FUMCGraspEd::EditLoadedGraspAnim),
 		FCanExecuteAction()
 	);
 
 	PluginCommandListEditSection->MapAction(
-		Commands.ShowNextEpisode,
-		FExecuteAction::CreateRaw(this, &FUMCGraspEd::ShowNextEpisode),
+		Commands.ShowNextFrame,
+		FExecuteAction::CreateRaw(this, &FUMCGraspEd::ShowNextFrame),
 		FCanExecuteAction()
 	);
 
 	PluginCommandListEditSection->MapAction(
-		Commands.ShowPreviousEpisode,
-		FExecuteAction::CreateRaw(this, &FUMCGraspEd::ShowPreviousEpisode),
+		Commands.ShowPreviousFrame,
+		FExecuteAction::CreateRaw(this, &FUMCGraspEd::ShowPreviousFrame),
 		FCanExecuteAction()
 	);
 
@@ -151,9 +151,9 @@ TSharedRef<SWidget> FUMCGraspEd::CreateOptionMenu()
 	CreateBuilder.BeginSection("New Grasp Animation");
 	{
 		CreateBuilder.AddMenuEntry(Commands.StartCreatingGrasp);
-		CreateBuilder.AddMenuEntry(Commands.SaveGraspingPosition);
-		CreateBuilder.AddMenuEntry(Commands.CreateGraspingStyle);
-		CreateBuilder.AddMenuEntry(Commands.DiscardNewGraspingStyle);
+		CreateBuilder.AddMenuEntry(Commands.SaveGraspPosition);
+		CreateBuilder.AddMenuEntry(Commands.CreateGraspAnim);
+		CreateBuilder.AddMenuEntry(Commands.DiscardNewGraspAnim);
 		CreateBuilder.AddMenuEntry(Commands.ShowCreateHelp);
 	}
 	CreateBuilder.EndSection();
@@ -168,10 +168,10 @@ TSharedRef<SWidget> FUMCGraspEd::EditOptionMenu()
 	const UMCGraspEdCommands& Commands = UMCGraspEdCommands::Get();
 	EditBuilder.BeginSection("Edit Grasp Animation");
 	{
-		EditBuilder.AddMenuEntry(Commands.LoadGraspingStyle);
-		EditBuilder.AddMenuEntry(Commands.EditGraspingPosition);
-		EditBuilder.AddMenuEntry(Commands.ShowNextEpisode);
-		EditBuilder.AddMenuEntry(Commands.ShowPreviousEpisode);
+		EditBuilder.AddMenuEntry(Commands.LoadGraspAnim);
+		EditBuilder.AddMenuEntry(Commands.EditGraspPosition);
+		EditBuilder.AddMenuEntry(Commands.ShowNextFrame);
+		EditBuilder.AddMenuEntry(Commands.ShowPreviousFrame);
 		EditBuilder.AddMenuEntry(Commands.ShowEditHelp);
 	}
 	EditBuilder.EndSection();
@@ -187,7 +187,7 @@ void FUMCGraspEd::AddCreateOptions(FToolBarBuilder & Builder)
 	Builder.AddComboButton(
 		FUIAction(),
 		FOnGetContent::CreateRaw(this, &FUMCGraspEd::CreateOptionMenu),
-		LOCTEXT("Create", "New Grasp Animation"),
+		LOCTEXT("Create", "New Grasp Anim"),
 		LOCTEXT("Create_Tooltip", "Options to create a grasping animation"),
 		FSlateIcon(UMCGraspEdStyle::GetStyleSetName(), "GraspingEditor.DebugOptionToolBar"),
 		false
@@ -202,7 +202,7 @@ void FUMCGraspEd::AddEditOptions(FToolBarBuilder & Builder)
 	Builder.AddComboButton(
 		FUIAction(),
 		FOnGetContent::CreateRaw(this, &FUMCGraspEd::EditOptionMenu),
-		LOCTEXT("Edit", "Edit Grasp Animation"),
+		LOCTEXT("Edit", "Edit Grasp Anim"),
 		LOCTEXT("Edit_Tooltip", "Options to edit an existing grasping animation"),
 		FSlateIcon(UMCGraspEdStyle::GetStyleSetName(), "GraspingEditor.DebugOptionToolBar"),
 		false
@@ -225,39 +225,39 @@ void FUMCGraspEd::InitializeStartRotations()
 	StartRotationsInitialized = true;
 }
 
-void FUMCGraspEd::ShowEpisodeEditWindow()
+void FUMCGraspEd::ShowFrameEditWindow()
 {
 	EditorCallback.SetPreviewMeshComponent(DebugMeshComponent);
 	TArray<FName> BoneNames;
 	DebugMeshComponent->GetBoneNames(BoneNames);
-	TMap<FString, FTransform> StartingBoneRotations;
+	TMap<FString, FTransform> StartingBoneTransforms;
 	//Get all of the current bone rotations and save them
 	for (FName BoneName : BoneNames) 
 	{
 		int Index = DebugMeshComponent->GetBoneIndex(BoneName);
 		FTransform BoneTransform = DebugMeshComponent->GetBoneTransform(Index);
-		StartingBoneRotations.Add(BoneName.ToString(), BoneTransform);
+		StartingBoneTransforms.Add(BoneName.ToString(), BoneTransform);
 	}
-	EditorCallback.SetStartingBoneRotations(StartingBoneRotations);
-	EditorCallback.ShowEpisodeEditWindow();
+	EditorCallback.SetStartingBoneTransforms(StartingBoneTransforms);
+	EditorCallback.ShowFrameEditWindow();
 }
 
-void FUMCGraspEd::WriteEpisodesToFile()
+void FUMCGraspEd::WriteFramesToAsset()
 {
 	//Writes all currently recorded episodes to a .ini file
 	EditorCallback.SetPreviewMeshComponent(DebugMeshComponent);
-	EditorCallback.WriteEpisodesToFile();
+	EditorCallback.WriteFramesToAsset();
 }
 
-void FUMCGraspEd::ShowSaveGraspingStyleWindow()
+void FUMCGraspEd::ShowSaveGraspAnimWindow()
 {
 	//Shows a window where you can enter a new for a newly created grasping stlye
 	EditorCallback.SetPreviewMeshComponent(DebugMeshComponent);
-	EditorCallback.ShowSaveGraspingStyleWindow();
+	EditorCallback.ShowSaveGraspAnimWindow();
 
 }
 
-void FUMCGraspEd::SaveBoneDatasAsEpisode()
+void FUMCGraspEd::SaveBoneDatasAsFrame()
 {
 	if(!StartRotationsInitialized)
 	{
@@ -267,14 +267,14 @@ void FUMCGraspEd::SaveBoneDatasAsEpisode()
 	}
 	//Saves the current mesh position as an episode
 	EditorCallback.SetPreviewMeshComponent(DebugMeshComponent);
-	EditorCallback.SaveBoneDatasAsEpisode();
+	EditorCallback.SaveBoneDatasAsFrame();
 }
 
-void FUMCGraspEd::EditLoadedGraspingStyle()
+void FUMCGraspEd::EditLoadedGraspAnim()
 {
 	//Overwrites the loaded step for a grasping stlye with the currently displayed hand position
 	EditorCallback.SetPreviewMeshComponent(DebugMeshComponent);
-	EditorCallback.EditLoadedGraspingStyle();
+	EditorCallback.EditLoadedGraspAnim();
 }
 
 void FUMCGraspEd::ShowCreateHelp()
@@ -291,24 +291,24 @@ void FUMCGraspEd::ShowEditHelp()
 	EditorCallback.ShowInstructions(Message);
 }
 
-void FUMCGraspEd::DiscardAllEpisodes()
+void FUMCGraspEd::DiscardAllFrames()
 {
 	//Discards all currently recorded episodes
-	EditorCallback.DiscardAllEpisodes();
+	EditorCallback.DiscardAllFrames();
 }
 
-void FUMCGraspEd::ShowNextEpisode()
+void FUMCGraspEd::ShowNextFrame()
 {
 	//Shows the next episode depending on the one currently displayed
 	EditorCallback.SetPreviewMeshComponent(DebugMeshComponent);
-	EditorCallback.ShowEpisode(true);
+	EditorCallback.ShowFrame(true);
 }
 
-void FUMCGraspEd::ShowPreviousEpisode()
+void FUMCGraspEd::ShowPreviousFrame()
 {
 	//Shows the previous episode depending on the one currently displayed
 	EditorCallback.SetPreviewMeshComponent(DebugMeshComponent);
-	EditorCallback.ShowEpisode(false);
+	EditorCallback.ShowFrame(false);
 }
 
 #undef LOCTEXT_NAMESPACE

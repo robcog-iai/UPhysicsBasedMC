@@ -24,11 +24,11 @@ UMCGraspEdCallback::UMCGraspEdCallback()
 {
 }
 
-void UMCGraspEdCallback::ShowEpisodeEditWindow()
+void UMCGraspEdCallback::ShowFrameEditWindow()
 {
 	//Creates the edit menu with 2 editable textfields and a button
 	TSharedRef<SWindow> CookbookWindow = SNew(SWindow)
-		.Title(FText::FromString(TEXT("Edit Grasp Animation")))
+		.Title(FText::FromString(TEXT("Edit Grasp Anima")))
 		.ClientSize(FVector2D(400, 200))
 		.SupportsMaximize(false)
 		.SupportsMinimize(false)
@@ -38,7 +38,7 @@ void UMCGraspEdCallback::ShowEpisodeEditWindow()
 			.HAlign(HAlign_Center)
 			.VAlign(VAlign_Center)
 			[
-				SAssignNew(GraspingStyleBox, SEditableTextBox)
+				SAssignNew(GraspAnimBox, SEditableTextBox)
 				.Text(FText::FromString(TEXT("Name")))
 				.MinDesiredWidth(200)
 			]
@@ -46,7 +46,7 @@ void UMCGraspEdCallback::ShowEpisodeEditWindow()
 				.HAlign(HAlign_Center)
 				.VAlign(VAlign_Center)
 				[
-					SAssignNew(EpisodeBox, SEditableTextBox)
+					SAssignNew(FrameBox, SEditableTextBox)
 					.Text(FText::FromString(TEXT("Frame")))
 					.MinDesiredWidth(200)
 				]
@@ -79,7 +79,7 @@ void UMCGraspEdCallback::ShowEpisodeEditWindow()
 	}
 }
 
-void UMCGraspEdCallback::ShowSaveGraspingStyleWindow()
+void UMCGraspEdCallback::ShowSaveGraspAnimWindow()
 {
 	//Creates the save menu with 2 editable textfields and a button
 	TSharedRef<SWindow> CookbookWindow = SNew(SWindow)
@@ -93,7 +93,7 @@ void UMCGraspEdCallback::ShowSaveGraspingStyleWindow()
 		.HAlign(HAlign_Center)
 		.VAlign(VAlign_Center)
 		[
-			SAssignNew(NewGraspingStyleNameBox, SEditableTextBox)
+			SAssignNew(NewGraspAnimNameBox, SEditableTextBox)
 			.Text(FText::FromString(TEXT("Name")))
 		]
 	+ SVerticalBox::Slot()
@@ -125,7 +125,7 @@ void UMCGraspEdCallback::ShowSaveGraspingStyleWindow()
 	}
 }
 
-void UMCGraspEdCallback::SaveBoneDatasAsEpisode()
+void UMCGraspEdCallback::SaveBoneDatasAsFrame()
 {
 	if (!StartRotatorsSet) 
 	{
@@ -187,23 +187,23 @@ void UMCGraspEdCallback::SaveBoneDatasAsEpisode()
 	}
 
 	//Checks if there is a need to create a new animation data.
-	if (!bFirstCreatedEpisodeData)
+	if (!bFirstCreatedFrameData)
 	{
-		bFirstCreatedEpisodeData = true;
+		bFirstCreatedFrameData = true;
 		CreateAnimationData(CalculatedBoneRotations);
 	}
 	//Show an error message if the new episode could not be added.
-	if (!NewGraspAnimationData.AddNewEpisode(NewEpisodeData)) {
+	if (!NewGraspAnimData.AddNewEpisode(NewEpisodeData)) {
 
 		ShowMessageBox(FText::FromString("Error"), FText::FromString("Could not add a new frame. Close and open the preview scene again and repeat your last steps."));
 	}
 	ShowMessageBox(FText::FromString("Saved current position"), FText::FromString("The current hand position was saved. Either add more frames for the grasp or press save to save all your episodes in a DataAsset."));
 }
 
-void UMCGraspEdCallback::WriteEpisodesToFile()
+void UMCGraspEdCallback::WriteFramesToAsset()
 {
 	//You need at least 2 episodes to create a 
-	if (NewGraspAnimationData.GetNumberOfEpisodes() < 2) 
+	if (NewGraspAnimData.GetNumberOfEpisodes() < 2) 
 	{
 		ShowMessageBox(FText::FromString("Error"), FText::FromString("You did not create enough frames. A grasping animation needs at least 2 frames."));
 		return;
@@ -211,17 +211,17 @@ void UMCGraspEdCallback::WriteEpisodesToFile()
 
 	//Save all episodes under the given name and reset all boolean etc.
 	UMCGraspAnimWriter Write = UMCGraspAnimWriter();
-	NewGraspAnimationData.AnimationName = NewGraspStyle;
-	Write.WriteFile(NewGraspAnimationData);
-	NewGraspAnimationData = FMCAnimationData();
-	bFirstCreatedEpisodeData = false;
+	NewGraspAnimData.AnimationName = NewGraspAnim;
+	Write.WriteFile(NewGraspAnimData);
+	NewGraspAnimData = FMCAnimationData();
+	bFirstCreatedFrameData = false;
 
 	ShowMessageBox(FText::FromString("Saved grasp"), FText::FromString("Grasp was saved as a DataAsset into the GraspingAnimations folder."));
 }
 
-void UMCGraspEdCallback::EditLoadedGraspingStyle()
+void UMCGraspEdCallback::EditLoadedGraspAnim()
 {
-	if (CurrentGraspEdited.IsEmpty() || CurrentEditedEpisode == 0)
+	if (CurrentGraspEdited.IsEmpty() || CurrentEditedFrame == 0)
 	{
 		ShowMessageBox(FText::FromString("Error"), FText::FromString("Could not edit grasping animation. Either you did not load any grasping animation or you are trying to edit the frame 0."));
 		return;
@@ -264,7 +264,7 @@ void UMCGraspEdCallback::EditLoadedGraspingStyle()
 	}
 
 	//Show an error message if the episode could not get overwritten.
-	if (!GraspDataToEdit.ReplaceEpisode(CurrentEditedEpisode, NewEpisodeData))
+	if (!GraspDataToEdit.ReplaceEpisode(CurrentEditedFrame, NewEpisodeData))
 	{
 		ShowMessageBox(FText::FromString("Error"), FText::FromString("Could not edit the chosen frame."));
 		return;
@@ -272,7 +272,7 @@ void UMCGraspEdCallback::EditLoadedGraspingStyle()
 	UMCGraspAnimWriter::WriteFile(GraspDataToEdit);
 	ShowMessageBox(FText::FromString("Edited grasp"), FText::FromString("The grasp was successfully edited."));
 	//Reloads the saved step.
-	ChangeBoneRotationsTo(CurrentGraspEdited, CurrentEditedEpisode);
+	ChangeBoneRotationsTo(CurrentGraspEdited, CurrentEditedFrame);
 }
 
 TMap<FName, FRotator> UMCGraspEdCallback::GetBoneRotations(USkeletalMeshComponent * SkeletalComponent)
@@ -298,10 +298,10 @@ void UMCGraspEdCallback::SetPreviewMeshComponent(UDebugSkelMeshComponent * Compo
 
 void UMCGraspEdCallback::CreateAnimationData(TMap<FString, FRotator> EpisodeData)
 {
-	NewGraspAnimationData.BoneNames = TArray<FString>();
+	NewGraspAnimData.BoneNames = TArray<FString>();
 	for (auto& Elem : EpisodeData)
 	{
-		NewGraspAnimationData.BoneNames.Add(Elem.Key);
+		NewGraspAnimData.BoneNames.Add(Elem.Key);
 	}
 }
 
@@ -343,7 +343,7 @@ void UMCGraspEdCallback::ShowInstructions(FString Message)
 	ShowMessageBox(FText::FromString("Help"), FText::FromString(Message));
 }
 
-void UMCGraspEdCallback::PlayOneEpisode(TMap<FString, FVector> BoneStartLocations, FMCAnimationData PlayData, int Index)
+void UMCGraspEdCallback::PlayOneFrame(TMap<FString, FVector> BoneStartLocations, FMCAnimationData PlayData, int Index)
 {
 	DebugMeshComponent->SkeletalMesh->Modify();
 
@@ -357,14 +357,14 @@ void UMCGraspEdCallback::PlayOneEpisode(TMap<FString, FVector> BoneStartLocation
 	DebugMeshComponent->PreviewInstance->SetForceRetargetBasePose(true);
 }
 
-void UMCGraspEdCallback::DiscardAllEpisodes()
+void UMCGraspEdCallback::DiscardAllFrames()
 {
-	NewGraspAnimationData = FMCAnimationData();
+	NewGraspAnimData = FMCAnimationData();
 	Reset();
 	ShowMessageBox(FText::FromString("Discard successful"), FText::FromString("All your recorded frames are discarded."));
 }
 
-void UMCGraspEdCallback::ShowEpisode(bool bForward)
+void UMCGraspEdCallback::ShowFrame(bool bForward)
 {
 	FMCAnimationData HandAnimationData = UMCGraspAnimReader::ReadFile(DebugMeshComponent->SkeletalMesh->GetFName().ToString(), CurrentGraspEdited);
 	int MaxEpisode = HandAnimationData.GetNumberOfEpisodes() - 1;
@@ -384,46 +384,46 @@ void UMCGraspEdCallback::ShowEpisode(bool bForward)
 	//Determines the next step to show
 	if (bForward) 
 	{
-		if (CurrentEditedEpisode == MaxEpisode)
+		if (CurrentEditedFrame == MaxEpisode)
 		{
-			CurrentEditedEpisode = 0;
+			CurrentEditedFrame = 0;
 		}
 		else 
 		{
-			CurrentEditedEpisode += 1;
+			CurrentEditedFrame += 1;
 		}
 	}
 	else 
 	{
-		if (CurrentEditedEpisode == 0)
+		if (CurrentEditedFrame == 0)
 		{
-			CurrentEditedEpisode = MaxEpisode;
+			CurrentEditedFrame = MaxEpisode;
 		}
 		else 
 		{
-			CurrentEditedEpisode -= 1;
+			CurrentEditedFrame -= 1;
 		}
 	}
 
 	//Show next step.
-	PlayOneEpisode(BoneStartLocations, HandAnimationData, CurrentEditedEpisode);
+	PlayOneFrame(BoneStartLocations, HandAnimationData, CurrentEditedFrame);
 }
 
 void UMCGraspEdCallback::Reset()
 {
 	StartRotatorsSet = false;
-	StartLocations.Empty();
+	StartBoneLocations.Empty();
 	StartRotatorsComponentSpace.Empty();
-	StartingBoneRotations.Empty();
-	CurrentEditedEpisode = 0;
+	StartBoneTransforms.Empty();
+	CurrentEditedFrame = 0;
 	CurrentGraspEdited = "";
-	NewGraspStyle = "";
-	bFirstCreatedEpisodeData = false;
+	NewGraspAnim = "";
+	bFirstCreatedFrameData = false;
 }
 
-void UMCGraspEdCallback::SetStartingBoneRotations(TMap<FString, FTransform> BoneRotations)
+void UMCGraspEdCallback::SetStartingBoneTransforms(TMap<FString, FTransform> BoneRotations)
 {
-	StartingBoneRotations = BoneRotations;
+	StartBoneTransforms = BoneRotations;
 }
 
 void UMCGraspEdCallback::ShowMessageBox(FText Title, FText Message)
@@ -459,8 +459,8 @@ void UMCGraspEdCallback::ApplyFingerDataForStartingIndex(FMCAnimationData PlayDa
 		FRotator BoneData = BoneDataEntry.Value.BoneSpaceRotation;
 		FRotator SwitchYawPitch = FRotator(BoneData.Pitch, BoneData.Yaw, BoneData.Roll);
 		int Index = DebugMeshComponent->GetBoneIndex(FName(*BoneDataEntry.Key));
-		FTransform* OldBoneTransform = StartingBoneRotations.Find(BoneDataEntry.Key);
-		FVector* OldBoneLocation = StartLocations.Find(BoneDataEntry.Key);
+		FTransform* OldBoneTransform = StartBoneTransforms.Find(BoneDataEntry.Key);
+		FVector* OldBoneLocation = StartBoneLocations.Find(BoneDataEntry.Key);
 		DebugMeshComponent->SkeletalMesh->RetargetBasePose[Index] = FTransform(BoneData, *OldBoneLocation);
 	}
 }
@@ -477,7 +477,7 @@ void UMCGraspEdCallback::ApplyFingerDataForIndex(FMCAnimationData PlayData, int 
 		FRotator SwitchYawPitch = FRotator(BoneData.Pitch, BoneData.Yaw, BoneData.Roll);
 		int BoneIndex = DebugMeshComponent->GetBoneIndex(FName(*BoneDataEntry.Key));
 		FTransform OldBoneTransform = DebugMeshComponent->GetBoneTransform(BoneIndex);
-		FVector* OldBoneLocation = StartLocations.Find(BoneDataEntry.Key);
+		FVector* OldBoneLocation = StartBoneLocations.Find(BoneDataEntry.Key);
 		DebugMeshComponent->SkeletalMesh->RetargetBasePose[BoneIndex] = FTransform(BoneData, *OldBoneLocation);
 	}
 }
@@ -490,28 +490,28 @@ void UMCGraspEdCallback::FillStartLocations()
 	int Index = 0;
 	for (FTransform BoneTransform : DebugMeshComponent->BoneSpaceTransforms) 
 	{
-		StartLocations.Add(BoneNames[Index].ToString(), BoneTransform.GetTranslation());
+		StartBoneLocations.Add(BoneNames[Index].ToString(), BoneTransform.GetTranslation());
 		Index++;
 	}
 }
 
 FReply UMCGraspEdCallback::OnEditButtonClicked()
 {
-	CurrentGraspEdited = GraspingStyleBox->GetText().ToString();
-	FText EpisodeToEdit = EpisodeBox->GetText();
-	CurrentEditedEpisode = FCString::Atoi(*EpisodeToEdit.ToString());
+	CurrentGraspEdited = GraspAnimBox->GetText().ToString();
+	FText EpisodeToEdit = FrameBox->GetText();
+	CurrentEditedFrame = FCString::Atoi(*EpisodeToEdit.ToString());
 
 	//Changes bone rotations to the given step for the given grasping stlye
-	ChangeBoneRotationsTo(CurrentGraspEdited, CurrentEditedEpisode);
+	ChangeBoneRotationsTo(CurrentGraspEdited, CurrentEditedFrame);
 	return FReply::Handled();
 }
 
 FReply UMCGraspEdCallback::OnSaveButtonClicked()
 {
-	NewGraspStyle = NewGraspingStyleNameBox->GetText().ToString();
+	NewGraspAnim = NewGraspAnimNameBox->GetText().ToString();
 
 	//Saves a new grasping style under the name given name
-	WriteEpisodesToFile();
+	WriteFramesToAsset();
 	return FReply::Handled();
 }
 #undef LOCTEXT_NAMESPACE

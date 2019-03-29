@@ -42,16 +42,16 @@ private:
 
 	//Prepares and calls actions on the EditorCallback
 	void InitializeStartRotations();
-	void ShowEpisodeEditWindow();
-	void WriteEpisodesToFile();
-	void ShowSaveGraspingStyleWindow();
-	void SaveBoneDatasAsEpisode();
-	void EditLoadedGraspingStyle();
+	void ShowFrameEditWindow();
+	void WriteFramesToAsset();
+	void ShowSaveGraspAnimWindow();
+	void SaveBoneDatasAsFrame();
+	void EditLoadedGraspAnim();
 	void ShowCreateHelp();
 	void ShowEditHelp();
-	void DiscardAllEpisodes();
-	void ShowNextEpisode();
-	void ShowPreviousEpisode();
+	void DiscardAllFrames();
+	void ShowNextFrame();
+	void ShowPreviousFrame();
 
 	UMCGraspEdCallback EditorCallback;
 
