@@ -12,12 +12,12 @@ struct FMCBoneData
 	GENERATED_BODY()
 
 	/** Input value for a constraints angular drive motor.*/
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(EditAnywhere)
 	FRotator AngularOrientationTarget;
 
 	/** Temporary array of local-space (relative to parent bone) rotation for each bone. 
 	Is used to load Animation back into editor.*/
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(EditAnywhere)
 	FRotator BoneSpaceRotation;
 
 	// Default ctor
@@ -51,6 +51,10 @@ public:
 	{
 		BonesData = TMap<FString, FMCBoneData>();
 	}
+
+	//map with all data for all fingers
+	UPROPERTY(EditAnywhere)
+	TMap<FString, FMCBoneData> BonesData;
 
 	//Checks for equality
 	FORCEINLINE bool operator==(const FMCFrame &arg1) const
@@ -99,11 +103,6 @@ public:
 	{
 		return &BonesData;
 	}
-
-	//map with all data for all fingers
-	UPROPERTY(VisibleAnywhere)
-	TMap<FString, FMCBoneData> BonesData;
-
 };
 
 //This struct represents one Animation. It holds the data for every episode 

@@ -227,7 +227,7 @@ void UMCGraspEdCallback::EditLoadedGraspAnim()
 		return;
 	}
 	
-	FMCAnimationData GraspDataToEdit = UMCGraspAnimReader::ReadFile(DebugMeshComponent->SkeletalMesh->GetFName().ToString(), CurrentGraspEdited);
+	FMCAnimationData GraspDataToEdit = UMCGraspAnimReader::ReadFile(CurrentGraspEdited);
 
 	TMap<FString, FMCBoneData> NewEpisodeData = TMap<FString, FMCBoneData>();
 
@@ -309,7 +309,7 @@ void UMCGraspEdCallback::ChangeBoneRotationsTo(FString GraspingStyle, int Episod
 {
 	DebugMeshComponent->SkeletalMesh->Modify();
 	DebugMeshComponent->PreviewInstance->ResetModifiedBone();
-	FMCAnimationData GraspDataToReadFrom = UMCGraspAnimReader::ReadFile(DebugMeshComponent->SkeletalMesh->GetFName().ToString(), GraspingStyle);
+	FMCAnimationData GraspDataToReadFrom = UMCGraspAnimReader::ReadFile(GraspingStyle);
 
 	//Show an error message if one of the parameter are wrong.
 	if (GraspDataToReadFrom.AnimationName == "") {
@@ -366,7 +366,7 @@ void UMCGraspEdCallback::DiscardAllFrames()
 
 void UMCGraspEdCallback::ShowFrame(bool bForward)
 {
-	FMCAnimationData HandAnimationData = UMCGraspAnimReader::ReadFile(DebugMeshComponent->SkeletalMesh->GetFName().ToString(), CurrentGraspEdited);
+	FMCAnimationData HandAnimationData = UMCGraspAnimReader::ReadFile(CurrentGraspEdited);
 	int MaxEpisode = HandAnimationData.GetNumberOfEpisodes() - 1;
 	DebugMeshComponent->SkeletalMesh->Modify();
 	int BoneNamesIndex = 0;

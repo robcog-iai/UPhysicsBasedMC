@@ -14,27 +14,18 @@
 class UMCGRASP_API UMCGraspAnimReader
 {
 public:
-	/*
-	This function reads a ini file. It should be located in: GameDir/GraspAnimations/SkeletalMeshName/Name.ini
-	@param SkeletalMeshName, this represents the directory
-	@param Name, the file name in this directory
-	@return the animation 
-	*/
-	static FMCAnimationData ReadFile(const FString& SkeletalMeshName, const FString& Name);
+	
+	// Finds grasp from animation name. 
+	static FMCAnimationData ReadFile(const FString& Name);
 
+	// Converts grasp DataAssets into grasp structs
 	static FMCAnimationData ConvertAssetToStruct(const UMCGraspDataAsset* DataAsset);
 
-	/*
-	This function reads all posibility animations for one skeleton 
-	(e.g it reads all animations in GameDir/GraspAnimations/SkeletalMeshName/...)
-	@param SkeletalMeshName, the directory that should be searched
-	@return all animations
-	*/
-	static TArray<FString> ReadNames(const FString& SkeletalMeshName);
-
+	// Returns all GraspDataAssets that can be read
 	static TArray<UMCGraspDataAsset*> LoadAllAssets();
 
 private:
 
+	// Finds all the GraspDataAssets in a hardcoded folder
 	static TArray<UMCGraspDataAsset*> OnRegistryLoaded();
 };

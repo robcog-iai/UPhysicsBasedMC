@@ -6,7 +6,7 @@
 #include "Runtime/AssetRegistry/Public/AssetRegistryModule.h"
 #include "Runtime/Engine/Classes/Engine/ObjectLibrary.h"
 
-FMCAnimationData UMCGraspAnimReader::ReadFile(const FString& SkeletalMeshName, const FString& Name)
+FMCAnimationData UMCGraspAnimReader::ReadFile(const FString& Name)
 {
 	FMCAnimationData DataStruct = FMCAnimationData();
 
