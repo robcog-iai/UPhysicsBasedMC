@@ -19,7 +19,7 @@ void UMCGraspEdCommands::RegisterCommands() {
 	UI_COMMAND(DiscardNewGraspAnim, "Clear All",
 		"Discards all frames", EUserInterfaceActionType::Button, FInputChord());
 
-	UI_COMMAND(LoadGraspAnim, "Load Grasp Animation",
+	UI_COMMAND(LoadGraspAnim, "Load Grasp Anim",
 		"Loads a graso animation at a specific frame", EUserInterfaceActionType::Button, FInputChord());
 
 	UI_COMMAND(EditGraspPosition, "Update Frame",
