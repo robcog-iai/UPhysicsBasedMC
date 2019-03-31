@@ -36,7 +36,7 @@ public:
 private:
 
 	/*
-	Calls LerpFingerOrientation on every finger
+	Uses interpolation to calculate target orientation for bones
 	@param Target - where calculated positions are saved
 	@param Initial - initial hand state if input was 0
 	@param Closed - final hand state if input was 1 
@@ -45,22 +45,19 @@ private:
 	void LerpHandOrientation(FMCFrame* Target, FMCFrame Initial, FMCFrame Closed, const float Input);
 
 	/*
-	Calls DriveToFingerOrientationTarget for every finger.
+	Sets all the constraints orientation drives to go into target orientation
 	@param Target - the target position that has been calculated by lerp
-	@param Hand - the AGraspingHand to move
 	*/
 	void DriveToHandOrientationTarget(FMCFrame* Target);
 
 	/*
-	Finds out which constraint belongs to which bone and sets them up  so we cann move them
+	Finds out which constraint belongs to which bone
 	@param BoneName - name of bone
-	@param Hand - AGraspingHand with the skeleton that has to be searched for the constraint
 	*/
 	FConstraintInstance* BoneNameToConstraint(FString BoneName);
 
 	/*
 	Stops the grasping process and resets the booleans that were changed
-	@param Hand - AGraspingHand that should stop grasping
 	*/
 	void StopGrasping();
 

@@ -246,7 +246,7 @@ void FUMCGraspEd::ShowFrameEditWindow()
 
 void FUMCGraspEd::WriteFramesToAsset()
 {
-	//Writes all currently recorded episodes to a .ini file
+	//Writes all currently recorded frames to a DataAsset
 	EditorCallback.SetPreviewMeshComponent(DebugMeshComponent);
 	EditorCallback.WriteFramesToAsset();
 }
@@ -267,7 +267,7 @@ void FUMCGraspEd::SaveBoneDatasAsFrame()
 		EditorCallback.ShowInstructions(Message);
 		return;
 	}
-	//Saves the current mesh position as an episode
+	//Saves the current mesh position as a frame
 	EditorCallback.SetPreviewMeshComponent(DebugMeshComponent);
 	EditorCallback.SaveBoneDatasAsFrame();
 }
@@ -295,20 +295,20 @@ void FUMCGraspEd::ShowEditHelp()
 
 void FUMCGraspEd::DiscardAllFrames()
 {
-	//Discards all currently recorded episodes
+	//Discards all currently recorded frames
 	EditorCallback.DiscardAllFrames();
 }
 
 void FUMCGraspEd::ShowNextFrame()
 {
-	//Shows the next episode depending on the one currently displayed
+	//Shows the next frame depending on the one currently displayed
 	EditorCallback.SetPreviewMeshComponent(DebugMeshComponent);
 	EditorCallback.ShowFrame(true);
 }
 
 void FUMCGraspEd::ShowPreviousFrame()
 {
-	//Shows the previous episode depending on the one currently displayed
+	//Shows the previous frame depending on the one currently displayed
 	EditorCallback.SetPreviewMeshComponent(DebugMeshComponent);
 	EditorCallback.ShowFrame(false);
 }

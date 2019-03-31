@@ -132,7 +132,7 @@ void UMCGraspEdCallback::SaveBoneDatasAsFrame()
 		return;
 	}
 
-	TMap<FString, FMCBoneData> NewEpisodeData = TMap<FString, FMCBoneData>();
+	TMap<FString, FMCBoneData> NewFrameData = TMap<FString, FMCBoneData>();
 	TMap<FString, FRotator> CalculatedBoneRotations;
 
 	TArray<FTransform> BoneSpaceTransforms = DebugMeshComponent->BoneSpaceTransforms;
@@ -141,7 +141,7 @@ void UMCGraspEdCallback::SaveBoneDatasAsFrame()
 	TMap<FString, FRotator> CurrentBoneSpaceRotations;
 	int Index = 0;
 
-	//Saves the current bone rotations as bone space. Its needed to load in an episode since only bone space is displayed in a preview.
+	//Saves the current bone rotations as bone space. Its needed to load in a frame since only bone space is displayed in a preview.
 	for (FTransform BoneTransform : BoneSpaceTransforms) 
 	{
 		CurrentBoneSpaceRotations.Add(BoneNames[Index].ToString(), BoneTransform.GetRotation().Rotator());
@@ -183,7 +183,7 @@ void UMCGraspEdCallback::SaveBoneDatasAsFrame()
 
 		CalculatedBoneRotations.Add(NewConstraint->ConstraintBone1.ToString(), (Quat.Rotator()));
 
-		NewEpisodeData.Add(NewConstraint->ConstraintBone1.ToString(), NewBoneData);
+		NewFrameData.Add(NewConstraint->ConstraintBone1.ToString(), NewBoneData);
 	}
 
 	//Checks if there is a need to create a new animation data.
@@ -192,24 +192,24 @@ void UMCGraspEdCallback::SaveBoneDatasAsFrame()
 		bFirstCreatedFrameData = true;
 		CreateAnimationData(CalculatedBoneRotations);
 	}
-	//Show an error message if the new episode could not be added.
-	if (!NewGraspAnimData.AddNewEpisode(NewEpisodeData)) {
+	//Show an error message if the new frame could not be added.
+	if (!NewGraspAnimData.AddNewFrame(NewFrameData)) {
 
 		ShowMessageBox(FText::FromString("Error"), FText::FromString("Could not add a new frame. Close and open the preview scene again and repeat your last steps."));
 	}
-	ShowMessageBox(FText::FromString("Saved current position"), FText::FromString("The current hand position was saved. Either add more frames for the grasp or press save to save all your episodes in a DataAsset."));
+	ShowMessageBox(FText::FromString("Saved current position"), FText::FromString("The current hand position was saved. Either add more frames for the grasp or press save to save all your frames in a DataAsset."));
 }
 
 void UMCGraspEdCallback::WriteFramesToAsset()
 {
-	//You need at least 2 episodes to create a 
-	if (NewGraspAnimData.GetNumberOfEpisodes() < 2) 
+	//You need at least 2 frames to create a DataAsset
+	if (NewGraspAnimData.GetNumberOfFrames() < 2) 
 	{
 		ShowMessageBox(FText::FromString("Error"), FText::FromString("You did not create enough frames. A grasping animation needs at least 2 frames."));
 		return;
 	}
 
-	//Save all episodes under the given name and reset all boolean etc.
+	//Save all frames under the given name and reset all boolean etc.
 	UMCGraspAnimWriter Write = UMCGraspAnimWriter();
 	NewGraspAnimData.AnimationName = NewGraspAnim;
 	Write.WriteFile(NewGraspAnimData);
@@ -229,14 +229,14 @@ void UMCGraspEdCallback::EditLoadedGraspAnim()
 	
 	FMCAnimationData GraspDataToEdit = UMCGraspAnimReader::ReadFile(CurrentGraspEdited);
 
-	TMap<FString, FMCBoneData> NewEpisodeData = TMap<FString, FMCBoneData>();
+	TMap<FString, FMCBoneData> NewFrameData = TMap<FString, FMCBoneData>();
 
 	TArray<FTransform> BoneSpaceTransforms = DebugMeshComponent->BoneSpaceTransforms;
 	TArray<FName> BoneNames;
 	DebugMeshComponent->GetBoneNames(BoneNames);
 	TMap<FString, FRotator> CurrentBoneSpaceRotations;
 	int Index = 0;
-	//Saves the current bone rotations as bone space. Its needed to load in an episode since only bone space is displayed in a preview.
+	//Saves the current bone rotations as bone space. Its needed to load in a frame since only bone space is displayed in a preview.
 	for (FTransform BoneTransform : BoneSpaceTransforms) 
 	{
 		CurrentBoneSpaceRotations.Add(BoneNames[Index].ToString(), BoneTransform.GetRotation().Rotator());
@@ -260,11 +260,11 @@ void UMCGraspEdCallback::EditLoadedGraspAnim()
 		//substract the change in bone2's rotation, so movements of parent bones are filtered out of bone1's rotation 
 		FQuat Quat = Quat1Difference * Quat2Difference.Inverse();
 		NewBoneData.AngularOrientationTarget = Quat.Rotator();
-		NewEpisodeData.Add(NewConstraint->ConstraintBone1.ToString(), NewBoneData);
+		NewFrameData.Add(NewConstraint->ConstraintBone1.ToString(), NewBoneData);
 	}
 
-	//Show an error message if the episode could not get overwritten.
-	if (!GraspDataToEdit.ReplaceEpisode(CurrentEditedFrame, NewEpisodeData))
+	//Show an error message if the frame could not get overwritten.
+	if (!GraspDataToEdit.ReplaceFrame(CurrentEditedFrame, NewFrameData))
 	{
 		ShowMessageBox(FText::FromString("Error"), FText::FromString("Could not edit the chosen frame."));
 		return;
@@ -296,20 +296,20 @@ void UMCGraspEdCallback::SetPreviewMeshComponent(UDebugSkelMeshComponent * Compo
 	DebugMeshComponent = Component;
 }
 
-void UMCGraspEdCallback::CreateAnimationData(TMap<FString, FRotator> EpisodeData)
+void UMCGraspEdCallback::CreateAnimationData(TMap<FString, FRotator> FrameData)
 {
 	NewGraspAnimData.BoneNames = TArray<FString>();
-	for (auto& Elem : EpisodeData)
+	for (auto& Elem : FrameData)
 	{
 		NewGraspAnimData.BoneNames.Add(Elem.Key);
 	}
 }
 
-void UMCGraspEdCallback::ChangeBoneRotationsTo(FString GraspingStyle, int EpisodeToEdit)
+void UMCGraspEdCallback::ChangeBoneRotationsTo(FString GraspAnim, int FrameToEdit)
 {
 	DebugMeshComponent->SkeletalMesh->Modify();
 	DebugMeshComponent->PreviewInstance->ResetModifiedBone();
-	FMCAnimationData GraspDataToReadFrom = UMCGraspAnimReader::ReadFile(GraspingStyle);
+	FMCAnimationData GraspDataToReadFrom = UMCGraspAnimReader::ReadFile(GraspAnim);
 
 	//Show an error message if one of the parameter are wrong.
 	if (GraspDataToReadFrom.AnimationName == "") {
@@ -317,13 +317,13 @@ void UMCGraspEdCallback::ChangeBoneRotationsTo(FString GraspingStyle, int Episod
 		return;
 	}
 
-	if (EpisodeToEdit < 0) {
+	if (FrameToEdit < 0) {
 		ShowMessageBox(FText::FromString("Error"), FText::FromString("You typed in a frame that does not exists. Change the frame to edit and try again."));
 		return;
 	}
 	
 	//Replace the current rotations with the rotations at the given step.
-	ApplyFingerDataForIndex(GraspDataToReadFrom, EpisodeToEdit);
+	ApplyBoneDataForIndex(GraspDataToReadFrom, FrameToEdit);
 	
 	DebugMeshComponent->PreviewInstance->SetForceRetargetBasePose(true);
 }
@@ -338,7 +338,7 @@ void UMCGraspEdCallback::PlayOneFrame(TMap<FString, FVector> BoneStartLocations,
 	DebugMeshComponent->SkeletalMesh->Modify();
 
 	//Replace the current rotations with the rotations at the given step.
-	ApplyFingerDataForIndex(PlayData, Index);
+	ApplyBoneDataForIndex(PlayData, Index);
 
 	DebugMeshComponent->PreviewInstance->SetForceRetargetBasePose(true);
 }
@@ -353,7 +353,7 @@ void UMCGraspEdCallback::DiscardAllFrames()
 void UMCGraspEdCallback::ShowFrame(bool bForward)
 {
 	FMCAnimationData HandAnimationData = UMCGraspAnimReader::ReadFile(CurrentGraspEdited);
-	int MaxEpisode = HandAnimationData.GetNumberOfEpisodes() - 1;
+	int MaxFrames = HandAnimationData.GetNumberOfFrames() - 1;
 	DebugMeshComponent->SkeletalMesh->Modify();
 	int BoneNamesIndex = 0;
 	TArray<FName> BoneNames;
@@ -370,7 +370,7 @@ void UMCGraspEdCallback::ShowFrame(bool bForward)
 	//Determines the next step to show
 	if (bForward) 
 	{
-		if (CurrentEditedFrame == MaxEpisode)
+		if (CurrentEditedFrame == MaxFrames)
 		{
 			CurrentEditedFrame = 0;
 		}
@@ -383,7 +383,7 @@ void UMCGraspEdCallback::ShowFrame(bool bForward)
 	{
 		if (CurrentEditedFrame == 0)
 		{
-			CurrentEditedFrame = MaxEpisode;
+			CurrentEditedFrame = MaxFrames;
 		}
 		else 
 		{
@@ -437,13 +437,13 @@ void UMCGraspEdCallback::SaveStartTransforms()
 	bSavedStartTransforms = true;
 }
 
-void UMCGraspEdCallback::ApplyFingerDataForIndex(FMCAnimationData PlayData, int Index)
+void UMCGraspEdCallback::ApplyBoneDataForIndex(FMCAnimationData PlayData, int Index)
 {
-	FMCFrame FingerData = PlayData.GetPositionDataWithIndex(Index);
-	TMap<FString, FMCBoneData>* FingerDataMap = FingerData.GetMap();
+	FMCFrame FrameData = PlayData.GetPositionDataWithIndex(Index);
+	TMap<FString, FMCBoneData>* FrameDataMap = FrameData.GetMap();
 
 	//Apply the rotations at a given step for the given AnimationData on the DebugMeshComponent
-	for (auto BoneDataEntry : *FingerDataMap)
+	for (auto BoneDataEntry : *FrameDataMap)
 	{
 		FRotator BoneData = BoneDataEntry.Value.BoneSpaceRotation;
 		FRotator SwitchYawPitch = FRotator(BoneData.Pitch, BoneData.Yaw, BoneData.Roll);
@@ -456,8 +456,8 @@ void UMCGraspEdCallback::ApplyFingerDataForIndex(FMCAnimationData PlayData, int 
 FReply UMCGraspEdCallback::OnEditButtonClicked()
 {
 	CurrentGraspEdited = GraspAnimBox->GetText().ToString();
-	FText EpisodeToEdit = FrameBox->GetText();
-	CurrentEditedFrame = FCString::Atoi(*EpisodeToEdit.ToString());
+	FText FrameToEdit = FrameBox->GetText();
+	CurrentEditedFrame = FCString::Atoi(*FrameToEdit.ToString());
 
 	//Changes bone rotations to the given step for the given grasping stlye
 	ChangeBoneRotationsTo(CurrentGraspEdited, CurrentEditedFrame);
@@ -468,7 +468,7 @@ FReply UMCGraspEdCallback::OnSaveButtonClicked()
 {
 	NewGraspAnim = NewGraspAnimNameBox->GetText().ToString();
 
-	//Saves a new grasping style under the name given name
+	//Saves a new grasp anim under the name given name
 	WriteFramesToAsset();
 	return FReply::Handled();
 }
