@@ -30,5 +30,5 @@ public:
 	TSharedPtr<FUICommandInfo> ShowNextFrame;
 	TSharedPtr<FUICommandInfo> ShowPreviousFrame;
 	TSharedPtr<FUICommandInfo> DiscardNewGraspAnim;
-	TSharedPtr<FUICommandInfo> StartCreatingGrasp;
+	TSharedPtr<FUICommandInfo> Initialize;
 };

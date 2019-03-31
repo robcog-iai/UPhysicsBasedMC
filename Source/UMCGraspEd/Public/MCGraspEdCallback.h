@@ -90,13 +90,7 @@ public:
 	*/
 	void Reset();
 
-	/*
-	* Sets the starting rotations to the given bone rotations.
-	* @param BoneRotations A map containing the BoneName as key and its rotation as value.
-	*/
-	void SetStartingBoneTransforms(TMap<FString, FTransform> BoneRotations);
-
-	void FillStartingRotatorsInComponentSpace();
+	void SaveStartTransforms();
 
 private:
 
@@ -105,33 +99,21 @@ private:
 
 	void ShowMessageBox(FText Title, FText Message);
 
-	void FillStartLocations();
-
-	//Applies FingerData for different indices.
-	void ApplyFingerDataForStartingIndex(FMCAnimationData PlayData);
 	void ApplyFingerDataForIndex(FMCAnimationData PlayData, int Index);
-
 
 	FReply OnEditButtonClicked();
 	FReply OnSaveButtonClicked();
 
 	/**
-	* All the bones start locations in bone space.
-	* Used to load frames back into editor.
-	*/
-	TMap<FString, FVector> StartBoneLocations;
-
-	/**
-	* All the bones start transforms in bone space.
-	* Used to load frames back into editor.
-	*/
-	TMap<FString, FTransform> StartBoneTransforms;
-
-	/**
-	* All the bones start rotations in component space.
+	* All the bones start transforms in component space.
 	* Used to calculate the change in orientation. 
 	*/
-	TMap<FString, FQuat> StartRotatorsComponentSpace;
+	TMap<FString, FTransform> StartBoneTransCompSpace;
+
+	/**
+	* All the bones start locations in bone space.
+	*/
+	TMap<FString, FVector> StartBoneLocBoneSpace;
 
 	//The buttons / editable textboxes displayed in the windows.
 	TSharedPtr<STextBlock> ButtonLabel;
@@ -141,7 +123,7 @@ private:
 
 	bool bFirstCreatedFrameData = false;
 	FString NewGraspAnim = "";
-	bool StartRotatorsSet = false;
+	bool bSavedStartTransforms = false;
 
 	int CurrentEditedFrame = 0;
 	FString CurrentGraspEdited = "";

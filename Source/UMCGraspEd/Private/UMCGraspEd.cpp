@@ -55,8 +55,8 @@ void FUMCGraspEd::InitializeUIButtons()
 
 	//Commands for the "New Grasp Animation " button
 	PluginCommandListCreateSection->MapAction(
-		Commands.StartCreatingGrasp,
-		FExecuteAction::CreateRaw(this, &FUMCGraspEd::InitializeStartRotations),
+		Commands.Initialize,
+		FExecuteAction::CreateRaw(this, &FUMCGraspEd::InitializeStartTransforms),
 		FCanExecuteAction()
 	);
 
@@ -85,6 +85,12 @@ void FUMCGraspEd::InitializeUIButtons()
 	);
 
 	//Commands for the "Edit Grasp Animation" button
+	PluginCommandListEditSection->MapAction(
+		Commands.Initialize,
+		FExecuteAction::CreateRaw(this, &FUMCGraspEd::InitializeStartTransforms),
+		FCanExecuteAction()
+	);
+
 	PluginCommandListEditSection->MapAction(
 		Commands.LoadGraspAnim,
 		FExecuteAction::CreateRaw(this, &FUMCGraspEd::ShowFrameEditWindow),
@@ -150,7 +156,7 @@ TSharedRef<SWidget> FUMCGraspEd::CreateOptionMenu()
 	const UMCGraspEdCommands& Commands = UMCGraspEdCommands::Get();
 	CreateBuilder.BeginSection("New Grasp Animation");
 	{
-		CreateBuilder.AddMenuEntry(Commands.StartCreatingGrasp);
+		CreateBuilder.AddMenuEntry(Commands.Initialize);
 		CreateBuilder.AddMenuEntry(Commands.SaveGraspPosition);
 		CreateBuilder.AddMenuEntry(Commands.CreateGraspAnim);
 		CreateBuilder.AddMenuEntry(Commands.DiscardNewGraspAnim);
@@ -168,6 +174,7 @@ TSharedRef<SWidget> FUMCGraspEd::EditOptionMenu()
 	const UMCGraspEdCommands& Commands = UMCGraspEdCommands::Get();
 	EditBuilder.BeginSection("Edit Grasp Animation");
 	{
+		EditBuilder.AddMenuEntry(Commands.Initialize);
 		EditBuilder.AddMenuEntry(Commands.LoadGraspAnim);
 		EditBuilder.AddMenuEntry(Commands.EditGraspPosition);
 		EditBuilder.AddMenuEntry(Commands.ShowNextFrame);
@@ -218,27 +225,22 @@ void FUMCGraspEd::OnPreviewCreation(const TSharedRef<IPersonaPreviewScene>& InPr
 	EditorCallback.Reset();
 }
 
-void FUMCGraspEd::InitializeStartRotations()
+void FUMCGraspEd::InitializeStartTransforms()
 {
 	EditorCallback.SetPreviewMeshComponent(DebugMeshComponent);
-	EditorCallback.FillStartingRotatorsInComponentSpace();
+	EditorCallback.SaveStartTransforms();
 	StartRotationsInitialized = true;
 }
 
 void FUMCGraspEd::ShowFrameEditWindow()
 {
-	EditorCallback.SetPreviewMeshComponent(DebugMeshComponent);
-	TArray<FName> BoneNames;
-	DebugMeshComponent->GetBoneNames(BoneNames);
-	TMap<FString, FTransform> StartingBoneTransforms;
-	//Get all of the current bone rotations and save them
-	for (FName BoneName : BoneNames) 
+	if (!StartRotationsInitialized)
 	{
-		int Index = DebugMeshComponent->GetBoneIndex(BoneName);
-		FTransform BoneTransform = DebugMeshComponent->GetBoneTransform(Index);
-		StartingBoneTransforms.Add(BoneName.ToString(), BoneTransform);
+		FString Message = "Please press start before editing any grasps";
+		EditorCallback.ShowInstructions(Message);
+		return;
 	}
-	EditorCallback.SetStartingBoneTransforms(StartingBoneTransforms);
+	EditorCallback.SetPreviewMeshComponent(DebugMeshComponent);
 	EditorCallback.ShowFrameEditWindow();
 }
 

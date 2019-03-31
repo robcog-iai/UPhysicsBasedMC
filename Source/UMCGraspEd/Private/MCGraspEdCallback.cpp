@@ -127,7 +127,7 @@ void UMCGraspEdCallback::ShowSaveGraspAnimWindow()
 
 void UMCGraspEdCallback::SaveBoneDatasAsFrame()
 {
-	if (!StartRotatorsSet) 
+	if (!bSavedStartTransforms) 
 	{
 		return;
 	}
@@ -173,9 +173,9 @@ void UMCGraspEdCallback::SaveBoneDatasAsFrame()
 
 		//save the start rotations of all the bones
 		//calculate how much bone1's roation has changed relative to the start 
-		FTransform Transform1Difference = FTransform(QuatBone1).GetRelativeTransform(FTransform(*StartRotatorsComponentSpace.Find(NewConstraint->ConstraintBone1.ToString())));
+		FTransform Transform1Difference = FTransform(QuatBone1).GetRelativeTransform(FTransform(StartBoneTransCompSpace.Find(NewConstraint->ConstraintBone1.ToString())->Rotator()));
 		FQuat Quat1Difference = Transform1Difference.GetRotation();
-		FTransform Transform2Difference = FTransform(QuatBone2).GetRelativeTransform(FTransform(*StartRotatorsComponentSpace.Find(NewConstraint->ConstraintBone2.ToString())));
+		FTransform Transform2Difference = FTransform(QuatBone2).GetRelativeTransform(FTransform(StartBoneTransCompSpace.Find(NewConstraint->ConstraintBone2.ToString())->Rotator()));
 		FQuat Quat2Difference = Transform2Difference.GetRotation();
 		//substract the change in bone2's rotation, so movements of parent bones are filtered out of bone1's rotation 
 		FQuat Quat = Quat1Difference * Quat2Difference.Inverse();
@@ -221,9 +221,9 @@ void UMCGraspEdCallback::WriteFramesToAsset()
 
 void UMCGraspEdCallback::EditLoadedGraspAnim()
 {
-	if (CurrentGraspEdited.IsEmpty() || CurrentEditedFrame == 0)
+	if (CurrentGraspEdited.IsEmpty())
 	{
-		ShowMessageBox(FText::FromString("Error"), FText::FromString("Could not edit grasping animation. Either you did not load any grasping animation or you are trying to edit the frame 0."));
+		ShowMessageBox(FText::FromString("Error"), FText::FromString("Could not edit grasping animation. You did not load any grasping animation."));
 		return;
 	}
 	
@@ -253,9 +253,9 @@ void UMCGraspEdCallback::EditLoadedGraspAnim()
 		NewBoneData.BoneSpaceRotation = *FoundRotation;
 
 		//calculate how much bone1's roation has changed relative to the start 
-		FTransform Transform1Difference = FTransform(QuatBone1).GetRelativeTransform(FTransform(*StartRotatorsComponentSpace.Find(NewConstraint->ConstraintBone1.ToString())));
+		FTransform Transform1Difference = FTransform(QuatBone1).GetRelativeTransform(FTransform(StartBoneTransCompSpace.Find(NewConstraint->ConstraintBone1.ToString())->Rotator()));
 		FQuat Quat1Difference = Transform1Difference.GetRotation();
-		FTransform Transform2Difference = FTransform(QuatBone2).GetRelativeTransform(FTransform(*StartRotatorsComponentSpace.Find(NewConstraint->ConstraintBone2.ToString())));
+		FTransform Transform2Difference = FTransform(QuatBone2).GetRelativeTransform(FTransform(StartBoneTransCompSpace.Find(NewConstraint->ConstraintBone2.ToString())->Rotator()));
 		FQuat Quat2Difference = Transform2Difference.GetRotation();
 		//substract the change in bone2's rotation, so movements of parent bones are filtered out of bone1's rotation 
 		FQuat Quat = Quat1Difference * Quat2Difference.Inverse();
@@ -321,16 +321,6 @@ void UMCGraspEdCallback::ChangeBoneRotationsTo(FString GraspingStyle, int Episod
 		ShowMessageBox(FText::FromString("Error"), FText::FromString("You typed in a frame that does not exists. Change the frame to edit and try again."));
 		return;
 	}
-
-	//Gets the current locations for the displayed hand
-	FillStartLocations();
-
-	//Reset to starting rotations.
-	ApplyFingerDataForStartingIndex(GraspDataToReadFrom);
-	DebugMeshComponent->PreviewInstance->SetForceRetargetBasePose(true);
-	
-	//Gets starting rotations in component space.
-	FillStartingRotatorsInComponentSpace();
 	
 	//Replace the current rotations with the rotations at the given step.
 	ApplyFingerDataForIndex(GraspDataToReadFrom, EpisodeToEdit);
@@ -346,10 +336,6 @@ void UMCGraspEdCallback::ShowInstructions(FString Message)
 void UMCGraspEdCallback::PlayOneFrame(TMap<FString, FVector> BoneStartLocations, FMCAnimationData PlayData, int Index)
 {
 	DebugMeshComponent->SkeletalMesh->Modify();
-
-	//Replace the current rotations with the rotations at step 0 for the currently loaded grasping stlye.
-	ApplyFingerDataForStartingIndex(PlayData);
-	DebugMeshComponent->PreviewInstance->SetForceRetargetBasePose(true);
 
 	//Replace the current rotations with the rotations at the given step.
 	ApplyFingerDataForIndex(PlayData, Index);
@@ -411,19 +397,13 @@ void UMCGraspEdCallback::ShowFrame(bool bForward)
 
 void UMCGraspEdCallback::Reset()
 {
-	StartRotatorsSet = false;
-	StartBoneLocations.Empty();
-	StartRotatorsComponentSpace.Empty();
-	StartBoneTransforms.Empty();
+	bSavedStartTransforms = false;
+	StartBoneLocBoneSpace.Empty();
+	StartBoneTransCompSpace.Empty();
 	CurrentEditedFrame = 0;
 	CurrentGraspEdited = "";
 	NewGraspAnim = "";
 	bFirstCreatedFrameData = false;
-}
-
-void UMCGraspEdCallback::SetStartingBoneTransforms(TMap<FString, FTransform> BoneRotations)
-{
-	StartBoneTransforms = BoneRotations;
 }
 
 void UMCGraspEdCallback::ShowMessageBox(FText Title, FText Message)
@@ -434,35 +414,27 @@ void UMCGraspEdCallback::ShowMessageBox(FText Title, FText Message)
 	Instructions->Debugf(Message,&Title);
 }
 
-void UMCGraspEdCallback::FillStartingRotatorsInComponentSpace()
+void UMCGraspEdCallback::SaveStartTransforms()
 {
-	//Gets all rotations of the bones in components space.
-	for (FConstraintInstance* NewConstraint : DebugMeshComponent->Constraints)
+	//Gets all locations of the bones in bone space
+	TArray<FName> BoneNames;
+	DebugMeshComponent->GetBoneNames(BoneNames);
+	int Index = 0;
+	for (FTransform BoneTransform : DebugMeshComponent->BoneSpaceTransforms)
 	{
-		FQuat QuatBone1 = DebugMeshComponent->GetBoneQuaternion(NewConstraint->ConstraintBone1, EBoneSpaces::ComponentSpace);
-		FQuat QuatBone2 = DebugMeshComponent->GetBoneQuaternion(NewConstraint->ConstraintBone2, EBoneSpaces::ComponentSpace);
-
-		StartRotatorsComponentSpace.Add(NewConstraint->ConstraintBone1.ToString(), QuatBone1);
-		StartRotatorsComponentSpace.Add(NewConstraint->ConstraintBone2.ToString(), QuatBone2);
+		StartBoneLocBoneSpace.Add(BoneNames[Index].ToString(), BoneTransform.GetTranslation());
+		Index++;
 	}
-	StartRotatorsSet = true;
-}
 
-void UMCGraspEdCallback::ApplyFingerDataForStartingIndex(FMCAnimationData PlayData)
-{
-	FMCFrame FingerDataStartingIndex = PlayData.GetPositionDataWithIndex(0);
-	TMap<FString, FMCBoneData>* FingerDataMapStartingIndex = FingerDataStartingIndex.GetMap();
-
-	//Apply the rotations at step 0 for the given AnimationData on the DebugMeshComponent
-	for (auto BoneDataEntry : *FingerDataMapStartingIndex)
+	//Gets all the transforms of the bones in component space
+	for (FName BoneName : BoneNames)
 	{
-		FRotator BoneData = BoneDataEntry.Value.BoneSpaceRotation;
-		FRotator SwitchYawPitch = FRotator(BoneData.Pitch, BoneData.Yaw, BoneData.Roll);
-		int Index = DebugMeshComponent->GetBoneIndex(FName(*BoneDataEntry.Key));
-		FTransform* OldBoneTransform = StartBoneTransforms.Find(BoneDataEntry.Key);
-		FVector* OldBoneLocation = StartBoneLocations.Find(BoneDataEntry.Key);
-		DebugMeshComponent->SkeletalMesh->RetargetBasePose[Index] = FTransform(BoneData, *OldBoneLocation);
+		int Index = DebugMeshComponent->GetBoneIndex(BoneName);
+		FTransform BoneTransform = DebugMeshComponent->GetBoneTransform(Index);
+		StartBoneTransCompSpace.Add(BoneName.ToString(), BoneTransform);
 	}
+
+	bSavedStartTransforms = true;
 }
 
 void UMCGraspEdCallback::ApplyFingerDataForIndex(FMCAnimationData PlayData, int Index)
@@ -476,22 +448,8 @@ void UMCGraspEdCallback::ApplyFingerDataForIndex(FMCAnimationData PlayData, int 
 		FRotator BoneData = BoneDataEntry.Value.BoneSpaceRotation;
 		FRotator SwitchYawPitch = FRotator(BoneData.Pitch, BoneData.Yaw, BoneData.Roll);
 		int BoneIndex = DebugMeshComponent->GetBoneIndex(FName(*BoneDataEntry.Key));
-		FTransform OldBoneTransform = DebugMeshComponent->GetBoneTransform(BoneIndex);
-		FVector* OldBoneLocation = StartBoneLocations.Find(BoneDataEntry.Key);
+		FVector* OldBoneLocation = StartBoneLocBoneSpace.Find(BoneDataEntry.Key);
 		DebugMeshComponent->SkeletalMesh->RetargetBasePose[BoneIndex] = FTransform(BoneData, *OldBoneLocation);
-	}
-}
-
-void UMCGraspEdCallback::FillStartLocations()
-{
-	//Gets the current starting locations if the DebugMeshComponent
-	TArray<FName> BoneNames;
-	DebugMeshComponent->GetBoneNames(BoneNames);
-	int Index = 0;
-	for (FTransform BoneTransform : DebugMeshComponent->BoneSpaceTransforms) 
-	{
-		StartBoneLocations.Add(BoneNames[Index].ToString(), BoneTransform.GetTranslation());
-		Index++;
 	}
 }
 

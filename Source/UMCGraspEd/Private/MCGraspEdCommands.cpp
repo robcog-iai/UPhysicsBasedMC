@@ -7,7 +7,7 @@
 void UMCGraspEdCommands::RegisterCommands() {
 	// Register all the UI elements
 
-	UI_COMMAND(StartCreatingGrasp, "Start",
+	UI_COMMAND(Initialize, "Start",
 		"Starts the process of creating a grasp animation", EUserInterfaceActionType::Button, FInputChord());
 
 	UI_COMMAND(SaveGraspPosition, "Add Frame",

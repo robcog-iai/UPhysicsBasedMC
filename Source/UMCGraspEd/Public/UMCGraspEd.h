@@ -41,7 +41,7 @@ private:
     void OnPreviewCreation(const TSharedRef<IPersonaPreviewScene>& InPreviewScene);
 
 	//Prepares and calls actions on the EditorCallback
-	void InitializeStartRotations();
+	void InitializeStartTransforms();
 	void ShowFrameEditWindow();
 	void WriteFramesToAsset();
 	void ShowSaveGraspAnimWindow();
