@@ -20,6 +20,6 @@ public:
 	// Create DataAsset
 	UObject* CreateGraspDataAsset(UClass* InClass, UObject* InParent, FName InName, EObjectFlags Flags, const TCHAR* Parms, FMCAnimationData DataStruct);
 
-	// Listens to MCIO delegator to see when a new GraspDataAsset should be created in the editor
+	// Called by GraspAnimWriter to tell factory to create new DataAsset
 	void AddGraspDataAsset(const FMCAnimationData& DataStruct);
 };

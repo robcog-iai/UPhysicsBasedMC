@@ -62,10 +62,9 @@ void UMCGraspController::InitializeComponent()
 {
 	Super::InitializeComponent();
 
-
+	//Create GraspExecuter
 	if (ASkeletalMeshActor* ParentActor = Cast<ASkeletalMeshActor>(GetOwner()))
 	{
-		//Create our grasping controllers for the left and right hand and register it
 		if (EquippedGrasps.Num() > 0)
 		{
 		GraspExecuter = NewObject<UMCGraspExecuter>();

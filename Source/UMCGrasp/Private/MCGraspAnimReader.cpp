@@ -6,7 +6,7 @@
 #include "Runtime/AssetRegistry/Public/AssetRegistryModule.h"
 #include "Runtime/Engine/Classes/Engine/ObjectLibrary.h"
 
-FMCAnimationData UMCGraspAnimReader::ReadFile(const FString& SkeletalMeshName, const FString& Name)
+FMCAnimationData UMCGraspAnimReader::ReadFile(const FString& Name)
 {
 	FMCAnimationData DataStruct = FMCAnimationData();
 
@@ -31,9 +31,9 @@ FMCAnimationData UMCGraspAnimReader::ConvertAssetToStruct(const UMCGraspDataAsse
 	{
 		DataStruct.BoneNames.Add(BoneName);
 	}
-	for (FMCFrame Episode : DataAsset->Frames)
+	for (FMCFrame Frame : DataAsset->Frames)
 	{
-		DataStruct.AddNewPositionData(Episode);
+		DataStruct.AddNewPositionData(Frame);
 	}
 
 	return DataStruct;

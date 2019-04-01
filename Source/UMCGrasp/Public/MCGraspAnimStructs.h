@@ -12,12 +12,12 @@ struct FMCBoneData
 	GENERATED_BODY()
 
 	/** Input value for a constraints angular drive motor.*/
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(EditAnywhere)
 	FRotator AngularOrientationTarget;
 
-	/** Temporary array of local-space (relative to parent bone) rotation for each bone. 
+	/** Array of local-space (relative to parent bone) rotation for each bone. 
 	Is used to load Animation back into editor.*/
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(EditAnywhere)
 	FRotator BoneSpaceRotation;
 
 	// Default ctor
@@ -40,7 +40,7 @@ struct FMCBoneData
 	}
 };
 
-//This structure represents one Episode with all their finger datas
+//This structure represents one frame with all their bone data
 USTRUCT()
 struct FMCFrame
 {
@@ -52,10 +52,14 @@ public:
 		BonesData = TMap<FString, FMCBoneData>();
 	}
 
+	//map with all data for all bones
+	UPROPERTY(EditAnywhere)
+	TMap<FString, FMCBoneData> BonesData;
+
 	//Checks for equality
 	FORCEINLINE bool operator==(const FMCFrame &arg1) const
 	{
-		//Go through all FingerDatas and check for equality
+		//Go through all BoneDatas and check for equality
 		for (auto Elem : BonesData)
 		{
 			//Checks if the other struct contains data for the current key
@@ -70,43 +74,38 @@ public:
 		return true;
 	}
 	
-	//Constructor to set all finger datas directly
+	//Constructor to set all bone datas directly
 	FMCFrame(const TMap<FString, FMCBoneData>& Map)
 	{
 		BonesData = Map;
 	}
 
-	//function to set all finger data
+	//function to set all bone data
 	void SetAllData(const TMap<FString, FMCBoneData> & NewMap)
 	{
 		BonesData = NewMap;
 	}
 
-	//sets one data for a finger
+	//sets one data for a bone
 	void AddNewBoneData(const FString& Name, const FMCBoneData& Data)
 	{
 		BonesData.Add(Name, Data);
 	}
 
-	//returns one finger data
+	//returns one bone data
 	FMCBoneData* GetBoneData(const FString& Name)
 	{
 		return BonesData.Find(Name);
 	}
 
-	//Function that returns the complete map with all fingers and their datas.
+	//Function that returns the complete map with all bones and their data
 	TMap<FString, FMCBoneData>* GetMap()
 	{
 		return &BonesData;
 	}
-
-	//map with all data for all fingers
-	UPROPERTY(VisibleAnywhere)
-	TMap<FString, FMCBoneData> BonesData;
-
 };
 
-//This struct represents one Animation. It holds the data for every episode 
+//This struct represents one Animation. It holds the data for every frame 
 //and also some general inforamtions
 USTRUCT()
 struct FMCAnimationData
@@ -120,7 +119,7 @@ public:
 	//All Bone informations
 	TArray<FString> BoneNames;
 
-	//All episodes
+	//All frames
 	TArray<FMCFrame> Frames;
 
 	//Standard constructor
@@ -130,23 +129,22 @@ public:
 		BoneNames = TArray<FString>();
 	}
 
-	//adds a new episode
+	//adds a new frame
 	void AddNewPositionData(const FMCFrame& Data)
 	{
 		Frames.Add(Data);
 	}
-
 	
-	//returns the number of episodes in this animation
-	int GetNumberOfEpisodes()
+	//returns the number of frames in this animation
+	int GetNumberOfFrames()
 	{
 		return Frames.Num();
 	}
 
-	//replaces one Episode with another one
-	bool ReplaceEpisode(const FMCFrame& OldData, const FMCFrame& NewData)
+	//replaces one frame with another one
+	bool ReplaceFrame(const FMCFrame& OldData, const FMCFrame& NewData)
 	{
-		int32 Index = RemoveEpisode(OldData);
+		int32 Index = RemoveFrame(OldData);
 		if (Index < 0) return false;
 		int32 IndexNew = Frames.Insert(NewData, Index);
 
@@ -154,18 +152,18 @@ public:
 		return Index == IndexNew;
 	}
 
-	//replaces one episode with another one. He also creates a new struct out of the map
-	bool ReplaceEpisode(const int32& RemoveIndex, const TMap<FString, FMCBoneData>& BoneData)
+	//replaces one frame with another one. He also creates a new struct out of the map
+	bool ReplaceFrame(const int32& RemoveIndex, const TMap<FString, FMCBoneData>& BoneData)
 	{
-		//Checks if the index is valid and also if the number of bones that are saved in BoneFingerNames
+		//Checks if the index is valid and also if the number of bones that are saved in BoneNames
 		//are equal with the new map (if not then there are missing bones)
-		if (RemoveIndex < GetNumberOfEpisodes() && BoneData.Num() != BoneNames.Num()) return false;
+		if (RemoveIndex < GetNumberOfFrames() && BoneData.Num() != BoneNames.Num()) return false;
 		Frames.RemoveAt(RemoveIndex);
-		return AddOneEpisode(BoneData, RemoveIndex);
+		return AddOneFrame(BoneData, RemoveIndex);
 	}
 
-	//removes one episode
-	int32 RemoveEpisode(const FMCFrame& OldData)
+	//removes one frame
+	int32 RemoveFrame(const FMCFrame& OldData)
 	{
 		//Checks if the data exists 
 		if (!Frames.Contains(OldData)) return -1;
@@ -175,22 +173,22 @@ public:
 		return Index;
 	}
 
-	//returns one episode for a specific index
+	//returns one frame for a specific index
 	FMCFrame GetPositionDataWithIndex(const int& Index)
 	{
 		if (Index >= Frames.Num() || Index < 0) return FMCFrame();
 		return Frames[Index];
 	}
 
-	//Adds a new episode
-	bool AddNewEpisode(const TMap<FString, FMCBoneData>& BoneData)
+	//Adds a new frame
+	bool AddNewFrame(const TMap<FString, FMCBoneData>& BoneData)
 	{
 		/*
-		checks if the number of bones that are saved in BoneFingerNames
+		checks if the number of bones that are saved in BoneNames
 		are equal with the new map (if not then there are missing bones)
 		*/
 		if (BoneData.Num() != BoneNames.Num()) return false;
-		return AddOneEpisode(BoneData, -1);
+		return AddOneFrame(BoneData, -1);
 	}
 
 	//returns all used bone names for this animation
@@ -199,22 +197,22 @@ public:
 		return BoneNames;
 	}
 
-	//helper function to add a new episode
-	bool AddOneEpisode(const TMap<FString, FMCBoneData>& BoneData, const int32& Index)
+	//helper function to add a new frame
+	bool AddOneFrame(const TMap<FString, FMCBoneData>& BoneData, const int32& Index)
 	{
-		//Create a new episode for all fingers
-		FMCFrame EpisodeData = FMCFrame();
-		EpisodeData.SetAllData(BoneData);
+		//Create a new frame for all bones
+		FMCFrame FrameData = FMCFrame();
+		FrameData.SetAllData(BoneData);
 
-		//If the Index is not -1 insert this episode to this position
+		//If the Index is not -1 insert this frame to this position
 		if (Index >= 0 && Index <= Frames.Num())
 		{
-			Frames.Insert(EpisodeData,Index);
+			Frames.Insert(FrameData,Index);
 		}
 		else
 		{
-			//Add the episode to the end
-			Frames.Add(EpisodeData);
+			//Add the frame to the end
+			Frames.Add(FrameData);
 		}
 		return true;
 	}

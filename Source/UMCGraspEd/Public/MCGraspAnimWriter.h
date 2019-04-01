@@ -15,5 +15,6 @@ class UMCGraspAnimWriter
 {
 public:
 
+	// Overwrites or creates DataAsset for a specific grasp
 	static void WriteFile(const FMCAnimationData& DataStruct);
 };

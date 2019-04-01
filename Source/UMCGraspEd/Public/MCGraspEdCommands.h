@@ -23,12 +23,12 @@ public:
 	//The entries for the drop down menu.
 	TSharedPtr<FUICommandInfo> ShowCreateHelp;
 	TSharedPtr<FUICommandInfo> ShowEditHelp;
-	TSharedPtr<FUICommandInfo> CreateGraspingStyle;
-	TSharedPtr<FUICommandInfo> LoadGraspingStyle;
-	TSharedPtr<FUICommandInfo> SaveGraspingPosition;
-	TSharedPtr<FUICommandInfo> EditGraspingPosition;
-	TSharedPtr<FUICommandInfo> ShowNextEpisode;
-	TSharedPtr<FUICommandInfo> ShowPreviousEpisode;
-	TSharedPtr<FUICommandInfo> DiscardNewGraspingStyle;
-	TSharedPtr<FUICommandInfo> StartCreatingGrasp;
+	TSharedPtr<FUICommandInfo> CreateGraspAnim;
+	TSharedPtr<FUICommandInfo> LoadGraspAnim;
+	TSharedPtr<FUICommandInfo> SaveGraspPosition;
+	TSharedPtr<FUICommandInfo> EditGraspPosition;
+	TSharedPtr<FUICommandInfo> ShowNextFrame;
+	TSharedPtr<FUICommandInfo> ShowPreviousFrame;
+	TSharedPtr<FUICommandInfo> DiscardNewGraspAnim;
+	TSharedPtr<FUICommandInfo> Initialize;
 };

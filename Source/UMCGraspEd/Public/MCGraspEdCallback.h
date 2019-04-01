@@ -18,29 +18,29 @@ public:
 	UMCGraspEdCallback();
 
 	/*
-	* Shows a window where you can set a grasping style at a specific episode to edit.
+	* Shows a window where you can set a grasp anim at a specific frame to edit.
 	*/
-    void ShowEpisodeEditWindow();
+    void ShowFrameEditWindow();
 
 	/*
-	* Shows a window where you can set a name for a new grasping stlye.
+	* Shows a window where you can set a name for a new grasp anim.
 	*/
-	void ShowSaveGraspingStyleWindow();
+	void ShowSaveGraspAnimWindow();
 
 	/*
-	* Saves the current position of the displayed mesh as an episode.
+	* Saves the current position of the displayed mesh as a frame.
 	*/
-	void SaveBoneDatasAsEpisode();
+	void SaveBoneDatasAsFrame();
 
 	/*
-	* Writes all currently recordes episodes to an .ini file.
+	* Writes all currently recorded frames to a DataAsset.
 	*/
-	void WriteEpisodesToFile();
+	void WriteFramesToAsset();
 
 	/*
 	* Overwrites the currently loaded step with the currently displayed bone rotations.
 	*/
-	void EditLoadedGraspingStyle();
+	void EditLoadedGraspAnim();
 
 	/*
 	* Sets the DebugMeshComponent to work with.
@@ -48,17 +48,17 @@ public:
 	void SetPreviewMeshComponent(UDebugSkelMeshComponent* Component);
 
 	/*
-	* Creates a new AnimationData with the given episodes.
-	* @param EpisodeData A map containing BoneNames as key and its rotation as value.
+	* Creates a new AnimationData with the given frames.
+	* @param FrameData A map containing BoneNames as key and its rotation as value.
 	*/
-	void CreateAnimationData(TMap<FString, FRotator> EpisodeData);
+	void CreateAnimationData(TMap<FString, FRotator> FrameData);
 
 	/*
-	* Loads a step from a grasping style.
-	* @param GraspingStyle the stlye to load.
+	* Loads a step from a grasp anim.
+	* @param GraspAnim the stlye to load.
 	* @param StepToEdit the steps that should get displayed in the preview scene.
 	*/
-	void ChangeBoneRotationsTo(FString GraspingStyle, int StepToEdit);
+	void ChangeBoneRotationsTo(FString GraspAnim, int StepToEdit);
 
 	/*
 	* Shows a help windows with the given message.
@@ -67,75 +67,73 @@ public:
 	void ShowInstructions(FString Message);
 	
 	/*
-	* Shows the episode at the given index for the given HandAnimationData in the preview scene.
+	* Shows the frame at the given index for the given HandAnimationData in the preview scene.
 	* @param BoneStartLocations The starting locations of the hand. Key is the BoneName and value its location.
 	* @param PlayData The AnimationData for a grasping stlye.
-	* @param Index The index of the episode that should get displayed.
+	* @param Index The index of the frame that should get displayed.
 	*/
-	void PlayOneEpisode(TMap<FString, FVector> BoneStartLocations, FMCAnimationData PlayData, int Index);
+	void PlayOneFrame(TMap<FString, FVector> BoneStartLocations, FMCAnimationData PlayData, int Index);
 
 	/*
-	* Discards all currently recorded episodes.
+	* Discards all currently recorded frames.
 	*/
-	void DiscardAllEpisodes();
+	void DiscardAllFrames();
 
 	/*
-	* Shows an episodes.
-	* @param bForward true if the next episode should get shown, false for the previous episode.
+	* Shows a frame.
+	* @param bForward true if the next frame should get shown, false for the previous frame.
 	*/
-	void ShowEpisode(bool bForward);
+	void ShowFrame(bool bForward);
 
 	/*
 	* Resets all variables used in this Class.
 	*/
 	void Reset();
 
-	/*
-	* Sets the starting rotations to the given bone rotations.
-	* @param BoneRotations A map containing the BoneName as key and its rotation as value.
-	*/
-	void SetStartingBoneRotations(TMap<FString, FTransform> BoneRotations);
-
-	void FillStartingRotatorsInComponentSpace();
+	// Saves all the transforms we need later on, before bones are moved
+	void SaveStartTransforms();
 
 private:
+
+	// Current mesh in the editor 
+	UDebugSkelMeshComponent* DebugMeshComponent;
+
+	// Our new grasp anim struct 
+	FMCAnimationData NewGraspAnimData = FMCAnimationData();
+
+	/**
+	* All the bones start transforms in component space.
+	* Used to calculate the change in orientation.
+	*/
+	TMap<FString, FTransform> StartBoneTransCompSpace;
+
+	/**
+	* All the bones start locations in bone space.
+	*/
+	TMap<FString, FVector> StartBoneLocBoneSpace;
 
 	//Creates a map with the names of the bones as FName and their current rotations as FRotator for a given USkeletalMeshComponent.
     TMap<FName, FRotator> GetBoneRotations(USkeletalMeshComponent*  SkeletalComponent);
 
 	void ShowMessageBox(FText Title, FText Message);
 
-	void FillStartLocations();
-
-	//Applies FingerData for different indices.
-	void ApplyFingerDataForStartingIndex(FMCAnimationData PlayData);
-	void ApplyFingerDataForIndex(FMCAnimationData PlayData, int Index);
-
+	void ApplyBoneDataForIndex(FMCAnimationData PlayData, int Index);
 
 	FReply OnEditButtonClicked();
 	FReply OnSaveButtonClicked();
 
-	//Start locations / rotations in different spaces.
-	TMap<FString, FVector> StartLocations;
-	TMap<FString, FQuat> StartRotatorsComponentSpace;
-	TMap<FString, FTransform> StartingBoneRotations;
-
 	//The buttons / editable textboxes displayed in the windows.
 	TSharedPtr<STextBlock> ButtonLabel;
-	TSharedPtr<SEditableTextBox> NewGraspingStyleNameBox;
-	TSharedPtr<SEditableTextBox> GraspingStyleBox;
-	TSharedPtr<SEditableTextBox> EpisodeBox;
+	TSharedPtr<SEditableTextBox> NewGraspAnimNameBox;
+	TSharedPtr<SEditableTextBox> GraspAnimBox;
+	TSharedPtr<SEditableTextBox> FrameBox;
 
-	bool bFirstCreatedEpisodeData = false;
-	FString NewGraspStyle = "";
-	bool StartRotatorsSet = false;
+	bool bFirstCreatedFrameData = false;
+	FString NewGraspAnim = "";
+	bool bSavedStartTransforms = false;
 
-	int CurrentEditedEpisode = 0;
+	int CurrentEditedFrame = 0;
 	FString CurrentGraspEdited = "";
-
-	UDebugSkelMeshComponent* DebugMeshComponent;
-
-	FMCAnimationData NewGraspAnimationData = FMCAnimationData();
 
 	bool bContinuePlayGrasp = true;
 };

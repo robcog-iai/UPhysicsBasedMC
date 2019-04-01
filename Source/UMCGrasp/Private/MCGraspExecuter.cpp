@@ -48,11 +48,12 @@ void UMCGraspExecuter::UpdateGrasp(const float Input)
 		return;
 	}
 
-	if (GraspingData.GetNumberOfEpisodes() <= 1)
+	if (GraspingData.GetNumberOfFrames() <= 1)
 	{
 		return;
 	}
 
+	// Ensures the hand goes into the initial frame when this is called the first itme
 	if (bFirstUpdate)
 	{
 		FMCFrame Save = GraspingData.GetPositionDataWithIndex(0);
@@ -74,7 +75,7 @@ void UMCGraspExecuter::UpdateGrasp(const float Input)
 		// Calculations for moving in multiple steps
 		// StepSize defines how much of the 0-1 input is between each step
 		// For 3 Steps for example there is a input of 0,5 seperating each 
-		float StepSize = 1 / ((float)GraspingData.GetNumberOfEpisodes() - 1);
+		float StepSize = 1 / ((float)GraspingData.GetNumberOfFrames() - 1);
 		// Calculates how many steps we have passed, given then current input
 		// When rounded down we know which step came before with this input
 		float StepIteratorCountFloat = Input / StepSize;

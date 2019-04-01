@@ -7,28 +7,28 @@
 void UMCGraspEdCommands::RegisterCommands() {
 	// Register all the UI elements
 
-	UI_COMMAND(StartCreatingGrasp, "Start",
+	UI_COMMAND(Initialize, "Start",
 		"Starts the process of creating a grasp animation", EUserInterfaceActionType::Button, FInputChord());
 
-	UI_COMMAND(SaveGraspingPosition, "Add Frame",
+	UI_COMMAND(SaveGraspPosition, "Add Frame",
 		"Add current position to animation as a frame", EUserInterfaceActionType::Button, FInputChord());
 
-	UI_COMMAND(CreateGraspingStyle, "Save",
+	UI_COMMAND(CreateGraspAnim, "Save",
 		"Save to data asset", EUserInterfaceActionType::Button, FInputChord());
 
-	UI_COMMAND(DiscardNewGraspingStyle, "Clear All",
+	UI_COMMAND(DiscardNewGraspAnim, "Clear All",
 		"Discards all frames", EUserInterfaceActionType::Button, FInputChord());
 
-	UI_COMMAND(LoadGraspingStyle, "Load Grasp Animation",
+	UI_COMMAND(LoadGraspAnim, "Load Grasp Anim",
 		"Loads a graso animation at a specific frame", EUserInterfaceActionType::Button, FInputChord());
 
-	UI_COMMAND(EditGraspingPosition, "Update Frame",
+	UI_COMMAND(EditGraspPosition, "Update Frame",
 		"Updates the loaded frame with current positions", EUserInterfaceActionType::Button, FInputChord());
 
-	UI_COMMAND(ShowNextEpisode, "Goto Next Frame",
+	UI_COMMAND(ShowNextFrame, "Goto Next Frame",
 		"Goto Next Frame", EUserInterfaceActionType::Button, FInputChord());
 
-	UI_COMMAND(ShowPreviousEpisode, "Goto Previous Frame",
+	UI_COMMAND(ShowPreviousFrame, "Goto Previous Frame",
 		"Goto Previous Frame", EUserInterfaceActionType::Button, FInputChord());
 
 	UI_COMMAND(ShowCreateHelp, "Help",

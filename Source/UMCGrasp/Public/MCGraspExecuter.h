@@ -17,6 +17,7 @@ public:
 	// Sets default values for this component's properties
 	UMCGraspExecuter();
 	
+	// sets up all the motors
 	void InitiateExecuter(ASkeletalMeshActor* Parent, const float& inSpringBase, const float& inSpringMultiplier, const float& inDamping, const float& inForceLimit);
 
 	/*
@@ -35,7 +36,7 @@ public:
 private:
 
 	/*
-	Calls LerpFingerOrientation on every finger
+	Uses interpolation to calculate target orientation for bones
 	@param Target - where calculated positions are saved
 	@param Initial - initial hand state if input was 0
 	@param Closed - final hand state if input was 1 
@@ -44,22 +45,19 @@ private:
 	void LerpHandOrientation(FMCFrame* Target, FMCFrame Initial, FMCFrame Closed, const float Input);
 
 	/*
-	Calls DriveToFingerOrientationTarget for every finger.
+	Sets all the constraints orientation drives to go into target orientation
 	@param Target - the target position that has been calculated by lerp
-	@param Hand - the AGraspingHand to move
 	*/
 	void DriveToHandOrientationTarget(FMCFrame* Target);
 
 	/*
-	Finds out which constraint belongs to which bone and sets them up  so we cann move them
+	Finds out which constraint belongs to which bone
 	@param BoneName - name of bone
-	@param Hand - AGraspingHand with the skeleton that has to be searched for the constraint
 	*/
 	FConstraintInstance* BoneNameToConstraint(FString BoneName);
 
 	/*
 	Stops the grasping process and resets the booleans that were changed
-	@param Hand - AGraspingHand that should stop grasping
 	*/
 	void StopGrasping();
 
@@ -80,17 +78,27 @@ private:
 	// Set to true when there is a grasp waiting to be applied
 	bool bIsInQueue;
 
+	// the mesh that has to be moved
 	ASkeletalMeshActor* Hand;
 
+	// bool to check if this objject has been initialized correctly 
 	bool bIsInitiated;
 
+	// Minimum spring value
 	float SpringBase = 9000;
 
+	/**
+	* Multiplier for the SpringBase. At an input of 1 the base value is multiplied by it.
+	* At an input of 0.5 the base value is multiplied by half of it and so on. 
+	*/ 
 	float SpringMultiplier = 5;
 
+	// Damping value
 	float Damping = 1000;
 
+	// Force limit. 0 means no limit. 
 	float ForceLimit = 0;
 
+	// bool that is used so the mesh goes into step 0 of it's current grasp when the game is started
 	bool bFirstUpdate = true;
 };
