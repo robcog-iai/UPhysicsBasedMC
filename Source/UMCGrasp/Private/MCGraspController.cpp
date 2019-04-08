@@ -11,7 +11,7 @@ UMCGraspController::UMCGraspController()
 	bWantsInitializeComponent = true;
 
 	// Default parameters
-	HandType = EMCRealisticGraspHandType::Left;
+	HandType = EMCGraspHandType::Left;
 	GraspAction = "LeftGrasp";
 	NextGraspAction = "LeftNext";
 	PreviousGraspAction = "LeftPrevious";
@@ -42,13 +42,13 @@ void UMCGraspController::PostEditChangeProperty(struct FPropertyChangedEvent& Pr
 	// Set the left / right constraint actors
 	if (PropertyName == GET_MEMBER_NAME_CHECKED(UMCGraspController, HandType))
 	{
-		if (HandType == EMCRealisticGraspHandType::Left)
+		if (HandType == EMCGraspHandType::Left)
 		{
 			GraspAction = "LeftGrasp";
 			NextGraspAction = "LeftNext";
 			PreviousGraspAction = "LeftPrevious";
 		}
-		else if (HandType == EMCRealisticGraspHandType::Right)
+		else if (HandType == EMCGraspHandType::Right)
 		{
 			GraspAction = "RightGrasp";
 			NextGraspAction = "RightNext";

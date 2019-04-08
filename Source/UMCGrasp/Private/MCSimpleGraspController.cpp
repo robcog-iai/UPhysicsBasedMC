@@ -14,8 +14,9 @@ UMCSimpleGraspController::UMCSimpleGraspController()
 	PrimaryComponentTick.bCanEverTick = false;
 
 	// Default parameters
-	HandType = EMCGraspHandType::Left;
+	HandType = EMCSimpleGraspHandType::Left;
 	InputAxisName = "LeftGrasp";
+	SkeletalType = EMCSimpleGraspSkeletalType::Default;
 
 	// Driver parameters
 	AngularDriveMode = EAngularDriveMode::SLERP;
@@ -52,10 +53,33 @@ void UMCSimpleGraspController::BeginPlay()
 			{
 				if (UInputComponent* IC = PC->InputComponent)
 				{
-					IC->BindAxis(InputAxisName, this, &UMCSimpleGraspController::Update);
+					if (SkeletalType == EMCSimpleGraspSkeletalType::Default)
+					{
+						IC->BindAxis(InputAxisName, this, &UMCSimpleGraspController::Update);
+					}
+					else if (SkeletalType == EMCSimpleGraspSkeletalType::Genesis)
+					{
+						IC->BindAxis(InputAxisName, this, &UMCSimpleGraspController::Update_Genesis);
+					}
+				}
+				else
+				{
+					UE_LOG(LogTemp, Error, TEXT("%s::%d No Input Component found.."), TEXT(__FUNCTION__), __LINE__);
 				}
 			}
+			else
+			{
+				UE_LOG(LogTemp, Error, TEXT("%s::%d No Player controller found.."), TEXT(__FUNCTION__), __LINE__);
+			}
 		}
+		else 
+		{
+			UE_LOG(LogTemp, Error, TEXT("%s::%d No valid skeletal mesh component found.."), TEXT(__FUNCTION__), __LINE__);
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("%s::%d Owner is not a skeletal mesh actor.."), TEXT(__FUNCTION__), __LINE__);
 	}
 }
 
@@ -72,11 +96,11 @@ void UMCSimpleGraspController::PostEditChangeProperty(struct FPropertyChangedEve
 	// Set the left / right constraint actors
 	if (PropertyName == GET_MEMBER_NAME_CHECKED(UMCSimpleGraspController, HandType))
 	{
-		if (HandType == EMCGraspHandType::Left)
+		if (HandType == EMCSimpleGraspHandType::Left)
 		{
 			InputAxisName = "LeftGrasp";
 		}
-		else if (HandType == EMCGraspHandType::Right)
+		else if (HandType == EMCSimpleGraspHandType::Right)
 		{
 			InputAxisName = "RightGrasp";
 		}
@@ -86,10 +110,27 @@ void UMCSimpleGraspController::PostEditChangeProperty(struct FPropertyChangedEve
 
 // Update the grasp
 void UMCSimpleGraspController::Update(float Value)
-{	
+{
 	// Apply target to fingers
 	for (auto& ConstraintInstance : SkeletalMesh->Constraints)
 	{
 		ConstraintInstance->SetAngularOrientationTarget(FRotator(0.f, 0.f, Value * MC_MAX_ANGULAR_TARGET).Quaternion());
+	}
+}
+
+// Update the grasp for the genesis skeleton
+void UMCSimpleGraspController::Update_Genesis(float Value)
+{
+	UE_LOG(LogTemp, Warning, TEXT("%s::%d"), TEXT(__FUNCTION__), __LINE__);
+	if (Value > 0)
+	{
+		UE_LOG(LogTemp, Error, TEXT("%s::%d"), TEXT(__FUNCTION__), __LINE__);
+		// Apply target to fingers
+		for (auto& ConstraintInstance : SkeletalMesh->Constraints)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("\t%s::%d Bone=%s"),
+				TEXT(__FUNCTION__), __LINE__, *ConstraintInstance->ConstraintBone1.ToString());
+			ConstraintInstance->SetAngularOrientationTarget(FRotator(0.f, 0.f, Value * MC_MAX_ANGULAR_TARGET).Quaternion());
+		}
 	}
 }

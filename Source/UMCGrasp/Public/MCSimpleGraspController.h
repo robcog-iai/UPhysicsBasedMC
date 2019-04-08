@@ -12,10 +12,20 @@
 * Hand type
 */
 UENUM()
-enum class EMCGraspHandType : uint8
+enum class EMCSimpleGraspHandType : uint8
 {
 	Left					UMETA(DisplayName = "Left"),
 	Right					UMETA(DisplayName = "Right"),
+};
+
+/**
+* Skeltal type
+*/
+UENUM()
+enum class EMCSimpleGraspSkeletalType : uint8
+{
+	Default					UMETA(DisplayName = "Default"),
+	Genesis					UMETA(DisplayName = "Genesis"),
 };
 
 /**
@@ -43,10 +53,17 @@ private:
 	// Update the grasp
 	void Update(float Value);
 
+	// Update the grasp for the genesis hands
+	void Update_Genesis(float Value);
+
 private:
 	// Hand type, to listen to the right inputs
 	UPROPERTY(EditAnywhere, Category = "Grasp Controller")
-	EMCGraspHandType HandType;
+	EMCSimpleGraspHandType HandType;
+
+	// Skeletal type, to apply the correct angles and bones
+	UPROPERTY(EditAnywhere, Category = "Grasp Controller")
+	EMCSimpleGraspSkeletalType SkeletalType;
 
 	// Input axis name
 	UPROPERTY(EditAnywhere, Category = "Grasp Controller")

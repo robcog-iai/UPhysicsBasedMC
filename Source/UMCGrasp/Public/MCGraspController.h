@@ -17,7 +17,7 @@
 * Hand type
 */
 UENUM()
-enum class EMCRealisticGraspHandType : uint8
+enum class EMCGraspHandType : uint8
 {
 	Left					UMETA(DisplayName = "Left"),
 	Right					UMETA(DisplayName = "Right"),
@@ -92,7 +92,7 @@ public:
 
 	// Hand type, to listen to the right inputs
 	UPROPERTY(EditAnywhere)
-	EMCRealisticGraspHandType HandType;
+	EMCGraspHandType HandType;
 
 private:
 
