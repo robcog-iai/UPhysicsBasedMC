@@ -192,7 +192,7 @@ void FMC6DController::Update(float DeltaTime)
 // Default update function
 void FMC6DController::Update_NONE(float DeltaTime)
 {
-	UE_LOG(LogTemp, Warning, TEXT(">> %s::%d"), TEXT(__FUNCTION__), __LINE__);
+	UE_LOG(LogTemp, Warning, TEXT(">> %s::%d"), *FString(__func__), __LINE__);
 }
 
 
