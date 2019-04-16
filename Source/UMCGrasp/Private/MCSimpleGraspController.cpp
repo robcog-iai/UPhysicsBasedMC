@@ -64,22 +64,22 @@ void UMCSimpleGraspController::BeginPlay()
 				}
 				else
 				{
-					UE_LOG(LogTemp, Error, TEXT("%s::%d No Input Component found.."), TEXT(__FUNCTION__), __LINE__);
+					UE_LOG(LogTemp, Error, TEXT("%s::%d No Input Component found.."), *FString(__func__), __LINE__);
 				}
 			}
 			else
 			{
-				UE_LOG(LogTemp, Error, TEXT("%s::%d No Player controller found.."), TEXT(__FUNCTION__), __LINE__);
+				UE_LOG(LogTemp, Error, TEXT("%s::%d No Player controller found.."), *FString(__func__), __LINE__);
 			}
 		}
 		else 
 		{
-			UE_LOG(LogTemp, Error, TEXT("%s::%d No valid skeletal mesh component found.."), TEXT(__FUNCTION__), __LINE__);
+			UE_LOG(LogTemp, Error, TEXT("%s::%d No valid skeletal mesh component found.."), *FString(__func__), __LINE__);
 		}
 	}
 	else
 	{
-		UE_LOG(LogTemp, Error, TEXT("%s::%d Owner is not a skeletal mesh actor.."), TEXT(__FUNCTION__), __LINE__);
+		UE_LOG(LogTemp, Error, TEXT("%s::%d Owner is not a skeletal mesh actor.."), *FString(__func__), __LINE__);
 	}
 }
 
@@ -121,15 +121,15 @@ void UMCSimpleGraspController::Update(float Value)
 // Update the grasp for the genesis skeleton
 void UMCSimpleGraspController::Update_Genesis(float Value)
 {
-	UE_LOG(LogTemp, Warning, TEXT("%s::%d"), TEXT(__FUNCTION__), __LINE__);
+	UE_LOG(LogTemp, Warning, TEXT("%s::%d"), *FString(__func__), __LINE__);
 	if (Value > 0)
 	{
-		UE_LOG(LogTemp, Error, TEXT("%s::%d"), TEXT(__FUNCTION__), __LINE__);
+		UE_LOG(LogTemp, Error, TEXT("%s::%d"), *FString(__func__), __LINE__);
 		// Apply target to fingers
 		for (auto& ConstraintInstance : SkeletalMesh->Constraints)
 		{
 			UE_LOG(LogTemp, Warning, TEXT("\t%s::%d Bone=%s"),
-				TEXT(__FUNCTION__), __LINE__, *ConstraintInstance->ConstraintBone1.ToString());
+				*FString(__func__), __LINE__, *ConstraintInstance->ConstraintBone1.ToString());
 			ConstraintInstance->SetAngularOrientationTarget(FRotator(0.f, 0.f, Value * MC_MAX_ANGULAR_TARGET).Quaternion());
 		}
 	}
