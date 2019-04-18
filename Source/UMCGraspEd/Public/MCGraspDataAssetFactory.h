@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Factories/Factory.h"
-#include "MCGRaspDataAsset.h"
+#include "MCGraspDataAsset.h"
 #include "MCGraspDataAssetFactory.generated.h"
 
 /**
