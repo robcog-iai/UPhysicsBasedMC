@@ -47,9 +47,12 @@ protected:
 #if WITH_EDITOR
 	// Called when a property is changed in the editor
 	virtual void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override;
-#endif // WITH_EDITOR
-		
+#endif // 
+
 private:
+	// Init the controller
+	void Init();
+
 	// Update the grasp
 	void Update(float Value);
 
@@ -73,6 +76,10 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Grasp Controller")
 	TEnumAsByte<EAngularDriveMode::Type> AngularDriveMode;
 
+	// Max angle target (the angle of the constraint when the trigger is at max (1.f)).
+	UPROPERTY(EditAnywhere, Category = "Grasp Controller", meta = (ClampMin = 0))
+	float MaxAngleMultiplier;
+
 	// Spring value to apply to the angular drive (Position strength)
 	UPROPERTY(EditAnywhere, Category = "Grasp Controller", meta = (ClampMin = 0))
 	float Spring;
@@ -87,4 +94,7 @@ private:
 
 	// Skeletal mesh of the owner
 	class USkeletalMeshComponent* SkeletalMesh;
+
+	// Don't iterate over the constraints if the input value did not change since last time
+	float PrevInputVal;
 };

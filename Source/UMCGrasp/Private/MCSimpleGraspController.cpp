@@ -4,8 +4,6 @@
 #include "MCSimpleGraspController.h"
 #include "Components/SkeletalMeshComponent.h"
 
-#define MC_MAX_ANGULAR_TARGET 45.f
-
 // Sets default values for this component's properties
 UMCSimpleGraspController::UMCSimpleGraspController()
 {
@@ -20,9 +18,13 @@ UMCSimpleGraspController::UMCSimpleGraspController()
 
 	// Driver parameters
 	AngularDriveMode = EAngularDriveMode::SLERP;
-	Spring = 15000.0f;
-	Damping = 100.0f;
-	ForceLimit = 50000.0f;
+	Spring = 50000.0f;
+	Damping = 500.0f;
+	ForceLimit = 250000.0f;
+
+	// Previous input value
+	PrevInputVal = 0.f;
+	MaxAngleMultiplier = 55.f;
 }
 
 // Called when the game starts
@@ -30,6 +32,38 @@ void UMCSimpleGraspController::BeginPlay()
 {
 	Super::BeginPlay();
 
+	// Check if the controller can be init to the skeletal mesh
+	Init();
+}
+
+#if WITH_EDITOR
+// Called when a property is changed in the editor
+void UMCSimpleGraspController::PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent)
+{
+	Super::PostEditChangeProperty(PropertyChangedEvent);
+
+	// Get the changed property name
+	FName PropertyName = (PropertyChangedEvent.Property != NULL) ?
+		PropertyChangedEvent.Property->GetFName() : NAME_None;
+
+	// Set the left / right constraint actors
+	if (PropertyName == GET_MEMBER_NAME_CHECKED(UMCSimpleGraspController, HandType))
+	{
+		if (HandType == EMCSimpleGraspHandType::Left)
+		{
+			InputAxisName = "LeftGrasp";
+		}
+		else if (HandType == EMCSimpleGraspHandType::Right)
+		{
+			InputAxisName = "RightGrasp";
+		}
+	}
+}
+#endif // WITH_EDITOR
+
+// Init the controller
+void UMCSimpleGraspController::Init()
+{
 	// Check that owner is a skeletal mesh actor and has a valid skeletal mesh component
 	if (ASkeletalMeshActor* OwnerAsSkelMA = Cast<ASkeletalMeshActor>(GetOwner()))
 	{
@@ -72,7 +106,7 @@ void UMCSimpleGraspController::BeginPlay()
 				UE_LOG(LogTemp, Error, TEXT("%s::%d No Player controller found.."), *FString(__func__), __LINE__);
 			}
 		}
-		else 
+		else
 		{
 			UE_LOG(LogTemp, Error, TEXT("%s::%d No valid skeletal mesh component found.."), *FString(__func__), __LINE__);
 		}
@@ -83,54 +117,44 @@ void UMCSimpleGraspController::BeginPlay()
 	}
 }
 
-#if WITH_EDITOR
-// Called when a property is changed in the editor
-void UMCSimpleGraspController::PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent)
-{
-	Super::PostEditChangeProperty(PropertyChangedEvent);
-
-	// Get the changed property name
-	FName PropertyName = (PropertyChangedEvent.Property != NULL) ?
-		PropertyChangedEvent.Property->GetFName() : NAME_None;
-
-	// Set the left / right constraint actors
-	if (PropertyName == GET_MEMBER_NAME_CHECKED(UMCSimpleGraspController, HandType))
-	{
-		if (HandType == EMCSimpleGraspHandType::Left)
-		{
-			InputAxisName = "LeftGrasp";
-		}
-		else if (HandType == EMCSimpleGraspHandType::Right)
-		{
-			InputAxisName = "RightGrasp";
-		}
-	}
-}
-#endif // WITH_EDITOR
-
 // Update the grasp
 void UMCSimpleGraspController::Update(float Value)
 {
-	// Apply target to fingers
-	for (auto& ConstraintInstance : SkeletalMesh->Constraints)
+	// Skip iterating constraints for small changes
+	if (FMath::Abs(Value - PrevInputVal) > 0.025)
 	{
-		ConstraintInstance->SetAngularOrientationTarget(FRotator(0.f, 0.f, Value * MC_MAX_ANGULAR_TARGET).Quaternion());
+		PrevInputVal = Value;
+		// Apply target to fingers
+		for (auto& ConstraintInstance : SkeletalMesh->Constraints)
+		{
+			ConstraintInstance->SetAngularOrientationTarget(FRotator(0.f, 0.f, Value * MaxAngleMultiplier).Quaternion());
+		}
 	}
 }
 
 // Update the grasp for the genesis skeleton
 void UMCSimpleGraspController::Update_Genesis(float Value)
 {
-	UE_LOG(LogTemp, Warning, TEXT("%s::%d"), *FString(__func__), __LINE__);
-	if (Value > 0)
+	// Skip iterating constraints for small changes
+	if (FMath::Abs(Value - PrevInputVal) > 0.05)
 	{
-		UE_LOG(LogTemp, Error, TEXT("%s::%d"), *FString(__func__), __LINE__);
+		PrevInputVal = Value;
+
 		// Apply target to fingers
 		for (auto& ConstraintInstance : SkeletalMesh->Constraints)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("\t%s::%d Bone=%s"),
-				*FString(__func__), __LINE__, *ConstraintInstance->ConstraintBone1.ToString());
-			ConstraintInstance->SetAngularOrientationTarget(FRotator(0.f, 0.f, Value * MC_MAX_ANGULAR_TARGET).Quaternion());
+			if (ConstraintInstance->ConstraintBone1.ToString().Contains("Carpal"))
+			{
+				continue;
+			}
+			else if (ConstraintInstance->ConstraintBone1.ToString().Contains("Thumb"))
+			{
+				ConstraintInstance->SetAngularOrientationTarget(FRotator( - Value * MaxAngleMultiplier, 0.f, 0.f).Quaternion());
+			}
+			else
+			{
+				ConstraintInstance->SetAngularOrientationTarget(FRotator(0.f, Value * MaxAngleMultiplier, 0.f).Quaternion());
+			}
 		}
 	}
 }
