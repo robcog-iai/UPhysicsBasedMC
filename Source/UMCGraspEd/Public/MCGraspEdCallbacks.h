@@ -7,15 +7,15 @@
 #include "Editor/UnrealEd/Classes/Animation/DebugSkelMeshComponent.h"
 #include "Runtime/Slate/Public/Widgets/Text/STextBlock.h"
 #include "Runtime/Slate/Public/Widgets/Input/SEditableTextBox.h"
-#include "MCGraspAnimStructs.h"
+#include "MCAnimGraspStructs.h"
 
 /**
  * 
  */
-class UMCGraspEdCallback
+class UMCGraspEdCallbacks
 {
 public:
-	UMCGraspEdCallback();
+	UMCGraspEdCallbacks();
 
 	/*
 	* Shows a window where you can set a grasp anim at a specific frame to edit.
@@ -72,7 +72,7 @@ public:
 	* @param PlayData The AnimationData for a grasping stlye.
 	* @param Index The index of the frame that should get displayed.
 	*/
-	void PlayOneFrame(TMap<FString, FVector> BoneStartLocations, FMCAnimationData PlayData, int Index);
+	void PlayOneFrame(TMap<FString, FVector> BoneStartLocations, FMCAnimGraspData PlayData, int Index);
 
 	/*
 	* Discards all currently recorded frames.
@@ -99,7 +99,7 @@ private:
 	UDebugSkelMeshComponent* DebugMeshComponent;
 
 	// Our new grasp anim struct 
-	FMCAnimationData NewGraspAnimData = FMCAnimationData();
+	FMCAnimGraspData NewGraspAnimData = FMCAnimGraspData();
 
 	/**
 	* All the bones start transforms in component space.
@@ -117,7 +117,7 @@ private:
 
 	void ShowMessageBox(FText Title, FText Message);
 
-	void ApplyBoneDataForIndex(FMCAnimationData PlayData, int Index);
+	void ApplyBoneDataForIndex(FMCAnimGraspData PlayData, int Index);
 
 	FReply OnEditButtonClicked();
 	FReply OnSaveButtonClicked();

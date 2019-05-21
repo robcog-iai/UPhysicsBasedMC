@@ -3,7 +3,7 @@
 #include "UMCGraspEd.h"
 #include "MCGraspEdStyle.h"
 #include "MCGraspEdCommands.h"
-#include "MCGraspEdCallback.h"
+#include "MCGraspEdCallbacks.h"
 #include "PersonaModule.h"
 #include "IPersonaPreviewScene.h"
 #include "IPersonaToolkit.h"
@@ -48,7 +48,7 @@ void FUMCGraspEd::ShutdownModule()
 void FUMCGraspEd::InitializeUIButtons()
 {
 	UMCGraspEdCommands::Register();
-	EditorCallback = UMCGraspEdCallback();
+	EditorCallback = UMCGraspEdCallbacks();
 	PluginCommandListCreateSection = MakeShareable(new FUICommandList);
 	PluginCommandListEditSection = MakeShareable(new FUICommandList);
 	const UMCGraspEdCommands& Commands = UMCGraspEdCommands::Get();

@@ -23,10 +23,11 @@ UMC6DTarget::UMC6DTarget()
 	DisplayModelSource = FName("SteamVR");
 	bHiddenInGame = true;
 	MotionSource = FXRMotionControllerBase::LeftHandSourceId;
+
+	HandType = EMC6DHandType::Left;
 #endif // WITH_EDITOR
 
 	// Default values
-	HandType = EMC6DHandType::Left;
 	bUseSkeletalMesh = true;
 	bApplyToAllSkeletalBodies = false;
 	bUseStaticMesh = false;

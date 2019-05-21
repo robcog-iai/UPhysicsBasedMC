@@ -4,8 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "Factories/Factory.h"
-#include "MCGraspDataAsset.h"
-#include "MCGraspDataAssetFactory.generated.h"
+#include "MCAnimGraspDataAsset.h"
+#include "MCAnimGraspDataAssetFactory.generated.h"
 
 /**
  * 
@@ -18,8 +18,8 @@ class UMCGraspDataAssetFactory : public UFactory
 public:
 
 	// Create DataAsset
-	UObject* CreateGraspDataAsset(UClass* InClass, UObject* InParent, FName InName, EObjectFlags Flags, const TCHAR* Parms, FMCAnimationData DataStruct);
+	UObject* CreateGraspDataAsset(UClass* InClass, UObject* InParent, FName InName, EObjectFlags Flags, const TCHAR* Parms, FMCAnimGraspData DataStruct);
 
 	// Called by GraspAnimWriter to tell factory to create new DataAsset
-	void AddGraspDataAsset(const FMCAnimationData& DataStruct);
+	void AddGraspDataAsset(const FMCAnimGraspData& DataStruct);
 };

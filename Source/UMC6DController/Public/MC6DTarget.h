@@ -50,9 +50,11 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 private:
-	// Hand type
+#if WITH_EDITOR
+	// Hand type, to point to the right XRMotionControllers
 	UPROPERTY(EditAnywhere, Category = "Movement Control")
 	EMC6DHandType HandType;
+#endif // WITH_EDITOR
 
 	// Control a skeletal mesh
 	UPROPERTY(EditAnywhere, Category = "Movement Control")

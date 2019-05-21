@@ -1,23 +1,25 @@
 // Copyright 2017-2019, Institute for Artificial Intelligence - University of Bremen
 
-#include "MCGraspExecuter.h"
-
+#include "MCAnimGraspExec.h"
 
 // Sets default values for this component's properties
-UMCGraspExecuter::UMCGraspExecuter()
+UMCAnimGraspExec::UMCAnimGraspExec()
 {
+	// Default values
+	bIsInit = false;
 
+	// Minimum spring value
+	SpringBase = 9000;
 }
 
-
-// Called when the game starts
-void UMCGraspExecuter::InitiateExecuter(ASkeletalMeshActor* Parent, const float& inSpringBase, const float& inSpringMultiplier, const float& inDamping, const float& inForceLimit)
+// Init the exec
+void UMCAnimGraspExec::Init(ASkeletalMeshActor* Parent, float InSpringBase, float& InSpringMultiplier, float InDamping, float InForceLimit)
 {
 	Hand = Parent;
-	SpringBase = inSpringBase;
-	SpringMultiplier = inSpringMultiplier;
-	Damping = inDamping;
-	ForceLimit = inForceLimit;
+	SpringBase = InSpringBase;
+	SpringMultiplier = InSpringMultiplier;
+	Damping = InDamping;
+	ForceLimit = InForceLimit;
 	Spring = SpringBase;
 
 	USkeletalMeshComponent* const SkelComp = Hand->GetSkeletalMeshComponent();
@@ -38,12 +40,12 @@ void UMCGraspExecuter::InitiateExecuter(ASkeletalMeshActor* Parent, const float&
 			Constraint->SetAngularDriveParams(Spring, Damping, ForceLimit);
 		}
 	}
-	bIsInitiated = true;
+	bIsInit = true;
 }
 
-void UMCGraspExecuter::UpdateGrasp(const float Input)
+void UMCAnimGraspExec::UpdateGrasp(const float Input)
 {
-	if (!bIsInitiated)
+	if (!bIsInit)
 	{
 		return;
 	}
@@ -56,7 +58,7 @@ void UMCGraspExecuter::UpdateGrasp(const float Input)
 	// Ensures the hand goes into the initial frame when this is called the first itme
 	if (bFirstUpdate)
 	{
-		FMCFrame Save = GraspingData.GetPositionDataWithIndex(0);
+		FMCAnimGraspFrame Save = GraspingData.GetPositionDataWithIndex(0);
 		DriveToHandOrientationTarget(&Save);
 		bFirstUpdate = false;
 	}
@@ -93,7 +95,7 @@ void UMCGraspExecuter::UpdateGrasp(const float Input)
 		float NewInput = StepIteratorCountFloat - (float)StepIteratorCountInt;
 
 		// Manipulate Orientation Drives
-		FMCFrame TargetOrientation;
+		FMCAnimGraspFrame TargetOrientation;
 		LerpHandOrientation(&TargetOrientation, GraspingData.GetPositionDataWithIndex(StepIteratorCountInt), GraspingData.GetPositionDataWithIndex(StepIteratorCountInt + 1), NewInput);
 		DriveToHandOrientationTarget(&TargetOrientation);
 
@@ -107,11 +109,11 @@ void UMCGraspExecuter::UpdateGrasp(const float Input)
 	}
 }
 
-void UMCGraspExecuter::StopGrasping()
+void UMCAnimGraspExec::StopGrasping()
 {
 	// Stop Grasp
 	Spring = SpringBase;
-	FMCFrame Save = GraspingData.GetPositionDataWithIndex(0);
+	FMCAnimGraspFrame Save = GraspingData.GetPositionDataWithIndex(0);
 	DriveToHandOrientationTarget(&Save);
 	if (bIsInQueue)
 	{
@@ -121,7 +123,7 @@ void UMCGraspExecuter::StopGrasping()
 	bIsGrasping = false;
 }
 
-void UMCGraspExecuter::LerpHandOrientation(FMCFrame* Target, FMCFrame Initial, FMCFrame Closed, const float Input)
+void UMCAnimGraspExec::LerpHandOrientation(FMCAnimGraspFrame* Target, FMCAnimGraspFrame Initial, FMCAnimGraspFrame Closed, const float Input)
 {
 	TArray<FString> TempArray;
 	Initial.GetMap()->GenerateKeyArray(TempArray);
@@ -132,7 +134,7 @@ void UMCGraspExecuter::LerpHandOrientation(FMCFrame* Target, FMCFrame Initial, F
 	}
 }
 
-void UMCGraspExecuter::DriveToHandOrientationTarget(FMCFrame* Target)
+void UMCAnimGraspExec::DriveToHandOrientationTarget(FMCAnimGraspFrame* Target)
 {
 	FConstraintInstance* Constraint = nullptr;
 	TArray<FString> TempArray;
@@ -146,7 +148,7 @@ void UMCGraspExecuter::DriveToHandOrientationTarget(FMCFrame* Target)
 	}
 }
 
-FConstraintInstance* UMCGraspExecuter::BoneNameToConstraint(FString BoneName)
+FConstraintInstance* UMCAnimGraspExec::BoneNameToConstraint(FString BoneName)
 {
 	FConstraintInstance* Constraint = nullptr;
 	UActorComponent* component = Hand->GetComponentByClass(USkeletalMeshComponent::StaticClass());
@@ -162,13 +164,14 @@ FConstraintInstance* UMCGraspExecuter::BoneNameToConstraint(FString BoneName)
 	return Constraint;
 }
 
-void UMCGraspExecuter::SetGraspingData(FMCAnimationData Data) {
+void UMCAnimGraspExec::LoadGrasp(UMCAnimGraspDataAsset* DataAsset)
+{
 	// if player is grasping put new grasp in queue, else change grasp immediately
 	if (bIsGrasping)
 	{
-		GraspQueue = Data;
+		GraspQueue = UMCAnimGraspReader::ConvertAssetToStruct(DataAsset);
 		bIsInQueue = true;
 		return;
 	}
-	GraspingData = Data;
+	GraspingData = UMCAnimGraspReader::ConvertAssetToStruct(DataAsset);
 }

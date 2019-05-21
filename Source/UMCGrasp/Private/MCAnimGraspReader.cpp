@@ -1,16 +1,16 @@
 // Copyright 2017-2019, Institute for Artificial Intelligence - University of Bremen
 
-#include "MCGraspAnimReader.h"
+#include "MCAnimGraspReader.h"
 #include "ConfigCacheIni.h"
 #include "Runtime/CoreUObject/Public/UObject/Package.h"
 #include "Runtime/AssetRegistry/Public/AssetRegistryModule.h"
 #include "Runtime/Engine/Classes/Engine/ObjectLibrary.h"
 
-FMCAnimationData UMCGraspAnimReader::ReadFile(const FString& Name)
+FMCAnimGraspData UMCAnimGraspReader::ReadFile(const FString& Name)
 {
-	FMCAnimationData DataStruct = FMCAnimationData();
+	FMCAnimGraspData DataStruct = FMCAnimGraspData();
 
-	for (UMCGraspDataAsset* DataAsset : LoadAllAssets())
+	for (UMCAnimGraspDataAsset* DataAsset : LoadAllAssets())
 	{
 		if (DataAsset->AnimationName == Name)
 		{
@@ -22,16 +22,16 @@ FMCAnimationData UMCGraspAnimReader::ReadFile(const FString& Name)
 	return DataStruct;
 }
 
-FMCAnimationData UMCGraspAnimReader::ConvertAssetToStruct(const UMCGraspDataAsset* DataAsset)
+FMCAnimGraspData UMCAnimGraspReader::ConvertAssetToStruct(const UMCAnimGraspDataAsset* DataAsset)
 {
-	FMCAnimationData DataStruct = FMCAnimationData();
+	FMCAnimGraspData DataStruct;
 
 	DataStruct.AnimationName = DataAsset->AnimationName;
 	for (FString BoneName : DataAsset->BoneNames)
 	{
 		DataStruct.BoneNames.Add(BoneName);
 	}
-	for (FMCFrame Frame : DataAsset->Frames)
+	for (FMCAnimGraspFrame Frame : DataAsset->Frames)
 	{
 		DataStruct.AddNewPositionData(Frame);
 	}
@@ -39,7 +39,7 @@ FMCAnimationData UMCGraspAnimReader::ConvertAssetToStruct(const UMCGraspDataAsse
 	return DataStruct;
 }
 
-TArray<UMCGraspDataAsset*> UMCGraspAnimReader::LoadAllAssets()
+TArray<UMCAnimGraspDataAsset*> UMCAnimGraspReader::LoadAllAssets()
 {
 	FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>(FName("AssetRegistry"));
 	IAssetRegistry& AssetRegistry = AssetRegistryModule.Get();
@@ -50,25 +50,25 @@ TArray<UMCGraspDataAsset*> UMCGraspAnimReader::LoadAllAssets()
 	return OnRegistryLoaded();
 }
 
-TArray<UMCGraspDataAsset*> UMCGraspAnimReader::OnRegistryLoaded()
+TArray<UMCAnimGraspDataAsset*> UMCAnimGraspReader::OnRegistryLoaded()
 {
 	FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>(FName("AssetRegistry"));
 	IAssetRegistry& AssetRegistry = AssetRegistryModule.Get();
 
 	FARFilter Filter;
-	Filter.ClassNames = { TEXT("MCGraspDataAsset")};
+	Filter.ClassNames = { TEXT("MCAnimGraspDataAsset")};
 	Filter.PackagePaths.Add("/UPhysicsBasedMC/GraspingAnimations");
 
 	TArray<FAssetData> AssetList;
 
 	AssetRegistry.GetAssets(Filter, AssetList);
 
-	TArray<UMCGraspDataAsset*> GraspAssets;
+	TArray<UMCAnimGraspDataAsset*> GraspAssets;
 
 	for (const FAssetData& DataAsset : AssetList) {
 		UObject* Obj = DataAsset.GetAsset();
-		if (Obj->GetClass()->IsChildOf(UMCGraspDataAsset::StaticClass())) {
-			GraspAssets.Add(Cast<UMCGraspDataAsset>(Obj));
+		if (Obj->GetClass()->IsChildOf(UMCAnimGraspDataAsset::StaticClass())) {
+			GraspAssets.Add(Cast<UMCAnimGraspDataAsset>(Obj));
 		}
 	}
 

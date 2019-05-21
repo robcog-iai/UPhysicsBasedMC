@@ -2,30 +2,30 @@
 
 #pragma once
 
-#include "MCGraspAnimStructs.h"
+#include "CoreMinimal.h"
+#include "MCAnimGraspStructs.h"
 #include "Runtime/Core/Public/HAL/PlatformFilemanager.h"
 #include "Runtime/Core/Public/Misc/LocalTimestampDirectoryVisitor.h"
-#include "CoreMinimal.h"
-#include "MCGraspDataAsset.h"
+#include "MCAnimGraspDataAsset.h"
 
 /**
  * This Class is used to read animations into files
  */
-class UMCGRASP_API UMCGraspAnimReader
+class UMCGRASP_API UMCAnimGraspReader
 {
 public:
 	
 	// Finds grasp from animation name. 
-	static FMCAnimationData ReadFile(const FString& Name);
+	static FMCAnimGraspData ReadFile(const FString& Name);
 
 	// Converts grasp DataAssets into grasp structs
-	static FMCAnimationData ConvertAssetToStruct(const UMCGraspDataAsset* DataAsset);
+	static FMCAnimGraspData ConvertAssetToStruct(const UMCAnimGraspDataAsset* DataAsset);
 
 	// Returns all GraspDataAssets that can be read
-	static TArray<UMCGraspDataAsset*> LoadAllAssets();
+	static TArray<UMCAnimGraspDataAsset*> LoadAllAssets();
 
 private:
 
 	// Finds all the GraspDataAssets in a hardcoded folder
-	static TArray<UMCGraspDataAsset*> OnRegistryLoaded();
+	static TArray<UMCAnimGraspDataAsset*> OnRegistryLoaded();
 };

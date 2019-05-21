@@ -9,7 +9,7 @@
 #include "Runtime/Core/Public/Templates/SharedPointer.h"
 #include "Runtime/Slate/Public/Framework/MultiBox/MultiBoxBuilder.h"
 #include "Editor/UnrealEd/Classes/Animation/DebugSkelMeshComponent.h"
-#include "MCGraspEdCallback.h"
+#include "MCGraspEdCallbacks.h"
 #include "PersonaModule.h"
 #include "IPersonaPreviewScene.h"
 #include "IPersonaToolkit.h"
@@ -38,7 +38,7 @@ private:
 	TSharedPtr<class FUICommandList> PluginCommandListEditSection;
 
 	//Gets called when a new preview scene is created
-    void OnPreviewCreation(const TSharedRef<IPersonaPreviewScene>& InPreviewScene);
+	void OnPreviewCreation(const TSharedRef<IPersonaPreviewScene>& InPreviewScene);
 
 	//Prepares and calls actions on the EditorCallback
 	void InitializeStartTransforms();
@@ -53,7 +53,7 @@ private:
 	void ShowNextFrame();
 	void ShowPreviousFrame();
 
-	UMCGraspEdCallback EditorCallback;
+	UMCGraspEdCallbacks EditorCallback;
 
 	FDelegateHandle OnPreviewSceneCreatedDelegate;
 

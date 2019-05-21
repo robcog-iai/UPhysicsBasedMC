@@ -37,7 +37,7 @@ void UMCFixationGrasp::BeginPlay()
 	Super::BeginPlay();
 
 	// Bind user input
-	UMCFixationGrasp::SetupInputBindings();
+	SetupInputBindings();
 
 	// Bind overlap functions
 	OnComponentBeginOverlap.AddDynamic(this, &UMCFixationGrasp::OnOverlapBegin);

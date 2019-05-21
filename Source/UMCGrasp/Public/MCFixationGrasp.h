@@ -88,9 +88,11 @@ public:
 	FMCGraspEnd OnGraspEnd;
 
 private:
+#if WITH_EDITOR
 	// Hand type, to listen to the right inputs
 	UPROPERTY(EditAnywhere, Category = "Fixation Grasp")
 	EMCFixationGraspHandType HandType;
+#endif // WITH_EDITOR
 
 	// Input action name
 	UPROPERTY(EditAnywhere, Category = "Fixation Grasp")

@@ -3,28 +3,28 @@
 #pragma once
 
 #include "Engine.h"
-#include "MCGraspAnimStructs.h"
+#include "MCAnimGraspStructs.h"
 #include "Runtime/Engine/Classes/Animation/SkeletalMeshActor.h"
-#include "MCGraspExecuter.generated.h"
+#include "MCAnimGraspExec.generated.h"
 
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class UMCGRASP_API UMCGraspExecuter : public UObject
+class UMCGRASP_API UMCAnimGraspExec : public UObject
 {
 	GENERATED_BODY()
 
 public:	
 	// Sets default values for this component's properties
-	UMCGraspExecuter();
+	UMCAnimGraspExec();
 	
 	// sets up all the motors
-	void InitiateExecuter(ASkeletalMeshActor* Parent, const float& inSpringBase, const float& inSpringMultiplier, const float& inDamping, const float& inForceLimit);
+	void Init(ASkeletalMeshActor* Parent, float InSpringBase, float& InSpringMultiplier, float InDamping, float InForceLimit);
 
 	/*
 	Loads the data of grasps into the grasping controller
 	@param Data - data to load
 	*/
-	void SetGraspingData(FMCAnimationData Data);
+	void LoadGrasp(UMCAnimGraspDataAsset* DataAsset);
 
 	/*
 	Responsible for updating the movement of all bones
@@ -42,13 +42,13 @@ private:
 	@param Closed - final hand state if input was 1 
 	@param Input - number from 0-1 that indicates how far the grasping trigger is being pushed down
 	*/
-	void LerpHandOrientation(FMCFrame* Target, FMCFrame Initial, FMCFrame Closed, const float Input);
+	void LerpHandOrientation(FMCAnimGraspFrame* Target, FMCAnimGraspFrame Initial, FMCAnimGraspFrame Closed, const float Input);
 
 	/*
 	Sets all the constraints orientation drives to go into target orientation
 	@param Target - the target position that has been calculated by lerp
 	*/
-	void DriveToHandOrientationTarget(FMCFrame* Target);
+	void DriveToHandOrientationTarget(FMCAnimGraspFrame* Target);
 
 	/*
 	Finds out which constraint belongs to which bone
@@ -65,7 +65,7 @@ private:
 	bool bIsGrasping;
 
 	// Current grasp loaded into hand
-	FMCAnimationData GraspingData;
+	FMCAnimGraspData GraspingData;
 
 	// Spring value to be used for constraints
 	// Makes angular motors more powerfull depending on how much the grasping button is pushed down
@@ -73,7 +73,7 @@ private:
 
 	// When changing grasp type while grasping, the new grasp isn't applied immediately
 	// Instead it is saved in this variable and applied once the user stops grasping 
-	FMCAnimationData GraspQueue;
+	FMCAnimGraspData GraspQueue;
 
 	// Set to true when there is a grasp waiting to be applied
 	bool bIsInQueue;
@@ -82,7 +82,7 @@ private:
 	ASkeletalMeshActor* Hand;
 
 	// bool to check if this objject has been initialized correctly 
-	bool bIsInitiated;
+	bool bIsInit;
 
 	// Minimum spring value
 	float SpringBase = 9000;
