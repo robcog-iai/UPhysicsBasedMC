@@ -1,7 +1,7 @@
 // Copyright 2017-2019, Institute for Artificial Intelligence - University of Bremen
 // Author: Andrei Haidu (http://haidu.eu)
 
-#include "MCFixationGrasp.h"
+#include "MCGraspFixation.h"
 #include "Animation/SkeletalMeshActor.h"
 #include "Engine/StaticMeshActor.h"
 #include "GameFramework/PlayerController.h"
@@ -11,7 +11,7 @@
 #define MC_RELEASE_VEL_BOOST 1.5f
 
 // Default constructor
-UMCFixationGrasp::UMCFixationGrasp()
+UMCGraspFixation::UMCGraspFixation()
 {	
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
@@ -24,7 +24,7 @@ UMCFixationGrasp::UMCFixationGrasp()
 	SetGenerateOverlapEvents(true);
 
 	// Default values
-	HandType = EMCFixationGraspHandType::Left;
+	HandType = EMCGraspFixationHandType::Left;
 	InputActionName = "LeftFixate";
 	bWeldBodies = true;
 	WeightLimit = 15.0f;
@@ -32,7 +32,7 @@ UMCFixationGrasp::UMCFixationGrasp()
 }
 
 // Called when the game starts
-void UMCFixationGrasp::BeginPlay()
+void UMCGraspFixation::BeginPlay()
 {
 	Super::BeginPlay();
 
@@ -40,13 +40,13 @@ void UMCFixationGrasp::BeginPlay()
 	SetupInputBindings();
 
 	// Bind overlap functions
-	OnComponentBeginOverlap.AddDynamic(this, &UMCFixationGrasp::OnOverlapBegin);
-	OnComponentEndOverlap.AddDynamic(this, &UMCFixationGrasp::OnOverlapEnd);
+	OnComponentBeginOverlap.AddDynamic(this, &UMCGraspFixation::OnOverlapBegin);
+	OnComponentEndOverlap.AddDynamic(this, &UMCGraspFixation::OnOverlapEnd);
 }
 
 #if WITH_EDITOR
 // Called when a property is changed in the editor
-void UMCFixationGrasp::PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent)
+void UMCGraspFixation::PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent)
 {
 	Super::PostEditChangeProperty(PropertyChangedEvent);
 
@@ -55,13 +55,13 @@ void UMCFixationGrasp::PostEditChangeProperty(struct FPropertyChangedEvent& Prop
 		PropertyChangedEvent.Property->GetFName() : NAME_None;
 
 	// Set the left / right constraint actors
-	if (PropertyName == GET_MEMBER_NAME_CHECKED(UMCFixationGrasp, HandType))
+	if (PropertyName == GET_MEMBER_NAME_CHECKED(UMCGraspFixation, HandType))
 	{
-		if (HandType == EMCFixationGraspHandType::Left)
+		if (HandType == EMCGraspFixationHandType::Left)
 		{
 			InputActionName = "LeftFixate";
 		}
-		else if (HandType == EMCFixationGraspHandType::Right)
+		else if (HandType == EMCGraspFixationHandType::Right)
 		{
 			InputActionName = "RightFixate";
 		}
@@ -70,20 +70,20 @@ void UMCFixationGrasp::PostEditChangeProperty(struct FPropertyChangedEvent& Prop
 #endif // WITH_EDITOR
 
 // Bind user inputs
-void UMCFixationGrasp::SetupInputBindings()
+void UMCGraspFixation::SetupInputBindings()
 {
 	if (APlayerController* PC = GetWorld()->GetFirstPlayerController())
 	{
 		if (UInputComponent* IC = PC->InputComponent)
 		{
-			IC->BindAction(InputActionName, IE_Pressed, this, &UMCFixationGrasp::Grasp);
-			IC->BindAction(InputActionName, IE_Released, this, &UMCFixationGrasp::Release);
+			IC->BindAction(InputActionName, IE_Pressed, this, &UMCGraspFixation::Grasp);
+			IC->BindAction(InputActionName, IE_Released, this, &UMCGraspFixation::Release);
 		}
 	}
 }
 
 // Try to fixate overlapping object to parent
-void UMCFixationGrasp::Grasp()
+void UMCGraspFixation::Grasp()
 {
 	while (!GraspedObject && ObjectsInSphereArea.Num() > 0)
 	{
@@ -91,10 +91,10 @@ void UMCFixationGrasp::Grasp()
 		AStaticMeshActor* SMA = ObjectsInSphereArea.Pop();
 
 		// Check if the object can be grasped (not to heavy/large)
-		if (UMCFixationGrasp::CanObjectBeGrasped(SMA))
+		if (UMCGraspFixation::CanObjectBeGrasped(SMA))
 		{
 			// Try to fixate the object to parent
-			if (UMCFixationGrasp::Fixate(SMA))
+			if (UMCGraspFixation::Fixate(SMA))
 			{
 				// Broadcast starting of grasp event
 				OnGraspBegin.Broadcast(GetOwner(), GraspedObject, GetWorld()->GetTimeSeconds());
@@ -109,7 +109,7 @@ void UMCFixationGrasp::Grasp()
 }
 
 // Free fixated object from parent
-void UMCFixationGrasp::Release()
+void UMCGraspFixation::Release()
 {
 	if (GraspedObject)
 	{
@@ -139,7 +139,7 @@ void UMCFixationGrasp::Release()
 }
 
 // Check if the object can be grasped (not too heavy/large)
-bool UMCFixationGrasp::CanObjectBeGrasped(AStaticMeshActor* InObject)
+bool UMCGraspFixation::CanObjectBeGrasped(AStaticMeshActor* InObject)
 {
 	// Check if the object is movable
 	if (!InObject->IsRootComponentMovable())
@@ -168,7 +168,7 @@ bool UMCFixationGrasp::CanObjectBeGrasped(AStaticMeshActor* InObject)
 }
 
 // Fixate the given object to parent
-bool UMCFixationGrasp::Fixate(AStaticMeshActor* InObject)
+bool UMCGraspFixation::Fixate(AStaticMeshActor* InObject)
 {
 	if (UStaticMeshComponent* SMC = InObject->GetStaticMeshComponent())
 	{
@@ -192,7 +192,7 @@ bool UMCFixationGrasp::Fixate(AStaticMeshActor* InObject)
 }
 
 // Called on overlap begin events
-void UMCFixationGrasp::OnOverlapBegin(UPrimitiveComponent* OverlappedComp,
+void UMCGraspFixation::OnOverlapBegin(UPrimitiveComponent* OverlappedComp,
 	AActor* OtherActor,
 	UPrimitiveComponent* OtherComp,
 	int32 OtherBodyIndex,
@@ -211,7 +211,7 @@ void UMCFixationGrasp::OnOverlapBegin(UPrimitiveComponent* OverlappedComp,
 }
 
 // Called on overlap end events
-void UMCFixationGrasp::OnOverlapEnd(UPrimitiveComponent* OverlappedComp,
+void UMCGraspFixation::OnOverlapEnd(UPrimitiveComponent* OverlappedComp,
 	AActor* OtherActor,
 	UPrimitiveComponent* OtherComp,
 	int32 OtherBodyIndex)

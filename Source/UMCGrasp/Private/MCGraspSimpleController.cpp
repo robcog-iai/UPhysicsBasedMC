@@ -1,20 +1,20 @@
 // Copyright 2017-2019, Institute for Artificial Intelligence - University of Bremen
 // Author: Andrei Haidu (http://haidu.eu)
 
-#include "MCSimpleGraspController.h"
+#include "MCGraspBasicController.h"
 #include "Components/SkeletalMeshComponent.h"
 
 // Sets default values for this component's properties
-UMCSimpleGraspController::UMCSimpleGraspController()
+UMCGraspBasicController::UMCGraspBasicController()
 {
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = false;
 
 	// Default parameters
-	HandType = EMCSimpleGraspHandType::Left;
+	HandType = EMCGraspBasicHandType::Left;
 	InputAxisName = "LeftGrasp";
-	SkeletalType = EMCSimpleGraspSkeletalType::Default;
+	SkeletalType = EMCGraspBasicSkeletalType::Default;
 
 	// Driver parameters
 	AngularDriveMode = EAngularDriveMode::SLERP;
@@ -28,7 +28,7 @@ UMCSimpleGraspController::UMCSimpleGraspController()
 }
 
 // Called when the game starts
-void UMCSimpleGraspController::BeginPlay()
+void UMCGraspBasicController::BeginPlay()
 {
 	Super::BeginPlay();
 
@@ -38,7 +38,7 @@ void UMCSimpleGraspController::BeginPlay()
 
 #if WITH_EDITOR
 // Called when a property is changed in the editor
-void UMCSimpleGraspController::PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent)
+void UMCGraspBasicController::PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent)
 {
 	Super::PostEditChangeProperty(PropertyChangedEvent);
 
@@ -47,13 +47,13 @@ void UMCSimpleGraspController::PostEditChangeProperty(struct FPropertyChangedEve
 		PropertyChangedEvent.Property->GetFName() : NAME_None;
 
 	// Set the left / right constraint actors
-	if (PropertyName == GET_MEMBER_NAME_CHECKED(UMCSimpleGraspController, HandType))
+	if (PropertyName == GET_MEMBER_NAME_CHECKED(UMCGraspBasicController, HandType))
 	{
-		if (HandType == EMCSimpleGraspHandType::Left)
+		if (HandType == EMCGraspBasicHandType::Left)
 		{
 			InputAxisName = "LeftGrasp";
 		}
-		else if (HandType == EMCSimpleGraspHandType::Right)
+		else if (HandType == EMCGraspBasicHandType::Right)
 		{
 			InputAxisName = "RightGrasp";
 		}
@@ -62,7 +62,7 @@ void UMCSimpleGraspController::PostEditChangeProperty(struct FPropertyChangedEve
 #endif // WITH_EDITOR
 
 // Init the controller
-void UMCSimpleGraspController::Init()
+void UMCGraspBasicController::Init()
 {
 	// Check that owner is a skeletal mesh actor and has a valid skeletal mesh component
 	if (ASkeletalMeshActor* OwnerAsSkelMA = Cast<ASkeletalMeshActor>(GetOwner()))
@@ -87,13 +87,13 @@ void UMCSimpleGraspController::Init()
 			{
 				if (UInputComponent* IC = PC->InputComponent)
 				{
-					if (SkeletalType == EMCSimpleGraspSkeletalType::Default)
+					if (SkeletalType == EMCGraspBasicSkeletalType::Default)
 					{
-						IC->BindAxis(InputAxisName, this, &UMCSimpleGraspController::Update);
+						IC->BindAxis(InputAxisName, this, &UMCGraspBasicController::Update);
 					}
-					else if (SkeletalType == EMCSimpleGraspSkeletalType::Genesis)
+					else if (SkeletalType == EMCGraspBasicSkeletalType::Genesis)
 					{
-						IC->BindAxis(InputAxisName, this, &UMCSimpleGraspController::Update_Genesis);
+						IC->BindAxis(InputAxisName, this, &UMCGraspBasicController::Update_Genesis);
 					}
 				}
 				else
@@ -118,7 +118,7 @@ void UMCSimpleGraspController::Init()
 }
 
 // Update the grasp
-void UMCSimpleGraspController::Update(float Value)
+void UMCGraspBasicController::Update(float Value)
 {
 	// Skip iterating constraints for small changes
 	if (FMath::Abs(Value - PrevInputVal) > 0.025)
@@ -133,7 +133,7 @@ void UMCSimpleGraspController::Update(float Value)
 }
 
 // Update the grasp for the genesis skeleton
-void UMCSimpleGraspController::Update_Genesis(float Value)
+void UMCGraspBasicController::Update_Genesis(float Value)
 {
 	// Skip iterating constraints for small changes
 	if (FMath::Abs(Value - PrevInputVal) > 0.05)
@@ -147,10 +147,10 @@ void UMCSimpleGraspController::Update_Genesis(float Value)
 			{
 				continue;
 			}
-			else if (ConstraintInstance->ConstraintBone1.ToString().Contains("Thumb"))
-			{
-				ConstraintInstance->SetAngularOrientationTarget(FRotator( - Value * MaxAngleMultiplier, 0.f, 0.f).Quaternion());
-			}
+			//else if (ConstraintInstance->ConstraintBone1.ToString().Contains("Thumb"))
+			//{
+			//	ConstraintInstance->SetAngularOrientationTarget(FRotator( - Value * MaxAngleMultiplier, 0.f, 0.f).Quaternion());
+			//}
 			else
 			{
 				ConstraintInstance->SetAngularOrientationTarget(FRotator(0.f, Value * MaxAngleMultiplier, 0.f).Quaternion());

@@ -7,7 +7,7 @@
 #include "Editor/UnrealEd/Classes/Animation/DebugSkelMeshComponent.h"
 #include "Runtime/Slate/Public/Widgets/Text/STextBlock.h"
 #include "Runtime/Slate/Public/Widgets/Input/SEditableTextBox.h"
-#include "MCAnimGraspStructs.h"
+#include "MCGraspAnimStructs.h"
 
 /**
  * 
@@ -72,7 +72,7 @@ public:
 	* @param PlayData The AnimationData for a grasping stlye.
 	* @param Index The index of the frame that should get displayed.
 	*/
-	void PlayOneFrame(TMap<FString, FVector> BoneStartLocations, FMCAnimGraspData PlayData, int Index);
+	void PlayOneFrame(TMap<FString, FVector> BoneStartLocations, FMCGraspAnimData PlayData, int Index);
 
 	/*
 	* Discards all currently recorded frames.
@@ -99,7 +99,7 @@ private:
 	UDebugSkelMeshComponent* DebugMeshComponent;
 
 	// Our new grasp anim struct 
-	FMCAnimGraspData NewGraspAnimData = FMCAnimGraspData();
+	FMCGraspAnimData NewGraspAnimData = FMCGraspAnimData();
 
 	/**
 	* All the bones start transforms in component space.
@@ -117,7 +117,7 @@ private:
 
 	void ShowMessageBox(FText Title, FText Message);
 
-	void ApplyBoneDataForIndex(FMCAnimGraspData PlayData, int Index);
+	void ApplyBoneDataForIndex(FMCGraspAnimData PlayData, int Index);
 
 	FReply OnEditButtonClicked();
 	FReply OnSaveButtonClicked();

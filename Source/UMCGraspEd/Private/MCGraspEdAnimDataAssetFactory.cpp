@@ -1,31 +1,31 @@
 // Copyright 2017-2019, Institute for Artificial Intelligence - University of Bremen
 
-#include "MCAnimGraspDataAssetFactory.h"
+#include "MCGraspEdAnimDataAssetFactory.h"
 #include "Editor/UnrealEd/Public/Editor.h"
 #include "Runtime/AssetRegistry/Public/AssetRegistryModule.h"
 
-UMCGraspDataAssetFactory::UMCGraspDataAssetFactory(const FObjectInitializer& ObjectInitializer)
+UMCGraspEdAnimDataAssetFactory::UMCGraspEdAnimDataAssetFactory(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
-	SupportedClass = UMCAnimGraspDataAsset::StaticClass();
+	SupportedClass = UMCGraspAnimDataAsset::StaticClass();
 
 	bEditorImport = true;
 
 	ImportPriority = DefaultImportPriority;
 }
 
-UObject* UMCGraspDataAssetFactory::CreateGraspDataAsset(UClass* InClass, UObject* InParent, FName InName, EObjectFlags Flags, const TCHAR* Parms, FMCAnimGraspData DataStruct)
+UObject* UMCGraspEdAnimDataAssetFactory::CreateGraspDataAsset(UClass* InClass, UObject* InParent, FName InName, EObjectFlags Flags, const TCHAR* Parms, FMCGraspAnimData DataStruct)
 {
 	FEditorDelegates::OnAssetPreImport.Broadcast(this, InClass, InParent, InName, Parms);
 
-	UMCAnimGraspDataAsset* DataAsset = NewObject<UMCAnimGraspDataAsset>(InParent, InName, Flags);
+	UMCGraspAnimDataAsset* DataAsset = NewObject<UMCGraspAnimDataAsset>(InParent, InName, Flags);
 
 	DataAsset->AnimationName = DataStruct.AnimationName;
 	for (FString BoneName : DataStruct.BoneNames)
 	{
 		DataAsset->BoneNames.Add(BoneName);
 	}
-	for(FMCAnimGraspFrame Frame : DataStruct.Frames)
+	for(FMCGraspAnimFrame Frame : DataStruct.Frames)
 	{
 		DataAsset->Frames.Add(Frame);
 	}
@@ -35,7 +35,7 @@ UObject* UMCGraspDataAssetFactory::CreateGraspDataAsset(UClass* InClass, UObject
 	return DataAsset;
 }
 
-void UMCGraspDataAssetFactory::AddGraspDataAsset(const FMCAnimGraspData& DataStruct)
+void UMCGraspEdAnimDataAssetFactory::AddGraspDataAsset(const FMCGraspAnimData& DataStruct)
 {
 	FString FinalPackageName = "/UPhysicsBasedMC/GraspingAnimations/" + DataStruct.AnimationName;
 
@@ -43,7 +43,7 @@ void UMCGraspDataAssetFactory::AddGraspDataAsset(const FMCAnimGraspData& DataStr
 
 	UPackage* OutermostPkg = Package->GetOutermost();
 
-	UObject* DataAsset = CreateGraspDataAsset(UMCAnimGraspDataAsset::StaticClass(), OutermostPkg, FName(*DataStruct.AnimationName), RF_Standalone | RF_Public, NULL, DataStruct);
+	UObject* DataAsset = CreateGraspDataAsset(UMCGraspAnimDataAsset::StaticClass(), OutermostPkg, FName(*DataStruct.AnimationName), RF_Standalone | RF_Public, NULL, DataStruct);
 
 	FAssetRegistryModule::AssetCreated(DataAsset);
 	DataAsset->MarkPackageDirty();

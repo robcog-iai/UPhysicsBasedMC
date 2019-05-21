@@ -6,23 +6,23 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "PhysicsEngine/ConstraintDrives.h"
-#include "MCSimpleGraspController.generated.h"
+#include "MCGraspBasicController.generated.h"
 
 /**
 * Hand type
 */
 UENUM()
-enum class EMCSimpleGraspHandType : uint8
+enum class EMCGraspBasicHandType : uint8
 {
 	Left					UMETA(DisplayName = "Left"),
 	Right					UMETA(DisplayName = "Right"),
 };
 
 /**
-* Skeltal type
+* Skeletal type
 */
 UENUM()
-enum class EMCSimpleGraspSkeletalType : uint8
+enum class EMCGraspBasicSkeletalType : uint8
 {
 	Default					UMETA(DisplayName = "Default"),
 	Genesis					UMETA(DisplayName = "Genesis"),
@@ -31,14 +31,14 @@ enum class EMCSimpleGraspSkeletalType : uint8
 /**
  * Skeletal grasp controller
  */
-UCLASS( ClassGroup=(MC), meta=(BlueprintSpawnableComponent, DisplayName = "MC Simple Grasp Controller"))
-class UMCGRASP_API UMCSimpleGraspController : public UActorComponent
+UCLASS( ClassGroup=(MC), meta=(BlueprintSpawnableComponent, DisplayName = "MC Grasp Basic Controller"))
+class UMCGRASP_API UMCGraspBasicController : public UActorComponent
 {
 	GENERATED_BODY()
 
 public:	
 	// Sets default values for this component's properties
-	UMCSimpleGraspController();
+	UMCGraspBasicController();
 
 protected:
 	// Called when the game starts
@@ -62,11 +62,11 @@ private:
 private:
 	// Hand type, to listen to the right inputs
 	UPROPERTY(EditAnywhere, Category = "Grasp Controller")
-	EMCSimpleGraspHandType HandType;
+	EMCGraspBasicHandType HandType;
 
 	// Skeletal type, to apply the correct angles and bones
 	UPROPERTY(EditAnywhere, Category = "Grasp Controller")
-	EMCSimpleGraspSkeletalType SkeletalType;
+	EMCGraspBasicSkeletalType SkeletalType;
 
 	// Input axis name
 	UPROPERTY(EditAnywhere, Category = "Grasp Controller")

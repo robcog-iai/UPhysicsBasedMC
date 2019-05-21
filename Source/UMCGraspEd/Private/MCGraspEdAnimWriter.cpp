@@ -1,17 +1,17 @@
 // Copyright 2017-2019, Institute for Artificial Intelligence - University of Bremen
 
-#include "MCAnimGraspWriter.h"
-#include "MCAnimGraspReader.h"
-#include "MCAnimGraspDataAssetFactory.h"
+#include "MCGraspEdAnimWriter.h"
+#include "MCGraspAnimReader.h"
+#include "MCGraspEdAnimDataAssetFactory.h"
 #include "ConfigCacheIni.h"
 #include "Runtime/CoreUObject/Public/UObject/Package.h"
 #include "Runtime/AssetRegistry/Public/AssetRegistryModule.h"
 #include "Runtime/Engine/Classes/Engine/ObjectLibrary.h"
 
-void UMCAnimGraspWriter::WriteToDataAsset(const FMCAnimGraspData& DataStruct)
+void UMCGraspEdAnimWriter::WriteToDataAsset(const FMCGraspAnimData& DataStruct)
 {
 	// If asset alread exists, edit it
-	for (UMCAnimGraspDataAsset* DataAsset : UMCAnimGraspReader::LoadAllAssets())
+	for (UMCGraspAnimDataAsset* DataAsset : UMCGraspAnimReader::LoadAllAssets())
 	{
 		if (DataAsset->AnimationName == DataStruct.AnimationName)
 		{
@@ -20,8 +20,8 @@ void UMCAnimGraspWriter::WriteToDataAsset(const FMCAnimGraspData& DataStruct)
 			{
 				DataAsset->BoneNames.Add(BoneName);
 			}
-			DataAsset->Frames = TArray<FMCAnimGraspFrame>();
-			for (FMCAnimGraspFrame Frame : DataStruct.Frames)
+			DataAsset->Frames = TArray<FMCGraspAnimFrame>();
+			for (FMCGraspAnimFrame Frame : DataStruct.Frames)
 			{
 				DataAsset->Frames.Add(Frame);
 			}
@@ -30,7 +30,7 @@ void UMCAnimGraspWriter::WriteToDataAsset(const FMCAnimGraspData& DataStruct)
 	}
 
 	// Else make a new one
-	auto Factory = NewObject<UMCGraspDataAssetFactory>();
+	auto Factory = NewObject<UMCGraspEdAnimDataAssetFactory>();
 
 	Factory->AddGraspDataAsset(DataStruct);
 }

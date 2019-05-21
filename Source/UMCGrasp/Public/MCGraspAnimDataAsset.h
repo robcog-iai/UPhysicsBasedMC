@@ -4,14 +4,14 @@
 
 #include "CoreMinimal.h"
 #include "Engine/DataAsset.h"
-#include "MCAnimGraspStructs.h"
-#include "MCAnimGraspDataAsset.generated.h"
+#include "MCGraspAnimStructs.h"
+#include "MCGraspAnimDataAsset.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class UMCGRASP_API UMCAnimGraspDataAsset : public UDataAsset
+class UMCGRASP_API UMCGraspAnimDataAsset : public UDataAsset
 {
 	GENERATED_BODY()
 
@@ -27,5 +27,5 @@ public:
 
 	//All frames
 	UPROPERTY(EditAnywhere)
-	TArray<FMCAnimGraspFrame> Frames;
+	TArray<FMCGraspAnimFrame> Frames;
 };
