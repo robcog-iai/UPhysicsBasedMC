@@ -211,20 +211,7 @@ void FMC6DController::Update_Skel_Velocity(float DeltaTime)
 	SelfAsSkeletalMeshComp->SetPhysicsLinearVelocity(OutLoc);
 
 	/* Rotation */
-	const FQuat FromQuat = SelfAsStaticMeshComp->GetComponentQuat();
-	const FQuat ToQuat = TargetSceneComp->GetComponentQuat();
-	FQuat DeltaQuat = ToQuat * FromQuat.Inverse();
-
-	// Avoid taking the long path around the sphere
-	// // See void FQuat::EnforceShortestArcWith(const FQuat& OtherQuat)
-	//	const float CosTheta = ToQuat | FromQuat;
-	//	if (CosTheta < 0)
-	if (DeltaQuat.W < 0.f)
-	{
-		DeltaQuat *= -1.f;
-	}
-	// The W part of the vector is always ~1.f, not relevant for applying the rotation
-	const FVector DeltaRotAsVector = FVector(DeltaQuat.X, DeltaQuat.Y, DeltaQuat.Z);
+	const FVector DeltaRotAsVector = GetRotationDelta(SelfAsStaticMeshComp->GetComponentQuat(), TargetSceneComp->GetComponentQuat());
 	const FVector OutRot = PIDRot.Update(DeltaRotAsVector, DeltaTime);
 	SelfAsSkeletalMeshComp->SetPhysicsAngularVelocityInRadians(OutRot);
 }
@@ -237,20 +224,7 @@ void FMC6DController::Update_Skel_Acceleration(float DeltaTime)
 	SelfAsSkeletalMeshComp->AddForce(OutLoc, NAME_None, true); // Acceleration based (mass will have no effect)
 
 	/* Rotation */
-	const FQuat FromQuat = SelfAsStaticMeshComp->GetComponentQuat();
-	const FQuat ToQuat = TargetSceneComp->GetComponentQuat();
-	FQuat DeltaQuat = ToQuat * FromQuat.Inverse();
-
-	// Avoid taking the long path around the sphere
-	// // See void FQuat::EnforceShortestArcWith(const FQuat& OtherQuat)
-	//	const float CosTheta = ToQuat | FromQuat;
-	//	if (CosTheta < 0)
-	if (DeltaQuat.W < 0.f)
-	{
-		DeltaQuat *= -1.f;
-	}
-	// The W part of the vector is always ~1.f, not relevant for applying the rotation
-	const FVector DeltaRotAsVector = FVector(DeltaQuat.X, DeltaQuat.Y, DeltaQuat.Z);
+	const FVector DeltaRotAsVector = GetRotationDelta(SelfAsStaticMeshComp->GetComponentQuat(), TargetSceneComp->GetComponentQuat());
 	const FVector OutRot = PIDRot.Update(DeltaRotAsVector, DeltaTime);
 	SelfAsSkeletalMeshComp->AddTorqueInRadians(OutRot, NAME_None, true); // Acceleration based (mass will have no effect)
 }
@@ -263,20 +237,7 @@ void FMC6DController::Update_Skel_Force(float DeltaTime)
 	SelfAsSkeletalMeshComp->AddForce(OutLoc);
 
 	/* Rotation */
-	const FQuat FromQuat = SelfAsStaticMeshComp->GetComponentQuat();
-	const FQuat ToQuat = TargetSceneComp->GetComponentQuat();
-	FQuat DeltaQuat = ToQuat * FromQuat.Inverse();
-
-	// Avoid taking the long path around the sphere
-	// // See void FQuat::EnforceShortestArcWith(const FQuat& OtherQuat)
-	//	const float CosTheta = ToQuat | FromQuat;
-	//	if (CosTheta < 0)
-	if (DeltaQuat.W < 0.f)
-	{
-		DeltaQuat *= -1.f;
-	}
-	// The W part of the vector is always ~1.f, not relevant for applying the rotation
-	const FVector DeltaRotAsVector = FVector(DeltaQuat.X, DeltaQuat.Y, DeltaQuat.Z);
+	const FVector DeltaRotAsVector = GetRotationDelta(SelfAsStaticMeshComp->GetComponentQuat(), TargetSceneComp->GetComponentQuat());
 	const FVector OutRot = PIDRot.Update(DeltaRotAsVector, DeltaTime);
 	SelfAsSkeletalMeshComp->AddTorqueInRadians(OutRot);
 }
@@ -289,24 +250,10 @@ void FMC6DController::Update_Skel_Impulse(float DeltaTime)
 	SelfAsSkeletalMeshComp->AddImpulse(OutLoc);
 
 	/* Rotation */
-	const FQuat FromQuat = SelfAsStaticMeshComp->GetComponentQuat();
-	const FQuat ToQuat = TargetSceneComp->GetComponentQuat();
-	FQuat DeltaQuat = ToQuat * FromQuat.Inverse();
-
-	// Avoid taking the long path around the sphere
-	// // See void FQuat::EnforceShortestArcWith(const FQuat& OtherQuat)
-	//	const float CosTheta = ToQuat | FromQuat;
-	//	if (CosTheta < 0)
-	if (DeltaQuat.W < 0.f)
-	{
-		DeltaQuat *= -1.f;
-	}
-	// The W part of the vector is always ~1.f, not relevant for applying the rotation
-	const FVector DeltaRotAsVector = FVector(DeltaQuat.X, DeltaQuat.Y, DeltaQuat.Z);
+	const FVector DeltaRotAsVector = GetRotationDelta(SelfAsStaticMeshComp->GetComponentQuat(), TargetSceneComp->GetComponentQuat());
 	const FVector OutRot = PIDRot.Update(DeltaRotAsVector, DeltaTime);
 	SelfAsSkeletalMeshComp->AddAngularImpulseInRadians(OutRot);
 }
-
 
 
 // Skeletal updates with offset
@@ -333,20 +280,7 @@ void FMC6DController::Update_Skel_Velocity_Offset(float DeltaTime)
 	SelfAsSkeletalMeshComp->SetPhysicsLinearVelocity(OutLoc);
 
 	/* Rotation */
-	const FQuat FromQuat = SelfAsSkeletalMeshComp->GetComponentQuat();
-	const FQuat ToQuat = CurrentTargetOffset.GetRotation();
-	FQuat DeltaQuat = ToQuat * FromQuat.Inverse();
-
-	// Avoid taking the long path around the sphere
-	// // See void FQuat::EnforceShortestArcWith(const FQuat& OtherQuat)
-	//	const float CosTheta = ToQuat | FromQuat;
-	//	if (CosTheta < 0)
-	if (DeltaQuat.W < 0.f)
-	{
-		DeltaQuat *= -1.f;
-	}
-	// The W part of the vector is always ~1.f, not relevant for applying the rotation
-	const FVector DeltaRotAsVector = FVector(DeltaQuat.X, DeltaQuat.Y, DeltaQuat.Z);
+	const FVector DeltaRotAsVector = GetRotationDelta(SelfAsStaticMeshComp->GetComponentQuat(), CurrentTargetOffset.GetRotation());
 	const FVector OutRot = PIDRot.Update(DeltaRotAsVector, DeltaTime);
 	SelfAsSkeletalMeshComp->SetPhysicsAngularVelocityInRadians(OutRot);
 }
@@ -363,20 +297,7 @@ void FMC6DController::Update_Skel_Acceleration_Offset(float DeltaTime)
 	SelfAsSkeletalMeshComp->AddForce(OutLoc, NAME_None, true); // Acceleration based (mass will have no effect)
 
 	/* Rotation */
-	const FQuat FromQuat = SelfAsSkeletalMeshComp->GetComponentQuat();
-	const FQuat ToQuat = CurrentTargetOffset.GetRotation();
-	FQuat DeltaQuat = ToQuat * FromQuat.Inverse();
-
-	// Avoid taking the long path around the sphere
-	// // See void FQuat::EnforceShortestArcWith(const FQuat& OtherQuat)
-	//	const float CosTheta = ToQuat | FromQuat;
-	//	if (CosTheta < 0)
-	if (DeltaQuat.W < 0.f)
-	{
-		DeltaQuat *= -1.f;
-	}
-	// The W part of the vector is always ~1.f, not relevant for applying the rotation
-	const FVector DeltaRotAsVector = FVector(DeltaQuat.X, DeltaQuat.Y, DeltaQuat.Z);
+	const FVector DeltaRotAsVector = GetRotationDelta(SelfAsStaticMeshComp->GetComponentQuat(), CurrentTargetOffset.GetRotation());
 	const FVector OutRot = PIDRot.Update(DeltaRotAsVector, DeltaTime);
 	SelfAsSkeletalMeshComp->AddTorqueInRadians(OutRot, NAME_None, true); // Acceleration based (mass will have no effect)
 }
@@ -393,20 +314,7 @@ void FMC6DController::Update_Skel_Force_Offset(float DeltaTime)
 	SelfAsSkeletalMeshComp->AddForce(OutLoc);
 
 	/* Rotation */
-	const FQuat FromQuat = SelfAsSkeletalMeshComp->GetComponentQuat();
-	const FQuat ToQuat = CurrentTargetOffset.GetRotation();
-	FQuat DeltaQuat = ToQuat * FromQuat.Inverse();
-
-	// Avoid taking the long path around the sphere
-	// // See void FQuat::EnforceShortestArcWith(const FQuat& OtherQuat)
-	//	const float CosTheta = ToQuat | FromQuat;
-	//	if (CosTheta < 0)
-	if (DeltaQuat.W < 0.f)
-	{
-		DeltaQuat *= -1.f;
-	}
-	// The W part of the vector is always ~1.f, not relevant for applying the rotation
-	const FVector DeltaRotAsVector = FVector(DeltaQuat.X, DeltaQuat.Y, DeltaQuat.Z);
+	const FVector DeltaRotAsVector = GetRotationDelta(SelfAsStaticMeshComp->GetComponentQuat(), CurrentTargetOffset.GetRotation());
 	const FVector OutRot = PIDRot.Update(DeltaRotAsVector, DeltaTime);
 	SelfAsSkeletalMeshComp->AddTorqueInRadians(OutRot);
 }
@@ -423,20 +331,7 @@ void FMC6DController::Update_Skel_Impulse_Offset(float DeltaTime)
 	SelfAsSkeletalMeshComp->AddImpulse(OutLoc);
 
 	/* Rotation */
-	const FQuat FromQuat = SelfAsSkeletalMeshComp->GetComponentQuat();
-	const FQuat ToQuat = CurrentTargetOffset.GetRotation();
-	FQuat DeltaQuat = ToQuat * FromQuat.Inverse();
-
-	// Avoid taking the long path around the sphere
-	// // See void FQuat::EnforceShortestArcWith(const FQuat& OtherQuat)
-	//	const float CosTheta = ToQuat | FromQuat;
-	//	if (CosTheta < 0)
-	if (DeltaQuat.W < 0.f)
-	{
-		DeltaQuat *= -1.f;
-	}
-	// The W part of the vector is always ~1.f, not relevant for applying the rotation
-	const FVector DeltaRotAsVector = FVector(DeltaQuat.X, DeltaQuat.Y, DeltaQuat.Z);
+	const FVector DeltaRotAsVector = GetRotationDelta(SelfAsStaticMeshComp->GetComponentQuat(), CurrentTargetOffset.GetRotation());
 	const FVector OutRot = PIDRot.Update(DeltaRotAsVector, DeltaTime);
 	SelfAsSkeletalMeshComp->AddAngularImpulseInRadians(OutRot);
 }
@@ -457,20 +352,7 @@ void FMC6DController::Update_Static_Velocity(float DeltaTime)
 	SelfAsStaticMeshComp->SetPhysicsLinearVelocity(OutLoc);
 
 	/* Rotation */
-	const FQuat FromQuat = SelfAsStaticMeshComp->GetComponentQuat();
-	const FQuat ToQuat = TargetSceneComp->GetComponentQuat();
-	FQuat DeltaQuat = ToQuat * FromQuat.Inverse();
-
-	// Avoid taking the long path around the sphere
-	// // See void FQuat::EnforceShortestArcWith(const FQuat& OtherQuat)
-	//	const float CosTheta = ToQuat | FromQuat;
-	//	if (CosTheta < 0)
-	if (DeltaQuat.W < 0.f)
-	{
-		DeltaQuat *= -1.f;
-	}
-	// The W part of the vector is always ~1.f, not relevant for applying the rotation
-	const FVector DeltaRotAsVector = FVector(DeltaQuat.X, DeltaQuat.Y, DeltaQuat.Z);
+	const FVector DeltaRotAsVector = GetRotationDelta(SelfAsStaticMeshComp->GetComponentQuat(), TargetSceneComp->GetComponentQuat());
 	const FVector OutRot = PIDRot.Update(DeltaRotAsVector, DeltaTime);
 	SelfAsStaticMeshComp->SetPhysicsAngularVelocityInRadians(OutRot);
 }
@@ -483,20 +365,7 @@ void FMC6DController::Update_Static_Acceleration(float DeltaTime)
 	SelfAsStaticMeshComp->AddForce(OutLoc, NAME_None, true); // Acceleration based (mass will have no effect)
 
 	/* Rotation */
-	const FQuat FromQuat = SelfAsStaticMeshComp->GetComponentQuat();
-	const FQuat ToQuat = TargetSceneComp->GetComponentQuat();
-	FQuat DeltaQuat = ToQuat * FromQuat.Inverse();
-
-	// Avoid taking the long path around the sphere
-	// // See void FQuat::EnforceShortestArcWith(const FQuat& OtherQuat)
-	//	const float CosTheta = ToQuat | FromQuat;
-	//	if (CosTheta < 0)
-	if (DeltaQuat.W < 0.f)
-	{
-		DeltaQuat *= -1.f;
-	}
-	// The W part of the vector is always ~1.f, not relevant for applying the rotation
-	const FVector DeltaRotAsVector = FVector(DeltaQuat.X, DeltaQuat.Y, DeltaQuat.Z);
+	const FVector DeltaRotAsVector = GetRotationDelta(SelfAsStaticMeshComp->GetComponentQuat(), TargetSceneComp->GetComponentQuat());
 	const FVector OutRot = PIDRot.Update(DeltaRotAsVector, DeltaTime);
 	SelfAsStaticMeshComp->AddTorqueInRadians(OutRot, NAME_None, true); // Acceleration based (mass will have no effect)
 }
@@ -509,20 +378,7 @@ void FMC6DController::Update_Static_Force(float DeltaTime)
 	SelfAsStaticMeshComp->AddForce(OutLoc);
 
 	/* Rotation */
-	const FQuat FromQuat = SelfAsStaticMeshComp->GetComponentQuat();
-	const FQuat ToQuat = TargetSceneComp->GetComponentQuat();
-	FQuat DeltaQuat = ToQuat * FromQuat.Inverse();
-
-	// Avoid taking the long path around the sphere
-	// // See void FQuat::EnforceShortestArcWith(const FQuat& OtherQuat)
-	//	const float CosTheta = ToQuat | FromQuat;
-	//	if (CosTheta < 0)
-	if (DeltaQuat.W < 0.f)
-	{
-		DeltaQuat *= -1.f;
-	}
-	// The W part of the vector is always ~1.f, not relevant for applying the rotation
-	const FVector DeltaRotAsVector = FVector(DeltaQuat.X, DeltaQuat.Y, DeltaQuat.Z);
+	const FVector DeltaRotAsVector = GetRotationDelta(SelfAsStaticMeshComp->GetComponentQuat(), TargetSceneComp->GetComponentQuat());
 	const FVector OutRot = PIDRot.Update(DeltaRotAsVector, DeltaTime);
 	SelfAsStaticMeshComp->AddTorqueInRadians(OutRot);
 }
@@ -535,20 +391,7 @@ void FMC6DController::Update_Static_Impulse(float DeltaTime)
 	SelfAsStaticMeshComp->AddImpulse(OutLoc);
 
 	/* Rotation */
-	const FQuat FromQuat = SelfAsStaticMeshComp->GetComponentQuat();
-	const FQuat ToQuat = TargetSceneComp->GetComponentQuat();
-	FQuat DeltaQuat = ToQuat * FromQuat.Inverse();
-
-	// Avoid taking the long path around the sphere
-	// // See void FQuat::EnforceShortestArcWith(const FQuat& OtherQuat)
-	//	const float CosTheta = ToQuat | FromQuat;
-	//	if (CosTheta < 0)
-	if (DeltaQuat.W < 0.f)
-	{
-		DeltaQuat *= -1.f;
-	}
-	// The W part of the vector is always ~1.f, not relevant for applying the rotation
-	const FVector DeltaRotAsVector = FVector(DeltaQuat.X, DeltaQuat.Y, DeltaQuat.Z);
+	const FVector DeltaRotAsVector = GetRotationDelta(SelfAsStaticMeshComp->GetComponentQuat(), TargetSceneComp->GetComponentQuat());
 	const FVector OutRot = PIDRot.Update(DeltaRotAsVector, DeltaTime);
 	SelfAsStaticMeshComp->AddAngularImpulseInRadians(OutRot);
 }
@@ -578,20 +421,7 @@ void FMC6DController::Update_Static_Velocity_Offset(float DeltaTime)
 	SelfAsStaticMeshComp->SetPhysicsLinearVelocity(OutLoc);
 
 	/* Rotation */
-	const FQuat FromQuat = SelfAsStaticMeshComp->GetComponentQuat();
-	const FQuat ToQuat = CurrentTargetOffset.GetRotation();
-	FQuat DeltaQuat = ToQuat * FromQuat.Inverse();
-
-	// Avoid taking the long path around the sphere
-	// // See void FQuat::EnforceShortestArcWith(const FQuat& OtherQuat)
-	//	const float CosTheta = ToQuat | FromQuat;
-	//	if (CosTheta < 0)
-	if (DeltaQuat.W < 0.f)
-	{
-		DeltaQuat *= -1.f;
-	}
-	// The W part of the vector is always ~1.f, not relevant for applying the rotation
-	const FVector DeltaRotAsVector = FVector(DeltaQuat.X, DeltaQuat.Y, DeltaQuat.Z);
+	const FVector DeltaRotAsVector = GetRotationDelta(SelfAsStaticMeshComp->GetComponentQuat(), CurrentTargetOffset.GetRotation());
 	const FVector OutRot = PIDRot.Update(DeltaRotAsVector, DeltaTime);
 	SelfAsStaticMeshComp->SetPhysicsAngularVelocityInRadians(OutRot);
 }
@@ -608,20 +438,7 @@ void FMC6DController::Update_Static_Acceleration_Offset(float DeltaTime)
 	SelfAsStaticMeshComp->AddForce(OutLoc, NAME_None, true); // Acceleration based (mass will have no effect)
 
 	/* Rotation */
-	const FQuat FromQuat = SelfAsStaticMeshComp->GetComponentQuat();
-	const FQuat ToQuat = CurrentTargetOffset.GetRotation();
-	FQuat DeltaQuat = ToQuat * FromQuat.Inverse();
-
-	// Avoid taking the long path around the sphere
-	// // See void FQuat::EnforceShortestArcWith(const FQuat& OtherQuat)
-	//	const float CosTheta = ToQuat | FromQuat;
-	//	if (CosTheta < 0)
-	if (DeltaQuat.W < 0.f)
-	{
-		DeltaQuat *= -1.f;
-	}
-	// The W part of the vector is always ~1.f, not relevant for applying the rotation
-	const FVector DeltaRotAsVector = FVector(DeltaQuat.X, DeltaQuat.Y, DeltaQuat.Z);
+	const FVector DeltaRotAsVector = GetRotationDelta(SelfAsStaticMeshComp->GetComponentQuat(), CurrentTargetOffset.GetRotation());
 	const FVector OutRot = PIDRot.Update(DeltaRotAsVector, DeltaTime);
 	SelfAsStaticMeshComp->AddTorqueInRadians(OutRot, NAME_None, true); // Acceleration based (mass will have no effect)
 }
@@ -638,20 +455,7 @@ void FMC6DController::Update_Static_Force_Offset(float DeltaTime)
 	SelfAsStaticMeshComp->AddForce(OutLoc); 
 
 	/* Rotation */
-	const FQuat FromQuat = SelfAsStaticMeshComp->GetComponentQuat();
-	const FQuat ToQuat = CurrentTargetOffset.GetRotation();
-	FQuat DeltaQuat = ToQuat * FromQuat.Inverse();
-
-	// Avoid taking the long path around the sphere
-	// // See void FQuat::EnforceShortestArcWith(const FQuat& OtherQuat)
-	//	const float CosTheta = ToQuat | FromQuat;
-	//	if (CosTheta < 0)
-	if (DeltaQuat.W < 0.f)
-	{
-		DeltaQuat *= -1.f;
-	}
-	// The W part of the vector is always ~1.f, not relevant for applying the rotation
-	const FVector DeltaRotAsVector = FVector(DeltaQuat.X, DeltaQuat.Y, DeltaQuat.Z);
+	const FVector DeltaRotAsVector = GetRotationDelta(SelfAsStaticMeshComp->GetComponentQuat(), CurrentTargetOffset.GetRotation());
 	const FVector OutRot = PIDRot.Update(DeltaRotAsVector, DeltaTime);
 	SelfAsStaticMeshComp->AddTorqueInRadians(OutRot); 
 }
@@ -668,20 +472,7 @@ void FMC6DController::Update_Static_Impulse_Offset(float DeltaTime)
 	SelfAsStaticMeshComp->AddImpulse(OutLoc);
 
 	/* Rotation */
-	const FQuat FromQuat = SelfAsStaticMeshComp->GetComponentQuat();
-	const FQuat ToQuat = CurrentTargetOffset.GetRotation();
-	FQuat DeltaQuat = ToQuat * FromQuat.Inverse();
-
-	// Avoid taking the long path around the sphere
-	// // See void FQuat::EnforceShortestArcWith(const FQuat& OtherQuat)
-	//	const float CosTheta = ToQuat | FromQuat;
-	//	if (CosTheta < 0)
-	if (DeltaQuat.W < 0.f)
-	{
-		DeltaQuat *= -1.f;
-	}
-	// The W part of the vector is always ~1.f, not relevant for applying the rotation
-	const FVector DeltaRotAsVector = FVector(DeltaQuat.X, DeltaQuat.Y, DeltaQuat.Z);
+	const FVector DeltaRotAsVector = GetRotationDelta(SelfAsStaticMeshComp->GetComponentQuat(), CurrentTargetOffset.GetRotation());
 	const FVector OutRot = PIDRot.Update(DeltaRotAsVector, DeltaTime);
 	SelfAsStaticMeshComp->AddAngularImpulseInRadians(OutRot);
 }

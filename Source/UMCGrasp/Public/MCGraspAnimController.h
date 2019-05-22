@@ -71,7 +71,10 @@ private:
 	@param Closed - final hand state if input was 1
 	@param Input - number from 0-1 that indicates how far the grasping trigger is being pushed down
 	*/
-	void LerpHandOrientation(FMCGraspAnimFrameData* Target, FMCGraspAnimFrameData Initial, FMCGraspAnimFrameData Closed, const float Input);
+	void LerpHandOrientation(FMCGraspAnimFrameData* OutTarget,
+		const FMCGraspAnimFrameData& Frame1,
+		const FMCGraspAnimFrameData& Frame2,
+		float Alpha);
 
 	/*
 	Sets all the constraints orientation drives to go into target orientation

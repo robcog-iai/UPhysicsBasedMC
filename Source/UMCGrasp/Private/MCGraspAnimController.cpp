@@ -199,22 +199,22 @@ void UMCGraspAnimController::Update(float Value)
 		int32 StepIteratorCountInt = (int32)StepIteratorCountFloat;
 
 		// We calculate how far the input is past the step that came before it
-		float NewInput = StepIteratorCountFloat - (float) StepIteratorCountInt;
+		float Alpha = StepIteratorCountFloat - (float) StepIteratorCountInt;
 
-		FMCGraspAnimFrameData StartFrame;
+		FMCGraspAnimFrameData Frame1;
 		if (ActiveGraspAnim.Frames.IsValidIndex(StepIteratorCountInt))
 		{
-			StartFrame = ActiveGraspAnim.Frames[StepIteratorCountInt];
+			Frame1 = ActiveGraspAnim.Frames[StepIteratorCountInt];
 		}
 		else
 		{
 			UE_LOG(LogTemp, Error, TEXT("%s::%d"), *FString(__func__), __LINE__);
 		}
 
-		FMCGraspAnimFrameData EndFrame;
+		FMCGraspAnimFrameData Frame2;
 		if (ActiveGraspAnim.Frames.IsValidIndex(StepIteratorCountInt + 1))
 		{
-			EndFrame = ActiveGraspAnim.Frames[StepIteratorCountInt + 1];
+			Frame2 = ActiveGraspAnim.Frames[StepIteratorCountInt + 1];
 		}
 		else
 		{
@@ -223,7 +223,7 @@ void UMCGraspAnimController::Update(float Value)
 
 		// Manipulate Orientation Drives
 		FMCGraspAnimFrameData TargetOrientation;
-		LerpHandOrientation(&TargetOrientation, StartFrame, EndFrame, NewInput);
+		LerpHandOrientation(&TargetOrientation, Frame1, Frame2, Alpha);
 		DriveToHandOrientationTarget(TargetOrientation);
 	}
 	else
@@ -265,16 +265,23 @@ void UMCGraspAnimController::PrevAnim()
 }
 
 
-
-void UMCGraspAnimController::LerpHandOrientation(FMCGraspAnimFrameData* OutTarget, FMCGraspAnimFrameData StartFrame, FMCGraspAnimFrameData ClosedFrame, const float Input)
+void UMCGraspAnimController::LerpHandOrientation(FMCGraspAnimFrameData* OutTarget,
+	const FMCGraspAnimFrameData& Frame1,
+	const FMCGraspAnimFrameData& Frame2,
+	float Alpha)
 {
+	UE_LOG(LogTemp, Warning, TEXT("%s::%d Input=%f"), *FString(__func__), __LINE__,Alpha);
 	TArray<FString> TempArray;
-	StartFrame.Map.GenerateKeyArray(TempArray);
+	Frame1.Map.GenerateKeyArray(TempArray);
 	for (FString S : TempArray) 
 	{
 		OutTarget->Map.Add(S, FMath::LerpRange(
-			StartFrame.Map.Find(S)->AngularOrientationTarget,
-			ClosedFrame.Map.Find(S)->AngularOrientationTarget, Input));
+			Frame1.Map.Find(S)->AngularOrientationTarget,
+			Frame2.Map.Find(S)->AngularOrientationTarget, Alpha));
+
+		//OutTarget->Map.Add(S, FMath::Lerp(
+		//	StartFrame.Map.Find(S)->AngularOrientationTarget,
+		//	ClosedFrame.Map.Find(S)->AngularOrientationTarget, Input));
 	}
 }
 
