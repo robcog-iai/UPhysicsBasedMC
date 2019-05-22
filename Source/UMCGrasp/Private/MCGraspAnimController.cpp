@@ -9,8 +9,7 @@ UMCGraspAnimController::UMCGraspAnimController()
 {
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
-	PrimaryComponentTick.bCanEverTick = true;
-	bWantsInitializeComponent = true;
+	PrimaryComponentTick.bCanEverTick = false;
 
 #if WITH_EDITOR
 	HandType = EMCGraspAnimHandType::Left;
@@ -29,7 +28,7 @@ UMCGraspAnimController::UMCGraspAnimController()
 	bGraspIsActive = false;
 
 	bFirstUpdate = true;
-	bIsInQueue = false;
+	bGrasIsWaitingInQueue = false;
 }
 
 // Called when the game starts
@@ -38,11 +37,7 @@ void UMCGraspAnimController::BeginPlay()
 	Super::BeginPlay();
 
 	// Init component
-	if (Init())
-	{
-		// Bind user inputs
-		SetupInputBindings();
-	}
+	Init();
 }
 
 #if WITH_EDITOR
@@ -87,14 +82,12 @@ bool UMCGraspAnimController::Init()
 		return false;
 	}
 
-	//// Create and initialize the grasp executor
-	//AnimGraspExecutor = NewObject<UMCGraspAnimExec>();
-	//if (AnimGraspExecutor)
-	//{
-	//	AnimGraspExecutor->Init(ParentAsSkMA, SpringBase, SpringMultiplier, Damping, ForceLimit);
-	//	AnimGraspExecutor->LoadActiveGrasp(AnimGraspDataAssets[CurrAnimGraspIndex]);
-	//	return true;
-	//}
+	SetActiveGrasp();
+	UE_LOG(LogTemp, Error, TEXT("%s::%d"), *FString(__func__), __LINE__);
+
+	SetupInputBindings();
+	UE_LOG(LogTemp, Error, TEXT("%s::%d"), *FString(__func__), __LINE__);
+
 	return true;
 }
 
@@ -117,9 +110,9 @@ bool UMCGraspAnimController::LoadSkeletalMesh()
 					Constraint->SetAngularSwing1Limit(ACM_Free, 0);
 					Constraint->SetAngularSwing2Limit(ACM_Free, 0);
 					Constraint->SetAngularTwistLimit(ACM_Free, 0);
-					Constraint->SetAngularDriveMode(EAngularDriveMode::SLERP);
 					Constraint->SetAngularVelocityDriveTwistAndSwing(false, false);
 					Constraint->SetAngularVelocityDriveSLERP(true);
+					Constraint->SetAngularDriveMode(EAngularDriveMode::SLERP);
 					Constraint->SetAngularDriveParams(SpringBase, Damping, ForceLimit);
 				}
 				return true;
@@ -134,9 +127,9 @@ bool UMCGraspAnimController::LoadAnimGrasps()
 {
 	for (const auto& DataAsset : AnimGraspDataAssets)
 	{
-		AnimGrasps.Emplace(UMCGraspAnimReader::ConvertAssetToStruct(DataAsset));
+		GraspAnims.Emplace(UMCGraspAnimReader::ConvertAssetToStruct(DataAsset));
 	}
-	return AnimGrasps.Num() > 0;
+	return GraspAnims.Num() > 0;
 }
 
 // Bind user inputs for updating the grasps and switching the animations
@@ -164,11 +157,18 @@ void UMCGraspAnimController::SetupInputBindings()
 // Forward the axis input value to the grasp animation executor
 void UMCGraspAnimController::Update(float Value)
 {
-	// Ensures the hand goes into the initial frame when this is called the first itme
+	// Ensures the hand goes into the initial frame when this is called the first time
 	if (bFirstUpdate)
 	{
-		FMCGraspAnimFrame Save = GraspingData.GetPositionDataWithIndex(0);
-		DriveToHandOrientationTarget(&Save);
+		if (ActiveGraspAnim.Frames.IsValidIndex(0))
+		{
+			DriveToHandOrientationTarget(ActiveGraspAnim.Frames[0]);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("%s::%d Invalid index"), *FString(__func__), __LINE__);
+			DriveToHandOrientationTarget(FMCGraspAnimFrameData());
+		}
 		bFirstUpdate = false;
 	}
 
@@ -183,7 +183,7 @@ void UMCGraspAnimController::Update(float Value)
 		NewSpringValue = SpringBase * ((SpringMultiplier * Value) + 1);
 
 		// Calculate step size relative to the number of frames in the animation
-		float StepSize = 1 / ((float) GraspingData.FramesNum() - 1);
+		float StepSize = 1 / ((float) ActiveGraspAnim.Frames.Num() - 1);
 
 		// Calculates how many steps we have passed, given then current input
 		// When rounded down we know which step came before with this input
@@ -201,11 +201,30 @@ void UMCGraspAnimController::Update(float Value)
 		// We calculate how far the input is past the step that came before it
 		float NewInput = StepIteratorCountFloat - (float) StepIteratorCountInt;
 
+		FMCGraspAnimFrameData StartFrame;
+		if (ActiveGraspAnim.Frames.IsValidIndex(StepIteratorCountInt))
+		{
+			StartFrame = ActiveGraspAnim.Frames[StepIteratorCountInt];
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("%s::%d"), *FString(__func__), __LINE__);
+		}
+
+		FMCGraspAnimFrameData EndFrame;
+		if (ActiveGraspAnim.Frames.IsValidIndex(StepIteratorCountInt + 1))
+		{
+			EndFrame = ActiveGraspAnim.Frames[StepIteratorCountInt + 1];
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("%s::%d"), *FString(__func__), __LINE__);
+		}
+
 		// Manipulate Orientation Drives
-		FMCGraspAnimFrame TargetOrientation;
-		LerpHandOrientation(&TargetOrientation, GraspingData.GetPositionDataWithIndex(StepIteratorCountInt),
-			GraspingData.GetPositionDataWithIndex(StepIteratorCountInt + 1), NewInput);
-		DriveToHandOrientationTarget(&TargetOrientation);
+		FMCGraspAnimFrameData TargetOrientation;
+		LerpHandOrientation(&TargetOrientation, StartFrame, EndFrame, NewInput);
+		DriveToHandOrientationTarget(TargetOrientation);
 	}
 	else
 	{
@@ -228,9 +247,7 @@ void UMCGraspAnimController::NextAnim()
 	{
 		CurrAnimGraspIndex++;
 	}
-	LoadActiveGrasp();
-
-	//AnimGraspExecutor->LoadActiveGrasp(AnimGraspDataAssets[CurrAnimGraspIndex]);
+	SetActiveGrasp();
 }
 
 // Switch to the previous animation
@@ -244,35 +261,35 @@ void UMCGraspAnimController::PrevAnim()
 	{
 		CurrAnimGraspIndex--;
 	}
-	LoadActiveGrasp();
-
-	//AnimGraspExecutor->LoadActiveGrasp(AnimGraspDataAssets[CurrAnimGraspIndex]);
+	SetActiveGrasp();
 }
 
 
 
-void UMCGraspAnimController::LerpHandOrientation(FMCGraspAnimFrame* Target, FMCGraspAnimFrame Initial, FMCGraspAnimFrame Closed, const float Input)
+void UMCGraspAnimController::LerpHandOrientation(FMCGraspAnimFrameData* OutTarget, FMCGraspAnimFrameData StartFrame, FMCGraspAnimFrameData ClosedFrame, const float Input)
 {
 	TArray<FString> TempArray;
-	Initial.GetMap()->GenerateKeyArray(TempArray);
-	for (FString s : TempArray) 
+	StartFrame.Map.GenerateKeyArray(TempArray);
+	for (FString S : TempArray) 
 	{
-		Target->AddNewBoneData(s, FMath::LerpRange(
-			Initial.GetBoneData(s)->AngularOrientationTarget,
-			Closed.GetBoneData(s)->AngularOrientationTarget, Input));
+		OutTarget->Map.Add(S, FMath::LerpRange(
+			StartFrame.Map.Find(S)->AngularOrientationTarget,
+			ClosedFrame.Map.Find(S)->AngularOrientationTarget, Input));
 	}
 }
 
-void UMCGraspAnimController::DriveToHandOrientationTarget(FMCGraspAnimFrame* Target)
+void UMCGraspAnimController::DriveToHandOrientationTarget(const FMCGraspAnimFrameData& TargetFrame)
 {
 	FConstraintInstance* Constraint = nullptr;
 	TArray<FString> TempArray;
-	Target->GetMap()->GenerateKeyArray(TempArray);
-	for (FString s : TempArray) {
-		Constraint = BoneNameToConstraint(s);
-		if (Constraint) {
+	TargetFrame.Map.GenerateKeyArray(TempArray);
+	for (FString S : TempArray) 
+	{
+		Constraint = BoneNameToConstraint(S);
+		if (Constraint) 
+		{
 			Constraint->SetAngularDriveParams(NewSpringValue, Damping, ForceLimit);
-			Constraint->SetAngularOrientationTarget(Target->GetMap()->Find(s)->AngularOrientationTarget.Quaternion());
+			Constraint->SetAngularOrientationTarget(TargetFrame.Map.Find(S)->AngularOrientationTarget.Quaternion());
 		}
 	}
 }
@@ -296,24 +313,31 @@ void UMCGraspAnimController::StopGrasping()
 {
 	// Stop Grasp
 	NewSpringValue = SpringBase;
-	FMCGraspAnimFrame Save = GraspingData.GetPositionDataWithIndex(0);
-	DriveToHandOrientationTarget(&Save);
-	if (bIsInQueue)
+	if (ActiveGraspAnim.Frames.IsValidIndex(0))
 	{
-		GraspingData = GraspQueue;
-		bIsInQueue = false;
+		DriveToHandOrientationTarget(ActiveGraspAnim.Frames[0]);
+	}
+	else
+	{
+		DriveToHandOrientationTarget(FMCGraspAnimFrameData());
+	}
+
+	if (bGrasIsWaitingInQueue)
+	{
+		ActiveGraspAnim = QueuedGrasAnim;
+		bGrasIsWaitingInQueue = false;
 	}
 	bGraspIsActive = false;
 }
 
-void UMCGraspAnimController::LoadActiveGrasp()
+void UMCGraspAnimController::SetActiveGrasp()
 {
 	// if player is grasping put new grasp in queue, else change grasp immediately
 	if (bGraspIsActive)
 	{
-		GraspQueue = AnimGrasps[CurrAnimGraspIndex];
-		bIsInQueue = true;
+		QueuedGrasAnim = GraspAnims[CurrAnimGraspIndex];
+		bGrasIsWaitingInQueue = true;
 		return;
 	}
-	GraspingData = AnimGrasps[CurrAnimGraspIndex];
+	ActiveGraspAnim = GraspAnims[CurrAnimGraspIndex];
 }

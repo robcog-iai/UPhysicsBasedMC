@@ -20,12 +20,12 @@ UObject* UMCGraspEdAnimDataAssetFactory::CreateGraspDataAsset(UClass* InClass, U
 
 	UMCGraspAnimDataAsset* DataAsset = NewObject<UMCGraspAnimDataAsset>(InParent, InName, Flags);
 
-	DataAsset->AnimationName = DataStruct.AnimationName;
+	DataAsset->AnimationName = DataStruct.Name;
 	for (FString BoneName : DataStruct.BoneNames)
 	{
 		DataAsset->BoneNames.Add(BoneName);
 	}
-	for(FMCGraspAnimFrame Frame : DataStruct.Frames)
+	for(FMCGraspAnimFrameData Frame : DataStruct.Frames)
 	{
 		DataAsset->Frames.Add(Frame);
 	}
@@ -37,13 +37,13 @@ UObject* UMCGraspEdAnimDataAssetFactory::CreateGraspDataAsset(UClass* InClass, U
 
 void UMCGraspEdAnimDataAssetFactory::AddGraspDataAsset(const FMCGraspAnimData& DataStruct)
 {
-	FString FinalPackageName = "/UPhysicsBasedMC/GraspingAnimations/" + DataStruct.AnimationName;
+	FString FinalPackageName = "/UPhysicsBasedMC/GraspingAnimations/" + DataStruct.Name;
 
 	UPackage* Package = CreatePackage(NULL, *FinalPackageName);
 
 	UPackage* OutermostPkg = Package->GetOutermost();
 
-	UObject* DataAsset = CreateGraspDataAsset(UMCGraspAnimDataAsset::StaticClass(), OutermostPkg, FName(*DataStruct.AnimationName), RF_Standalone | RF_Public, NULL, DataStruct);
+	UObject* DataAsset = CreateGraspDataAsset(UMCGraspAnimDataAsset::StaticClass(), OutermostPkg, FName(*DataStruct.Name), RF_Standalone | RF_Public, NULL, DataStruct);
 
 	FAssetRegistryModule::AssetCreated(DataAsset);
 	DataAsset->MarkPackageDirty();

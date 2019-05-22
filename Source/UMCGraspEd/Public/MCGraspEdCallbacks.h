@@ -117,7 +117,7 @@ private:
 
 	void ShowMessageBox(FText Title, FText Message);
 
-	void ApplyBoneDataForIndex(FMCGraspAnimData PlayData, int Index);
+	void ApplyBoneDataForIndex(const FMCGraspAnimData& Anim, int32 Index);
 
 	FReply OnEditButtonClicked();
 	FReply OnSaveButtonClicked();
@@ -132,7 +132,7 @@ private:
 	FString NewGraspAnim = "";
 	bool bSavedStartTransforms = false;
 
-	int CurrentEditedFrame = 0;
+	int32 CurrEditFrameIndex = 0;
 	FString CurrentGraspEdited = "";
 
 	bool bContinuePlayGrasp = true;

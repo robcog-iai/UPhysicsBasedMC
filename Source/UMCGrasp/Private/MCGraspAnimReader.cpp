@@ -26,14 +26,14 @@ FMCGraspAnimData UMCGraspAnimReader::ConvertAssetToStruct(const UMCGraspAnimData
 {
 	FMCGraspAnimData DataStruct;
 
-	DataStruct.AnimationName = DataAsset->AnimationName;
+	DataStruct.Name = DataAsset->AnimationName;
 	for (FString BoneName : DataAsset->BoneNames)
 	{
 		DataStruct.BoneNames.Add(BoneName);
 	}
-	for (FMCGraspAnimFrame Frame : DataAsset->Frames)
+	for (FMCGraspAnimFrameData Frame : DataAsset->Frames)
 	{
-		DataStruct.AddNewFrame(Frame);
+		DataStruct.Frames.Add(Frame);
 	}
 
 	return DataStruct;

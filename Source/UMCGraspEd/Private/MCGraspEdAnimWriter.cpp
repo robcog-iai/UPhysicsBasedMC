@@ -13,15 +13,15 @@ void UMCGraspEdAnimWriter::WriteToDataAsset(const FMCGraspAnimData& DataStruct)
 	// If asset alread exists, edit it
 	for (UMCGraspAnimDataAsset* DataAsset : UMCGraspAnimReader::LoadAllAssets())
 	{
-		if (DataAsset->AnimationName == DataStruct.AnimationName)
+		if (DataAsset->AnimationName == DataStruct.Name)
 		{
 			DataAsset->BoneNames = TArray<FString>();
 			for (FString BoneName : DataStruct.BoneNames)
 			{
 				DataAsset->BoneNames.Add(BoneName);
 			}
-			DataAsset->Frames = TArray<FMCGraspAnimFrame>();
-			for (FMCGraspAnimFrame Frame : DataStruct.Frames)
+			DataAsset->Frames = TArray<FMCGraspAnimFrameData>();
+			for (FMCGraspAnimFrameData Frame : DataStruct.Frames)
 			{
 				DataAsset->Frames.Add(Frame);
 			}

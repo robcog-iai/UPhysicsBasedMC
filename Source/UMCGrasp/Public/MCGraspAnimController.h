@@ -71,13 +71,13 @@ private:
 	@param Closed - final hand state if input was 1
 	@param Input - number from 0-1 that indicates how far the grasping trigger is being pushed down
 	*/
-	void LerpHandOrientation(FMCGraspAnimFrame* Target, FMCGraspAnimFrame Initial, FMCGraspAnimFrame Closed, const float Input);
+	void LerpHandOrientation(FMCGraspAnimFrameData* Target, FMCGraspAnimFrameData Initial, FMCGraspAnimFrameData Closed, const float Input);
 
 	/*
 	Sets all the constraints orientation drives to go into target orientation
 	@param Target - the target position that has been calculated by lerp
 	*/
-	void DriveToHandOrientationTarget(FMCGraspAnimFrame* Target);
+	void DriveToHandOrientationTarget(const FMCGraspAnimFrameData& Target);
 
 	/*
 	Finds out which constraint belongs to which bone
@@ -91,7 +91,7 @@ private:
 	void StopGrasping();
 
 	// Loads the current grasp data from the data asset
-	void LoadActiveGrasp();
+	void SetActiveGrasp();
 
 private:
 #if WITH_EDITOR
@@ -131,13 +131,9 @@ private:
 	// Force limit, 0 means no limit. 
 	UPROPERTY(EditAnywhere, Category = "Grasp Controller")
 	float ForceLimit;
-
-	//// The executor crunches the number and applies the forces to the fingers
-	//UPROPERTY()
-	//UMCGraspAnimExec* AnimGraspExecutor;
-
+	
 	// Controller friendly conversion of the animation grasps
-	TArray<FMCGraspAnimData> AnimGrasps;
+	TArray<FMCGraspAnimData> GraspAnims;
 
 	// Skeletal mesh to apply the animation on
 	USkeletalMeshComponent* SkelComp;
@@ -153,15 +149,16 @@ private:
 
 
 
+
 	// Current grasp loaded into hand
-	FMCGraspAnimData GraspingData;
+	FMCGraspAnimData ActiveGraspAnim;
 
 	// When changing grasp type while grasping, the new grasp isn't applied immediately
 	// Instead it is saved in this variable and applied once the user stops grasping 
-	FMCGraspAnimData GraspQueue;
+	FMCGraspAnimData QueuedGrasAnim;
 
 	// Set to true when there is a grasp waiting to be applied
-	bool bIsInQueue;
+	bool bGrasIsWaitingInQueue;
 
 	// bool that is used so the mesh goes into step 0 of it's current grasp when the game is started
 	bool bFirstUpdate;

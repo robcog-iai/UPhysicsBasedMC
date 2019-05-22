@@ -16,7 +16,6 @@ class UMCGRASP_API UMCGraspAnimDataAsset : public UDataAsset
 	GENERATED_BODY()
 
 public:
-
 	//The name for this Animation
 	UPROPERTY(EditAnywhere)
 	FString AnimationName;
@@ -27,5 +26,5 @@ public:
 
 	//All frames
 	UPROPERTY(EditAnywhere)
-	TArray<FMCGraspAnimFrame> Frames;
+	TArray<FMCGraspAnimFrameData> Frames;
 };
