@@ -27,7 +27,7 @@ UObject* UMCGraspEdAnimDataAssetFactory::CreateGraspDataAsset(UClass* InClass,
 	UMCGraspAnimDataAsset* DataAsset = NewObject<UMCGraspAnimDataAsset>(InParent, InName, Flags);
 
 	DataAsset->Name = InName.ToString();
-	DataAsset->BoneNames = InBoneNames;
+	//DataAsset->BoneNames = InBoneNames;
 	DataAsset->Frames = InFrames;
 
 	FEditorDelegates::OnAssetPostImport.Broadcast(this, DataAsset);

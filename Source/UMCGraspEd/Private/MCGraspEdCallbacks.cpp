@@ -4,8 +4,6 @@
 #include "Core.h"
 #include "Editor.h"
 #include "Components/SkeletalMeshComponent.h"
-#include "MCGraspAnimReader.h"
-#include "MCGraspEdAnimWriter.h"
 #include "PhysicsEngine/ConstraintInstance.h"
 #include "Widgets/Input/SEditableText.h"
 #include "AnimPreviewInstance.h"
@@ -15,7 +13,7 @@
 #include "Widgets/Input/SButton.h"
 #include "Widgets/Input/SEditableTextBox.h"
 
-#define LOCTEXT_NAMESPACE "FMCGraspingEditorModule"
+#define LOCTEXT_NAMESPACE "FMCGraspEdModule"
 
 UMCGraspEdCallbacks::UMCGraspEdCallbacks()
 {
@@ -206,8 +204,8 @@ void UMCGraspEdCallbacks::WriteFramesToAsset()
 	}
 
 	//Save all frames under the given name and reset all boolean etc.
-	UMCGraspEdAnimWriter Write = UMCGraspEdAnimWriter();
-	Write.WriteToDataAsset(NewGraspAnimName,NewBoneNames, NewFrames);
+	
+	WriteToDataAsset(NewGraspAnimName,NewBoneNames, NewFrames);
 	NewFrames.Empty();
 	bFirstCreatedFrameData = false;
 
@@ -222,7 +220,7 @@ void UMCGraspEdCallbacks::EditLoadedGraspAnim()
 		return;
 	}
 	
-	UMCGraspAnimDataAsset* GraspDataAssetToEdit = UMCGraspAnimReader::GetAnimGraspDataAsset(CurrGraspName);
+	UMCGraspAnimDataAsset* GraspDataAssetToEdit = GetAnimGraspDataAsset(CurrGraspName);
 	if (!GraspDataAssetToEdit)
 	{
 		ShowMessageBox(FText::FromString("Error"), FText::FromString("Could not find the grasp animation."));
@@ -265,7 +263,6 @@ void UMCGraspEdCallbacks::EditLoadedGraspAnim()
 
 	GraspDataAssetToEdit->Frames[CurrEditFrameIndex] = NewFrameData;
 
-	//UMCGraspEdAnimWriter::WriteToDataAsset(GraspDataToEdit);
 	ShowMessageBox(FText::FromString("Edited grasp"), FText::FromString("The grasp was successfully edited. (TODO test this)"));
 	//Reloads the saved step.
 	ChangeBoneRotationsTo(CurrGraspName, CurrEditFrameIndex);
@@ -305,7 +302,7 @@ void UMCGraspEdCallbacks::CreateAnimationData(TMap<FString, FRotator> FrameData)
 void UMCGraspEdCallbacks::ChangeBoneRotationsTo(const FString& GraspAnimName, int32 FrameIndex)
 {
 	TArray<FMCGraspAnimFrameData> Frames;
-	if (UMCGraspAnimReader::ReadFramesFromName(GraspAnimName, Frames))
+	if (ReadFramesFromName(GraspAnimName, Frames))
 	{
 		if (Frames.IsValidIndex(FrameIndex))
 		{
@@ -355,7 +352,7 @@ void UMCGraspEdCallbacks::DiscardAllFrames()
 void UMCGraspEdCallbacks::ShowFrame(bool bForward)
 {
 	TArray<FMCGraspAnimFrameData> Frames;
-	UMCGraspAnimReader::ReadFramesFromName(CurrGraspName, Frames);
+	ReadFramesFromName(CurrGraspName, Frames);
 
 	int32 LastFrameIndex = Frames.Num() - 1;
 	DebugMeshComponent->SkeletalMesh->Modify();
@@ -458,6 +455,89 @@ void UMCGraspEdCallbacks::ApplyFrame(const FMCGraspAnimFrameData& Frame)
 		}
 	}
 }
+
+// Get data asset, returns nullptr if not found
+UMCGraspAnimDataAsset* UMCGraspEdCallbacks::GetAnimGraspDataAsset(const FString& Name)
+{
+	for (UMCGraspAnimDataAsset* DataAsset : LoadAllAssets())
+	{
+		if (DataAsset->Name.Equals(Name))
+		{
+			return DataAsset;
+		}
+	}
+	return nullptr;
+}
+
+
+// Read frames from the data asset file
+bool UMCGraspEdCallbacks::ReadFramesFromName(const FString& Name, TArray<FMCGraspAnimFrameData>& OutFrames)
+{
+	for (UMCGraspAnimDataAsset* DataAsset : LoadAllAssets())
+	{
+		if (DataAsset->Name.Equals(Name))
+		{
+			OutFrames = DataAsset->Frames;
+			return true;
+		}
+	}
+	return false;
+}
+
+
+TArray<UMCGraspAnimDataAsset*> UMCGraspEdCallbacks::LoadAllAssets()
+{
+	FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>(FName("AssetRegistry"));
+	IAssetRegistry& AssetRegistry = AssetRegistryModule.Get();
+	while (AssetRegistry.IsLoadingAssets())
+	{
+		UE_LOG(LogTemp, Error, TEXT("%s::%d Loading.."), *FString(__func__), __LINE__);
+	}
+
+	return OnRegistryLoaded();
+}
+
+TArray<UMCGraspAnimDataAsset*> UMCGraspEdCallbacks::OnRegistryLoaded()
+{
+	FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>(FName("AssetRegistry"));
+	IAssetRegistry& AssetRegistry = AssetRegistryModule.Get();
+
+	FARFilter Filter;
+	Filter.ClassNames = { TEXT("MCGraspAnimDataAsset") };
+	Filter.PackagePaths.Add("/UPhysicsBasedMC/GraspingAnimations");
+
+	TArray<FAssetData> AssetList;
+
+	AssetRegistry.GetAssets(Filter, AssetList);
+
+	TArray<UMCGraspAnimDataAsset*> GraspAssets;
+
+	for (const FAssetData& DataAsset : AssetList) {
+		UObject* Obj = DataAsset.GetAsset();
+		if (Obj->GetClass()->IsChildOf(UMCGraspAnimDataAsset::StaticClass())) {
+			GraspAssets.Add(Cast<UMCGraspAnimDataAsset>(Obj));
+		}
+	}
+
+	return GraspAssets;
+}
+
+
+void UMCGraspEdCallbacks::WriteToDataAsset(const FString& InAnimName, const TArray<FString>& InBoneNames, const TArray<FMCGraspAnimFrameData>& InFrames)
+{
+	if (UMCGraspAnimDataAsset* DataAsset = GetAnimGraspDataAsset(InAnimName))
+	{
+		DataAsset->Name = InAnimName;
+		//DataAsset->BoneNames = InBoneNames;
+		DataAsset->Frames = InFrames;
+	}
+	else
+	{
+		UMCGraspEdAnimDataAssetFactory* GraspAnimFactory = NewObject<UMCGraspEdAnimDataAssetFactory>();
+		GraspAnimFactory->AddGraspDataAsset(InAnimName, InBoneNames, InFrames);
+	}
+}
+
 
 FReply UMCGraspEdCallbacks::OnEditButtonClicked()
 {

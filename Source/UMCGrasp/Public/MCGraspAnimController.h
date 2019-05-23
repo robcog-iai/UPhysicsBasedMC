@@ -40,53 +40,42 @@ protected:
 #endif // WITH_EDITOR
 
 private:
-	// Init the component
+	// Init the component, return false is something went wrong
 	bool Init();
 
 	// Prepare the skeletal mesh component physics and angular motors
 	bool LoadSkeletalMesh();
 
+	// Load the data from the animation data assets in a more optimized form, return true if at least one animation is loaded
+	bool LoadAnimationData();
+
+	// Set first grasp animation
+	void GotoFirstAnimation();
+
 	// Bind user inputs for updating the grasps and switching the animations
 	void SetupInputBindings();
 
+	// Set the cached target to the first frame 
+	void SetTargetToIdle();
+
+	// Compute and set the cached target by interpolating between the two frames
+	void SetTargetUsingLerp(const TMap<FConstraintInstance*, FRotator>& FrameA, const TMap<FConstraintInstance*, FRotator>& FrameB, float Alpha);
+
+	// Set the drive parameters to the cached target
+	void DriveToTarget();
+
+	/* Input callbacks */
 	// Update the grasp animation from the trigger input
-	void Update(float Value);
+	void GraspUpdateCallback(float Value);
 
 	// Switch to the next grasp animation
-	void NextAnim();
+	void GotoNextAnimationCallback();
 
 	// Switch to the previous animation
-	void PrevAnim();
+	void GotoPreviousAnimationCallback();
 
 
-private:
-	/*
-	Uses interpolation to calculate target orientation for bones
-	@param Target - where calculated positions are saved
-	@param Initial - initial hand state if input was 0
-	@param Closed - final hand state if input was 1
-	@param Input - number from 0-1 that indicates how far the grasping trigger is being pushed down
-	*/
-	void LerpHandOrientation(FMCGraspAnimFrameData* OutTarget,
-		const FMCGraspAnimFrameData& Frame1,
-		const FMCGraspAnimFrameData& Frame2,
-		float Alpha);
-
-	/*
-	Sets all the constraints orientation drives to go into target orientation
-	@param Target - the target position that has been calculated by lerp
-	*/
-	void DriveToHandOrientationTarget(const FMCGraspAnimFrameData& Target);
-
-	/*
-	Finds out which constraint belongs to which bone
-	@param BoneName - name of bone
-	*/
-	FConstraintInstance* BoneNameToConstraint(FString BoneName);
-
-	/*
-	Stops the grasping process and resets the booleans that were changed
-	*/
+	// Stops the grasping process and resets the booleans that were changed
 	void StopGrasping();
 
 	// Loads the current grasp data from the data asset
@@ -113,15 +102,15 @@ private:
 
 	// An array the user can fill with grasps they want to use
 	UPROPERTY(EditAnywhere, Category = "Grasp Controller")
-	TArray<UMCGraspAnimDataAsset*> GraspAnimsDA;
+	TArray<UMCGraspAnimDataAsset*> AnimationDataAssets;
 
-	// Minimum spring value
+	// Idle spring value (used to keep the fingers steady when the trigger is released)
 	UPROPERTY(EditAnywhere, Category = "Grasp Controller")
-	float SpringBase;
+	float SpringIdle;
 
-	// Increase the strength of the spring value
+	// Multiply the spring value relative to the trigger pressed value
 	UPROPERTY(EditAnywhere, Category = "Grasp Controller")
-	float SpringMultiplier;
+	float SpringActiveMultiplier;
 
 	// Damping value
 	UPROPERTY(EditAnywhere, Category = "Grasp Controller")
@@ -134,24 +123,43 @@ private:
 	// Skeletal mesh to apply the animation on
 	USkeletalMeshComponent* SkelComp;
 
+
+	typedef TMap<FConstraintInstance*, FRotator> FFrame;
+	typedef TArray<FFrame> FAnimation;
+
+	// Drive target (map between the constraint instance reference and the rotation)
+	FFrame DriveTarget;
+
+	// Selected animation
+	FAnimation ActiveAnimation;
+	
+	// Animation list
+	TArray<FAnimation> Animations;
+
+
+
+
+
+	// Cache the constraints references directly to the animation rotation data
+
 	// Currently active grasp animation index
-	int32 CurrAnimIndex;
+	int32 ActiveAnimIndex;
 
 	// Flag showing inf the grasp is ongoing
 	bool bGraspIsActive;
 
-	// Spring value 
-	float NewSpringValue;
 
 
 
+	// Spring value during an active grasp
+	float SpringActive;
 
-	// Current grasp loaded into hand
-	UMCGraspAnimDataAsset* ActiveAnimDA;
+	//// Current grasp loaded into hand
+	//UMCGraspAnimDataAsset* ActiveAnimDA;
 
-	// When changing grasp type while grasping, the new grasp isn't applied immediately
-	// Instead it is saved in this variable and applied once the user stops grasping 
-	UMCGraspAnimDataAsset* QueuedAnimDA;
+	//// When changing grasp type while grasping, the new grasp isn't applied immediately
+	//// Instead it is saved in this variable and applied once the user stops grasping 
+	//UMCGraspAnimDataAsset* QueuedAnimDA;
 
 	// Set to true when there is a grasp waiting to be applied
 	bool bGrasIsWaitingInQueue;

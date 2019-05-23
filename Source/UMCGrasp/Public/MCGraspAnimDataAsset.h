@@ -22,14 +22,6 @@ struct FMCGraspAnimBoneOrientation
 
 	// Default ctor
 	FMCGraspAnimBoneOrientation() {}
-
-	// Init Ctor with AngularOrientationTarget
-	FMCGraspAnimBoneOrientation(const FRotator& InAngularOrientationTarget) : AngularOrientationTarget(InAngularOrientationTarget) {}
-
-	// Init Ctor
-	FMCGraspAnimBoneOrientation(const FRotator& InAngularOrientationTarget, const FRotator& InBoneSpaceRotation)
-		: AngularOrientationTarget(InAngularOrientationTarget), BoneSpaceRotation(InBoneSpaceRotation)
-	{}
 };
 
 // Contains all the bones data within a frame
@@ -44,9 +36,6 @@ struct FMCGraspAnimFrameData
 
 	// Default ctor
 	FMCGraspAnimFrameData() {}
-
-	// Init ctor
-	FMCGraspAnimFrameData(const TMap<FString, FMCGraspAnimBoneOrientation>& InFrameData) : BonesData(InFrameData) {}
 };
 
 /**
@@ -61,10 +50,6 @@ public:
 	//The name for this Animation
 	UPROPERTY(EditAnywhere, Category = "Grasp Controller")
 	FString Name;
-
-	//All bone names
-	UPROPERTY(EditAnywhere, Category = "Grasp Controller")
-	TArray<FString> BoneNames;
 
 	//All frames
 	UPROPERTY(EditAnywhere, Category = "Grasp Controller")

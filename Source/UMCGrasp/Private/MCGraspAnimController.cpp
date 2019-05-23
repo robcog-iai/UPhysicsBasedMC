@@ -2,7 +2,6 @@
 
 #include "MCGraspAnimController.h"
 #include "Animation/SkeletalMeshActor.h"
-#include "MCGraspAnimReader.h"
 
 // Sets default values for this component's properties
 UMCGraspAnimController::UMCGraspAnimController()
@@ -20,13 +19,14 @@ UMCGraspAnimController::UMCGraspAnimController()
 	InputNextAnimAction = "LeftNextGraspAnim";
 	InputPrevAnimAction = "LeftPrevGraspAnim";
 
-	SpringBase = 9000.f;
-	SpringMultiplier = 5.f;
+	SpringIdle = 9000.f;
+	SpringActiveMultiplier = 5.f;
 	Damping = 1000.f;
 	ForceLimit = 0.f;
-	CurrAnimIndex = 0;
+	ActiveAnimIndex = INDEX_NONE;
+	
+	
 	bGraspIsActive = false;
-
 	bFirstUpdate = true;
 	bGrasIsWaitingInQueue = false;
 }
@@ -36,8 +36,18 @@ void UMCGraspAnimController::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// Init component
-	Init();
+	// Check if the skeletal mesh is valid and animations are loaded
+	if (Init())
+	{
+		// Bind the user input to the callbacks
+		//SetupInputBindings();
+
+		// The active spring value is at least the value of the idle
+		SpringActive = SpringIdle;
+
+		// Go to the first animation mode
+		GotoFirstAnimation();
+	}
 }
 
 #if WITH_EDITOR
@@ -69,22 +79,10 @@ void UMCGraspAnimController::PostEditChangeProperty(struct FPropertyChangedEvent
 }
 #endif // WITH_EDITOR
 
-// Called before begin play
+// Init component, return false is something went wrong
 bool UMCGraspAnimController::Init()
 {
-	if (!LoadSkeletalMesh())
-	{
-		return false;
-	}
-
-	// Remove any unset references in the array
-	GraspAnimsDA.Remove(nullptr);
-
-	SetActiveGrasp();
-
-	SetupInputBindings();
-
-	return true;
+	return LoadSkeletalMesh() && LoadAnimationData();
 }
 
 // Prepare the skeletal mesh component physics and angular motors
@@ -109,13 +107,54 @@ bool UMCGraspAnimController::LoadSkeletalMesh()
 					Constraint->SetAngularVelocityDriveTwistAndSwing(false, false);
 					Constraint->SetAngularVelocityDriveSLERP(true);
 					Constraint->SetAngularDriveMode(EAngularDriveMode::SLERP);
-					Constraint->SetAngularDriveParams(SpringBase, Damping, ForceLimit);
+					Constraint->SetAngularDriveParams(SpringIdle, Damping, ForceLimit);
 				}
 				return true;
 			}
 		}
 	}
 	return false;
+}
+
+// Load the data from the animation data assets in a more optimized form, return true if at least one animation is loaded
+bool UMCGraspAnimController::LoadAnimationData()
+{	
+	// Remove any unset references in the array
+	AnimationDataAssets.Remove(nullptr);
+
+	for (const auto& Animation : AnimationDataAssets)
+	{
+		// Iterate frames from the animation
+		FAnimation CurrAnim;
+		for (const auto& Frame : Animation->Frames)
+		{
+			// Iterate data from the frame and cache it
+			FFrame CurrFrame;
+			for (const auto& BoneData : Frame.BonesData)
+			{
+				if (FConstraintInstance* CI = SkelComp->FindConstraintInstance(FName(*BoneData.Key)))
+				{
+					CurrFrame.Add(CI, BoneData.Value.AngularOrientationTarget);
+				}
+				else
+				{
+					UE_LOG(LogTemp, Error, TEXT("%s::%d Could not find constraint %s"), *FString(__func__), __LINE__, *BoneData.Key);
+				}
+			}
+			CurrAnim.Add(CurrFrame);
+		}
+		Animations.Add(CurrAnim);
+	}
+	return Animations.Num() > 0;
+}
+
+// Set first grasp animation
+void UMCGraspAnimController::GotoFirstAnimation()
+{
+	ActiveAnimIndex = 0;
+	ActiveAnimation = Animations[0];
+	SetTargetToIdle();
+	DriveToTarget();
 }
 
 // Bind user inputs for updating the grasps and switching the animations
@@ -125,9 +164,9 @@ void UMCGraspAnimController::SetupInputBindings()
 	{
 		if (UInputComponent* IC = PC->InputComponent)
 		{
-			IC->BindAxis(InputAxisName, this, &UMCGraspAnimController::Update);
-			IC->BindAction(InputNextAnimAction, IE_Pressed, this, &UMCGraspAnimController::NextAnim);
-			IC->BindAction(InputPrevAnimAction, IE_Pressed, this, &UMCGraspAnimController::PrevAnim);
+			IC->BindAxis(InputAxisName, this, &UMCGraspAnimController::GraspUpdateCallback);
+			IC->BindAction(InputNextAnimAction, IE_Pressed, this, &UMCGraspAnimController::GotoNextAnimationCallback);
+			IC->BindAction(InputPrevAnimAction, IE_Pressed, this, &UMCGraspAnimController::GotoPreviousAnimationCallback);
 		}
 		else
 		{
@@ -140,20 +179,40 @@ void UMCGraspAnimController::SetupInputBindings()
 	}
 }
 
+// Set the cached target to the first frame 
+void UMCGraspAnimController::SetTargetToIdle()
+{
+	DriveTarget = ActiveAnimation[0];
+}
+
+// Compute and set the cached target by interpolating between the two frames
+void UMCGraspAnimController::SetTargetUsingLerp(const FFrame& FrameA, const FFrame& FrameB, float Alpha)
+{
+	for (auto& DT : DriveTarget)
+	{
+		DT.Value = FMath::LerpRange(FrameA[DT.Key], FrameB[DT.Key], Alpha);
+	}
+}
+
+// Set the drive parameters to the cached target
+void UMCGraspAnimController::DriveToTarget()
+{
+	for (const auto& DT : DriveTarget)
+	{
+		DT.Key->SetAngularDriveParams(SpringActive, Damping, ForceLimit);
+		DT.Key->SetAngularOrientationTarget(DT.Value.Quaternion());
+	}
+}
+
+/* Input callbacks */
 // Forward the axis input value to the grasp animation executor
-void UMCGraspAnimController::Update(float Value)
+void UMCGraspAnimController::GraspUpdateCallback(float Value)
 {
 	// Ensures the hand goes into the initial frame when this is called the first time
 	if (bFirstUpdate)
 	{
-		if (ActiveAnimDA->Frames.IsValidIndex(0))
-		{
-			DriveToHandOrientationTarget(ActiveAnimDA->Frames[0]);
-		}
-		else
-		{
-			DriveToHandOrientationTarget(FMCGraspAnimFrameData());
-		}
+		SetTargetToIdle();
+		DriveToTarget();
 		bFirstUpdate = false;
 	}
 
@@ -165,10 +224,10 @@ void UMCGraspAnimController::Update(float Value)
 		}
 
 		// Calculate the new spring value of the motor
-		NewSpringValue = SpringBase * ((SpringMultiplier * Value) + 1);
+		SpringActive = SpringIdle + (SpringIdle * SpringActiveMultiplier * Value);
 
 		// Calculate step size relative to the number of frames in the animation
-		float StepSize = 1 / ((float) ActiveAnimDA->Frames.Num() - 1);
+		float StepSize = 1 / ((float) ActiveAnimation.Num() - 1);
 
 		// Calculates how many steps we have passed, given then current input
 		// When rounded down we know which step came before with this input
@@ -181,35 +240,13 @@ void UMCGraspAnimController::Update(float Value)
 		}
 
 		// Uses the float to int cast to round down
-		int32 StepIteratorCountInt = (int32)StepIteratorCountFloat;
+		int32 FrameIndex = (int32)StepIteratorCountFloat;
 
 		// We calculate how far the input is past the step that came before it
-		float Alpha = StepIteratorCountFloat - (float) StepIteratorCountInt;
+		float Alpha = StepIteratorCountFloat - (float) FrameIndex;
 
-		FMCGraspAnimFrameData Frame1;
-		if (ActiveAnimDA->Frames.IsValidIndex(StepIteratorCountInt))
-		{
-			Frame1 = ActiveAnimDA->Frames[StepIteratorCountInt];
-		}
-		else
-		{
-			UE_LOG(LogTemp, Error, TEXT("%s::%d"), *FString(__func__), __LINE__);
-		}
-
-		FMCGraspAnimFrameData Frame2;
-		if (ActiveAnimDA->Frames.IsValidIndex(StepIteratorCountInt + 1))
-		{
-			Frame2 = ActiveAnimDA->Frames[StepIteratorCountInt + 1];
-		}
-		else
-		{
-			UE_LOG(LogTemp, Error, TEXT("%s::%d"), *FString(__func__), __LINE__);
-		}
-
-		// Manipulate Orientation Drives
-		FMCGraspAnimFrameData TargetOrientation;
-		LerpHandOrientation(&TargetOrientation, Frame1, Frame2, Alpha);
-		DriveToHandOrientationTarget(TargetOrientation);
+		SetTargetUsingLerp(ActiveAnimation[FrameIndex], ActiveAnimation[FrameIndex + 1], Alpha);
+		DriveToTarget();
 	}
 	else
 	{
@@ -222,101 +259,50 @@ void UMCGraspAnimController::Update(float Value)
 }
 
 // Switch to the next grasp animation
-void UMCGraspAnimController::NextAnim()
+void UMCGraspAnimController::GotoNextAnimationCallback()
 {
-	if (CurrAnimIndex >= GraspAnimsDA.Num()-1)
+	if (ActiveAnimIndex >= AnimationDataAssets.Num()-1)
 	{
-		CurrAnimIndex = 0;
+		ActiveAnimIndex = 0;
 	}
 	else
 	{
-		CurrAnimIndex++;
+		ActiveAnimIndex++;
 	}
 	SetActiveGrasp();
 }
 
 // Switch to the previous animation
-void UMCGraspAnimController::PrevAnim()
+void UMCGraspAnimController::GotoPreviousAnimationCallback()
 {
-	if (CurrAnimIndex <= 0)
+	if (ActiveAnimIndex <= 0)
 	{
-		CurrAnimIndex = GraspAnimsDA.Num() - 1;
+		ActiveAnimIndex = AnimationDataAssets.Num() - 1;
 	} 
 	else 
 	{
-		CurrAnimIndex--;
+		ActiveAnimIndex--;
 	}
 	SetActiveGrasp();
 }
 
 
-void UMCGraspAnimController::LerpHandOrientation(FMCGraspAnimFrameData* OutTarget,
-	const FMCGraspAnimFrameData& Frame1,
-	const FMCGraspAnimFrameData& Frame2,
-	float Alpha)
-{
-	TArray<FString> TempArray;
-	Frame1.BonesData.GenerateKeyArray(TempArray);
-	for (FString S : TempArray) 
-	{
-		OutTarget->BonesData.Add(S, FMath::LerpRange(
-			Frame1.BonesData.Find(S)->AngularOrientationTarget,
-			Frame2.BonesData.Find(S)->AngularOrientationTarget, Alpha));
-
-		//OutTarget->Map.Add(S, FMath::Lerp(
-		//	StartFrame.Map.Find(S)->AngularOrientationTarget,
-		//	ClosedFrame.Map.Find(S)->AngularOrientationTarget, Input));
-	}
-}
-
-void UMCGraspAnimController::DriveToHandOrientationTarget(const FMCGraspAnimFrameData& TargetFrame)
-{
-	FConstraintInstance* Constraint = nullptr;
-	TArray<FString> TempArray;
-	TargetFrame.BonesData.GenerateKeyArray(TempArray);
-	for (FString S : TempArray) 
-	{
-		Constraint = BoneNameToConstraint(S);
-		if (Constraint) 
-		{
-			Constraint->SetAngularDriveParams(NewSpringValue, Damping, ForceLimit);
-			Constraint->SetAngularOrientationTarget(TargetFrame.BonesData.Find(S)->AngularOrientationTarget.Quaternion());
-		}
-	}
-}
-
-FConstraintInstance* UMCGraspAnimController::BoneNameToConstraint(FString BoneName)
-{
-	FConstraintInstance* Constraint = nullptr;
-
-	//finds the constraint responsible for moving this bone
-	for (FConstraintInstance* NewConstraint : SkelComp->Constraints)
-	{
-		if (NewConstraint->ConstraintBone1.ToString() == BoneName)
-		{
-			Constraint = NewConstraint;
-		}
-	}
-	return Constraint;
-}
 
 void UMCGraspAnimController::StopGrasping()
 {
 	// Stop Grasp
-	NewSpringValue = SpringBase;
-	if (ActiveAnimDA->Frames.IsValidIndex(0))
-	{
-		DriveToHandOrientationTarget(ActiveAnimDA->Frames[0]);
-	}
-	else
-	{
-		DriveToHandOrientationTarget(FMCGraspAnimFrameData());
-	}
+	SpringActive = SpringIdle;
+	//if (ActiveAnimDA->Frames.IsValidIndex(0))
+	//DriveToHandOrientationTarget(ActiveAnimDA->Frames[0]);
+
+	SetTargetToIdle();
+	DriveToTarget();
+
 
 	if (bGrasIsWaitingInQueue)
 	{
 		//ActiveAnim = QueuedAnim;
-		ActiveAnimDA = QueuedAnimDA;
+		//ActiveAnimDA = QueuedAnimDA;
 		bGrasIsWaitingInQueue = false;
 	}
 	bGraspIsActive = false;
@@ -327,9 +313,11 @@ void UMCGraspAnimController::SetActiveGrasp()
 	// if player is grasping put new grasp in queue, else change grasp immediately
 	if (bGraspIsActive)
 	{
-		QueuedAnimDA = GraspAnimsDA[CurrAnimIndex];
+		//QueuedAnimDA = AnimationDataAssets[ActiveAnimIndex];
 		bGrasIsWaitingInQueue = true;
 		return;
 	}
-	ActiveAnimDA = GraspAnimsDA[CurrAnimIndex];
+	//ActiveAnimDA = AnimationDataAssets[ActiveAnimIndex];
+
+
 }

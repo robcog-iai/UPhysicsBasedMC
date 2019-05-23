@@ -98,6 +98,20 @@ private:
 	// Apply the given frame to the debug mesh
 	void ApplyFrame(const FMCGraspAnimFrameData& Frame);
 
+	// Read frames from the data asset file
+	bool ReadFramesFromName(const FString& Name, TArray<FMCGraspAnimFrameData>& OutFrames);
+
+	// Find the grasp animation data asset, return nullptr if not found
+	UMCGraspAnimDataAsset* GetAnimGraspDataAsset(const FString& Name);
+
+	// Returns all GraspDataAssets that can be read
+	TArray<UMCGraspAnimDataAsset*> LoadAllAssets();
+
+	// Finds all the GraspDataAssets in a hardcoded folder
+	TArray<UMCGraspAnimDataAsset*> OnRegistryLoaded();
+
+
+	void WriteToDataAsset(const FString& InAnimName, const TArray<FString>& InBoneNames, const TArray<FMCGraspAnimFrameData>& InFrames);
 
 	FReply OnEditButtonClicked();
 	FReply OnSaveButtonClicked();
