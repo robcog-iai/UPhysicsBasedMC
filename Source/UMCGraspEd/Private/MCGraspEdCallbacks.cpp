@@ -3,22 +3,19 @@
 #include "MCGraspEdCallbacks.h"
 #include "Core.h"
 #include "Editor.h"
-#include "Runtime/Engine/Classes/Components/SkeletalMeshComponent.h"
+#include "Components/SkeletalMeshComponent.h"
 #include "MCGraspAnimReader.h"
 #include "MCGraspEdAnimWriter.h"
-#include "MCGraspAnimStructs.h"
-#include "Runtime/Engine/Classes/PhysicsEngine/ConstraintInstance.h"
-#include "Runtime/Slate/Public/Widgets/Input/SEditableText.h"
-#include "Editor/AnimGraph/Classes/AnimPreviewInstance.h"
-#include "Editor/MainFrame/Public/Interfaces/IMainFrameModule.h"
-#include "Runtime/Slate/Public/Framework/Application/SlateApplication.h"
-#include "Runtime/Slate/Public/Widgets/Text/STextBlock.h"
-#include "Runtime/Slate/Public/Widgets/Input/SButton.h"
-#include "Runtime/Slate/Public/Widgets/Input/SEditableTextBox.h"
-#include <thread>
+#include "PhysicsEngine/ConstraintInstance.h"
+#include "Widgets/Input/SEditableText.h"
+#include "AnimPreviewInstance.h"
+#include "Interfaces/IMainFrameModule.h"
+#include "Framework/Application/SlateApplication.h"
+#include "Widgets/Text/STextBlock.h"
+#include "Widgets/Input/SButton.h"
+#include "Widgets/Input/SEditableTextBox.h"
 
 #define LOCTEXT_NAMESPACE "FMCGraspingEditorModule"
-
 
 UMCGraspEdCallbacks::UMCGraspEdCallbacks()
 {
@@ -59,7 +56,7 @@ void UMCGraspEdCallbacks::ShowFrameEditWindow()
 					.Content()
 					[
 							SAssignNew(ButtonLabel, STextBlock)
-							.Text(FText::FromString(TEXT("Load Frame")))				
+							.Text(FText::FromString(TEXT("Load Frame")))
 						]
 
 					]
@@ -151,7 +148,7 @@ void UMCGraspEdCallbacks::SaveBoneDatasAsFrame()
 	//go over each constraint in the skeleton. bone1 is the one affected by it 
 	for (FConstraintInstance* NewConstraint : DebugMeshComponent->Constraints)
 	{
-		FMCGraspAnimBoneData NewBoneData = FMCGraspAnimBoneData();
+		FMCGraspAnimBoneOrientation NewBoneData = FMCGraspAnimBoneOrientation();
 
 		// Gets BoneSpaceRotation from CurrentBoneSpaceRotations
 		FRotator *InBoneSpaceRotation = CurrentBoneSpaceRotations.Find(NewConstraint->ConstraintBone1.ToString());
@@ -183,7 +180,7 @@ void UMCGraspEdCallbacks::SaveBoneDatasAsFrame()
 
 		CalculatedBoneRotations.Add(NewConstraint->ConstraintBone1.ToString(), (Quat.Rotator()));
 
-		NewFrameData.Map.Add(NewConstraint->ConstraintBone1.ToString(), NewBoneData);
+		NewFrameData.BonesData.Add(NewConstraint->ConstraintBone1.ToString(), NewBoneData);
 	}
 
 	//Checks if there is a need to create a new animation data.
@@ -206,6 +203,7 @@ void UMCGraspEdCallbacks::WriteFramesToAsset()
 {
 	//You need at least 2 frames to create a DataAsset
 	if (NewGraspAnimData.Frames.Num() < 2) 
+	//if (NewFrames.Num() < 2)
 	{
 		ShowMessageBox(FText::FromString("Error"), FText::FromString("You did not create enough frames. A grasping animation needs at least 2 frames."));
 		return;
@@ -213,9 +211,11 @@ void UMCGraspEdCallbacks::WriteFramesToAsset()
 
 	//Save all frames under the given name and reset all boolean etc.
 	UMCGraspEdAnimWriter Write = UMCGraspEdAnimWriter();
-	NewGraspAnimData.Name = NewGraspAnim;
-	Write.WriteToDataAsset(NewGraspAnimData);
-	NewGraspAnimData = FMCGraspAnimData();
+	//NewGraspAnimData.Name = NewGraspAnimName;
+	//Write.WriteToDataAsset(NewGraspAnimData);
+	Write.WriteToDataAsset2(NewGraspAnimName,NewBoneNames, NewFrames);
+	//NewGraspAnimData = FMCGraspAnimData(); // this should be the reset. todo add .Reset();
+	NewFrames.Empty();
 	bFirstCreatedFrameData = false;
 
 	ShowMessageBox(FText::FromString("Saved grasp"), FText::FromString("Grasp was saved as a DataAsset into the GraspingAnimations folder."));
@@ -223,13 +223,18 @@ void UMCGraspEdCallbacks::WriteFramesToAsset()
 
 void UMCGraspEdCallbacks::EditLoadedGraspAnim()
 {
-	if (CurrentGraspEdited.IsEmpty())
+	if (CurrGraspName.IsEmpty())
 	{
 		ShowMessageBox(FText::FromString("Error"), FText::FromString("Could not edit grasping animation. You did not load any grasping animation."));
 		return;
 	}
 	
-	FMCGraspAnimData GraspDataToEdit = UMCGraspAnimReader::ReadFile(CurrentGraspEdited);
+	UMCGraspAnimDataAsset* GraspDataAssetToEdit = UMCGraspAnimReader::GetAnimGraspDataAsset(CurrGraspName);
+	if (!GraspDataAssetToEdit)
+	{
+		ShowMessageBox(FText::FromString("Error"), FText::FromString("Could not find the grasp animation."));
+	}
+	
 
 	FMCGraspAnimFrameData NewFrameData;
 
@@ -247,7 +252,7 @@ void UMCGraspEdCallbacks::EditLoadedGraspAnim()
 	//go over each constraint in the skeleton. bone1 is the one affected by it 
 	for (FConstraintInstance* NewConstraint : DebugMeshComponent->Constraints)
 	{
-		FMCGraspAnimBoneData NewBoneData = FMCGraspAnimBoneData();
+		FMCGraspAnimBoneOrientation NewBoneData = FMCGraspAnimBoneOrientation();
 		//get the rotation of bones
 		FQuat QuatBone1 = DebugMeshComponent->GetBoneQuaternion(NewConstraint->ConstraintBone1, EBoneSpaces::ComponentSpace);
 		FQuat QuatBone2 = DebugMeshComponent->GetBoneQuaternion(NewConstraint->ConstraintBone2, EBoneSpaces::ComponentSpace);
@@ -262,10 +267,10 @@ void UMCGraspEdCallbacks::EditLoadedGraspAnim()
 		//substract the change in bone2's rotation, so movements of parent bones are filtered out of bone1's rotation 
 		FQuat Quat = Quat1Difference * Quat2Difference.Inverse();
 		NewBoneData.AngularOrientationTarget = Quat.Rotator();
-		NewFrameData.Map.Add(NewConstraint->ConstraintBone1.ToString(), NewBoneData);
+		NewFrameData.BonesData.Add(NewConstraint->ConstraintBone1.ToString(), NewBoneData);
 	}
 
-	GraspDataToEdit.Frames[CurrEditFrameIndex] = NewFrameData;
+	GraspDataAssetToEdit->Frames[CurrEditFrameIndex] = NewFrameData;
 
 
 	////Show an error message if the frame could not get overwritten.
@@ -275,10 +280,10 @@ void UMCGraspEdCallbacks::EditLoadedGraspAnim()
 	//	return;
 	//}
 
-	UMCGraspEdAnimWriter::WriteToDataAsset(GraspDataToEdit);
-	ShowMessageBox(FText::FromString("Edited grasp"), FText::FromString("The grasp was successfully edited."));
+	//UMCGraspEdAnimWriter::WriteToDataAsset(GraspDataToEdit);
+	ShowMessageBox(FText::FromString("Edited grasp"), FText::FromString("The grasp was successfully edited. (TODO test this)"));
 	//Reloads the saved step.
-	ChangeBoneRotationsTo(CurrentGraspEdited, CurrEditFrameIndex);
+	ChangeBoneRotationsTo(CurrGraspName, CurrEditFrameIndex);
 }
 
 TMap<FName, FRotator> UMCGraspEdCallbacks::GetBoneRotations(USkeletalMeshComponent * SkeletalComponent)
@@ -308,30 +313,34 @@ void UMCGraspEdCallbacks::CreateAnimationData(TMap<FString, FRotator> FrameData)
 	for (auto& Elem : FrameData)
 	{
 		NewGraspAnimData.BoneNames.Add(Elem.Key);
+		NewBoneNames.Add(Elem.Key);
 	}
 }
 
-void UMCGraspEdCallbacks::ChangeBoneRotationsTo(FString GraspAnim, int FrameToEdit)
+void UMCGraspEdCallbacks::ChangeBoneRotationsTo(const FString& GraspAnimName, int32 FrameIndex)
 {
-	DebugMeshComponent->SkeletalMesh->Modify();
-	DebugMeshComponent->PreviewInstance->ResetModifiedBone();
-	FMCGraspAnimData GraspDataToReadFrom = UMCGraspAnimReader::ReadFile(GraspAnim);
+	TArray<FMCGraspAnimFrameData> Frames;
+	if (UMCGraspAnimReader::ReadFramesFromName(GraspAnimName, Frames))
+	{
+		if (Frames.IsValidIndex(FrameIndex))
+		{
+			DebugMeshComponent->SkeletalMesh->Modify();
+			DebugMeshComponent->PreviewInstance->ResetModifiedBone();
 
-	//Show an error message if one of the parameter are wrong.
-	if (GraspDataToReadFrom.Name == "") {
+			ApplyFrame(Frames[FrameIndex]);
+
+			DebugMeshComponent->PreviewInstance->SetForceRetargetBasePose(true);
+		}
+		else
+		{
+			ShowMessageBox(FText::FromString("Error"), FText::FromString("You typed in a frame that does not exists. Change the frame to edit and try again."));
+			return;
+		}
+	}
+	else
+	{
 		ShowMessageBox(FText::FromString("Error"), FText::FromString("The chosen grasp does not exist. Make sure the value exists and try again."));
-		return;
 	}
-
-	if (FrameToEdit < 0) {
-		ShowMessageBox(FText::FromString("Error"), FText::FromString("You typed in a frame that does not exists. Change the frame to edit and try again."));
-		return;
-	}
-	
-	//Replace the current rotations with the rotations at the given step.
-	ApplyBoneDataForIndex(GraspDataToReadFrom, FrameToEdit);
-	
-	DebugMeshComponent->PreviewInstance->SetForceRetargetBasePose(true);
 }
 
 void UMCGraspEdCallbacks::ShowInstructions(FString Message)
@@ -339,12 +348,12 @@ void UMCGraspEdCallbacks::ShowInstructions(FString Message)
 	ShowMessageBox(FText::FromString("Help"), FText::FromString(Message));
 }
 
-void UMCGraspEdCallbacks::PlayOneFrame(TMap<FString, FVector> BoneStartLocations, FMCGraspAnimData PlayData, int Index)
+void UMCGraspEdCallbacks::PlayOneFrame(TMap<FString, FVector> BoneStartLocations, TArray<FMCGraspAnimFrameData> Frames, int32 Index)
 {
 	DebugMeshComponent->SkeletalMesh->Modify();
 
-	//Replace the current rotations with the rotations at the given step.
-	ApplyBoneDataForIndex(PlayData, Index);
+	//Replace the current rotations with the rotations at the given step.	
+	ApplyFrame(Frames[Index]);
 
 	DebugMeshComponent->PreviewInstance->SetForceRetargetBasePose(true);
 }
@@ -358,10 +367,12 @@ void UMCGraspEdCallbacks::DiscardAllFrames()
 
 void UMCGraspEdCallbacks::ShowFrame(bool bForward)
 {
-	FMCGraspAnimData HandAnimationData = UMCGraspAnimReader::ReadFile(CurrentGraspEdited);
-	int MaxFrames = HandAnimationData.Frames.Num() - 1;
+	TArray<FMCGraspAnimFrameData> Frames;
+	UMCGraspAnimReader::ReadFramesFromName(CurrGraspName, Frames);
+
+	int32 LastFrameIndex = Frames.Num() - 1;
 	DebugMeshComponent->SkeletalMesh->Modify();
-	int BoneNamesIndex = 0;
+	int32 BoneNamesIndex = 0;
 	TArray<FName> BoneNames;
 	DebugMeshComponent->GetBoneNames(BoneNames);
 	TArray<FTransform> BoneSpaceTransforms = DebugMeshComponent->BoneSpaceTransforms;
@@ -376,7 +387,7 @@ void UMCGraspEdCallbacks::ShowFrame(bool bForward)
 	//Determines the next step to show
 	if (bForward) 
 	{
-		if (CurrEditFrameIndex == MaxFrames)
+		if (CurrEditFrameIndex == LastFrameIndex)
 		{
 			CurrEditFrameIndex = 0;
 		}
@@ -389,7 +400,7 @@ void UMCGraspEdCallbacks::ShowFrame(bool bForward)
 	{
 		if (CurrEditFrameIndex == 0)
 		{
-			CurrEditFrameIndex = MaxFrames;
+			CurrEditFrameIndex = LastFrameIndex;
 		}
 		else 
 		{
@@ -398,7 +409,7 @@ void UMCGraspEdCallbacks::ShowFrame(bool bForward)
 	}
 
 	//Show next step.
-	PlayOneFrame(BoneStartLocations, HandAnimationData, CurrEditFrameIndex);
+	PlayOneFrame(BoneStartLocations, Frames, CurrEditFrameIndex);
 }
 
 void UMCGraspEdCallbacks::Reset()
@@ -407,8 +418,8 @@ void UMCGraspEdCallbacks::Reset()
 	StartBoneLocBoneSpace.Empty();
 	StartBoneTransCompSpace.Empty();
 	CurrEditFrameIndex = 0;
-	CurrentGraspEdited = "";
-	NewGraspAnim = "";
+	CurrGraspName = "";
+	NewGraspAnimName = "";
 	bFirstCreatedFrameData = false;
 }
 
@@ -443,35 +454,38 @@ void UMCGraspEdCallbacks::SaveStartTransforms()
 	bSavedStartTransforms = true;
 }
 
-void UMCGraspEdCallbacks::ApplyBoneDataForIndex(const FMCGraspAnimData& Anim, int32 Index)
-{
-	FMCGraspAnimFrameData AnimFrame = Anim.Frames[Index];
 
-	//Apply the rotations at a given step for the given AnimationData on the DebugMeshComponent
-	for (auto BoneDataEntry : AnimFrame.Map)
+void UMCGraspEdCallbacks::ApplyFrame(const FMCGraspAnimFrameData& Frame)
+{
+	for (const auto& BoneData : Frame.BonesData)
 	{
-		FRotator BoneData = BoneDataEntry.Value.BoneSpaceRotation;
-		FRotator SwitchYawPitch = FRotator(BoneData.Pitch, BoneData.Yaw, BoneData.Roll);
-		int32 BoneIndex = DebugMeshComponent->GetBoneIndex(FName(*BoneDataEntry.Key));
-		FVector* OldBoneLocation = StartBoneLocBoneSpace.Find(BoneDataEntry.Key);
-		DebugMeshComponent->SkeletalMesh->RetargetBasePose[BoneIndex] = FTransform(BoneData, *OldBoneLocation);
+		const FRotator SpaceRotation = BoneData.Value.BoneSpaceRotation;
+		int32 BoneIndex = DebugMeshComponent->GetBoneIndex(FName(*BoneData.Key));
+		if (FVector* OldBoneLocation = StartBoneLocBoneSpace.Find(BoneData.Key))
+		{
+			DebugMeshComponent->SkeletalMesh->RetargetBasePose[BoneIndex] = FTransform(SpaceRotation, *OldBoneLocation);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("%s::%d Could not find bone %s"), *FString(__func__), __LINE__, *BoneData.Key);
+		}
 	}
 }
 
 FReply UMCGraspEdCallbacks::OnEditButtonClicked()
 {
-	CurrentGraspEdited = GraspAnimBox->GetText().ToString();
+	CurrGraspName = GraspAnimBox->GetText().ToString();
 	FText FrameToEdit = FrameBox->GetText();
 	CurrEditFrameIndex = FCString::Atoi(*FrameToEdit.ToString());
 
 	//Changes bone rotations to the given step for the given grasping stlye
-	ChangeBoneRotationsTo(CurrentGraspEdited, CurrEditFrameIndex);
+	ChangeBoneRotationsTo(CurrGraspName, CurrEditFrameIndex);
 	return FReply::Handled();
 }
 
 FReply UMCGraspEdCallbacks::OnSaveButtonClicked()
 {
-	NewGraspAnim = NewGraspAnimNameBox->GetText().ToString();
+	NewGraspAnimName = NewGraspAnimNameBox->GetText().ToString();
 
 	//Saves a new grasp anim under the name given name
 	WriteFramesToAsset();

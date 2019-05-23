@@ -4,13 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "Engine/DataAsset.h"
-#include "MCGraspAnimStructs.h"
 #include "MCGraspAnimDataAsset.generated.h"
-
 
 // Angular drive and editor rotation data for a bone in a given frame
 USTRUCT()
-struct FMCGraspAnimBoneData
+struct FMCGraspAnimBoneOrientation
 {
 	GENERATED_BODY()
 
@@ -20,16 +18,16 @@ struct FMCGraspAnimBoneData
 
 	// Array of local-space (relative to parent bone) rotation for each bone. Used for loading the animation in the editor
 	UPROPERTY(EditAnywhere, Category = "Grasp Controller")
-		FRotator BoneSpaceRotation;
+	FRotator BoneSpaceRotation;
 
 	// Default ctor
-	FMCGraspAnimBoneData() {}
+	FMCGraspAnimBoneOrientation() {}
 
 	// Init Ctor with AngularOrientationTarget
-	FMCGraspAnimBoneData(const FRotator& InAngularOrientationTarget) : AngularOrientationTarget(InAngularOrientationTarget) {}
+	FMCGraspAnimBoneOrientation(const FRotator& InAngularOrientationTarget) : AngularOrientationTarget(InAngularOrientationTarget) {}
 
 	// Init Ctor
-	FMCGraspAnimBoneData(const FRotator& InAngularOrientationTarget, const FRotator& InBoneSpaceRotation)
+	FMCGraspAnimBoneOrientation(const FRotator& InAngularOrientationTarget, const FRotator& InBoneSpaceRotation)
 		: AngularOrientationTarget(InAngularOrientationTarget), BoneSpaceRotation(InBoneSpaceRotation)
 	{}
 };
@@ -42,13 +40,13 @@ struct FMCGraspAnimFrameData
 
 	// Frame data, mapping from the bone name to their rotational data
 	UPROPERTY(EditAnywhere, Category = "Grasp Controller")
-	TMap<FString, FMCGraspAnimBoneData> Map;
+	TMap<FString, FMCGraspAnimBoneOrientation> BonesData;
 
 	// Default ctor
 	FMCGraspAnimFrameData() {}
 
 	// Init ctor
-	FMCGraspAnimFrameData(const TMap<FString, FMCGraspAnimBoneData>& InFrameData) : Map(InFrameData) {}
+	FMCGraspAnimFrameData(const TMap<FString, FMCGraspAnimBoneOrientation>& InFrameData) : BonesData(InFrameData) {}
 };
 
 // Contains the data of a grasp animation
@@ -63,18 +61,18 @@ struct FMCGraspAnimData
 
 	// Bone names
 	UPROPERTY(EditAnywhere, Category = "Grasp Controller")
-		TArray<FString> BoneNames;
+	TArray<FString> BoneNames;
 
 	// The animation frames
 	UPROPERTY(EditAnywhere, Category = "Grasp Controller")
-		TArray<FMCGraspAnimFrameData> Frames;
+	TArray<FMCGraspAnimFrameData> Frames;
 
 	// Default ctor
 	FMCGraspAnimData() {}
 };
 
 /**
- * 
+ * Contains the data of a grasp animation
  */
 UCLASS()
 class UMCGRASP_API UMCGraspAnimDataAsset : public UDataAsset
@@ -83,14 +81,14 @@ class UMCGRASP_API UMCGraspAnimDataAsset : public UDataAsset
 
 public:
 	//The name for this Animation
-	UPROPERTY(EditAnywhere)
-	FString AnimationName;
+	UPROPERTY(EditAnywhere, Category = "Grasp Controller")
+	FString Name;
 
 	//All bone names
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Grasp Controller")
 	TArray<FString> BoneNames;
 
 	//All frames
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Grasp Controller")
 	TArray<FMCGraspAnimFrameData> Frames;
 };

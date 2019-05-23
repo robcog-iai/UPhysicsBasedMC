@@ -3,30 +3,42 @@
 #include "MCGraspAnimReader.h"
 #include "ConfigCacheIni.h"
 #include "Runtime/CoreUObject/Public/UObject/Package.h"
-#include "Runtime/AssetRegistry/Public/AssetRegistryModule.h"
-#include "Runtime/Engine/Classes/Engine/ObjectLibrary.h"
+#include "AssetRegistry/Public/AssetRegistryModule.h"
+#include "Engine/ObjectLibrary.h"
 
-FMCGraspAnimData UMCGraspAnimReader::ReadFile(const FString& Name)
+// Get data asset, returns nullptr if not found
+UMCGraspAnimDataAsset* UMCGraspAnimReader::GetAnimGraspDataAsset(const FString& Name)
 {
-	FMCGraspAnimData DataStruct = FMCGraspAnimData();
-
 	for (UMCGraspAnimDataAsset* DataAsset : LoadAllAssets())
 	{
-		if (DataAsset->AnimationName == Name)
+		if (DataAsset->Name.Equals(Name))
 		{
-			DataStruct = ConvertAssetToStruct(DataAsset);
-			break;
+			return DataAsset;
 		}
 	}
+	return nullptr;
+}
 
-	return DataStruct;
+
+// Read frames from the data asset file
+bool UMCGraspAnimReader::ReadFramesFromName(const FString& Name, TArray<FMCGraspAnimFrameData>& OutFrames)
+{
+	for (UMCGraspAnimDataAsset* DataAsset : LoadAllAssets())
+	{
+		if (DataAsset->Name.Equals(Name))
+		{
+			OutFrames = DataAsset->Frames;
+			return true;
+		}
+	}
+	return false;
 }
 
 FMCGraspAnimData UMCGraspAnimReader::ConvertAssetToStruct(const UMCGraspAnimDataAsset* DataAsset)
 {
 	FMCGraspAnimData DataStruct;
 
-	DataStruct.Name = DataAsset->AnimationName;
+	DataStruct.Name = DataAsset->Name;
 	for (FString BoneName : DataAsset->BoneNames)
 	{
 		DataStruct.BoneNames.Add(BoneName);
@@ -45,6 +57,7 @@ TArray<UMCGraspAnimDataAsset*> UMCGraspAnimReader::LoadAllAssets()
 	IAssetRegistry& AssetRegistry = AssetRegistryModule.Get();
 	while(AssetRegistry.IsLoadingAssets()) 
 	{
+		UE_LOG(LogTemp, Error, TEXT("%s::%d Loading.."), *FString(__func__), __LINE__);
 	}
 
 	return OnRegistryLoaded();

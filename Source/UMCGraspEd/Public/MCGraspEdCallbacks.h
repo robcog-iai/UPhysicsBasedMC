@@ -7,7 +7,6 @@
 #include "Editor/UnrealEd/Classes/Animation/DebugSkelMeshComponent.h"
 #include "Runtime/Slate/Public/Widgets/Text/STextBlock.h"
 #include "Runtime/Slate/Public/Widgets/Input/SEditableTextBox.h"
-#include "MCGraspAnimStructs.h"
 
 /**
  * 
@@ -58,7 +57,7 @@ public:
 	* @param GraspAnim the stlye to load.
 	* @param StepToEdit the steps that should get displayed in the preview scene.
 	*/
-	void ChangeBoneRotationsTo(FString GraspAnim, int StepToEdit);
+	void ChangeBoneRotationsTo(const FString& GraspAnimName, int32 FrameIndex);
 
 	/*
 	* Shows a help windows with the given message.
@@ -72,7 +71,7 @@ public:
 	* @param PlayData The AnimationData for a grasping stlye.
 	* @param Index The index of the frame that should get displayed.
 	*/
-	void PlayOneFrame(TMap<FString, FVector> BoneStartLocations, FMCGraspAnimData PlayData, int Index);
+	void PlayOneFrame(TMap<FString, FVector> BoneStartLocations, TArray<FMCGraspAnimFrameData> Frames, int32 Index);
 
 	/*
 	* Discards all currently recorded frames.
@@ -94,12 +93,24 @@ public:
 	void SaveStartTransforms();
 
 private:
+	void ShowMessageBox(FText Title, FText Message);
+
+	// Apply the given frame to the debug mesh
+	void ApplyFrame(const FMCGraspAnimFrameData& Frame);
+
+
+	FReply OnEditButtonClicked();
+	FReply OnSaveButtonClicked();
 
 	// Current mesh in the editor 
 	UDebugSkelMeshComponent* DebugMeshComponent;
 
 	// Our new grasp anim struct 
 	FMCGraspAnimData NewGraspAnimData = FMCGraspAnimData();
+	TArray<FMCGraspAnimFrameData> NewFrames;
+
+	TArray<FString> NewBoneNames;
+
 
 	/**
 	* All the bones start transforms in component space.
@@ -115,13 +126,6 @@ private:
 	//Creates a map with the names of the bones as FName and their current rotations as FRotator for a given USkeletalMeshComponent.
     TMap<FName, FRotator> GetBoneRotations(USkeletalMeshComponent*  SkeletalComponent);
 
-	void ShowMessageBox(FText Title, FText Message);
-
-	void ApplyBoneDataForIndex(const FMCGraspAnimData& Anim, int32 Index);
-
-	FReply OnEditButtonClicked();
-	FReply OnSaveButtonClicked();
-
 	//The buttons / editable textboxes displayed in the windows.
 	TSharedPtr<STextBlock> ButtonLabel;
 	TSharedPtr<SEditableTextBox> NewGraspAnimNameBox;
@@ -129,11 +133,11 @@ private:
 	TSharedPtr<SEditableTextBox> FrameBox;
 
 	bool bFirstCreatedFrameData = false;
-	FString NewGraspAnim = "";
+	FString NewGraspAnimName = "";
 	bool bSavedStartTransforms = false;
 
 	int32 CurrEditFrameIndex = 0;
-	FString CurrentGraspEdited = "";
+	FString CurrGraspName = "";
 
 	bool bContinuePlayGrasp = true;
 };

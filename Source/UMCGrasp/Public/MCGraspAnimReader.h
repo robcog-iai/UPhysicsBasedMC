@@ -3,9 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "MCGraspAnimStructs.h"
-#include "Runtime/Core/Public/HAL/PlatformFilemanager.h"
-#include "Runtime/Core/Public/Misc/LocalTimestampDirectoryVisitor.h"
+#include "HAL/PlatformFilemanager.h"
+#include "Misc/LocalTimestampDirectoryVisitor.h"
 #include "MCGraspAnimDataAsset.h"
 
 /**
@@ -14,9 +13,11 @@
 class UMCGRASP_API UMCGraspAnimReader
 {
 public:
-	
-	// Finds grasp from animation name. 
-	static FMCGraspAnimData ReadFile(const FString& Name);
+	// Read frames from the data asset file
+	static bool ReadFramesFromName(const FString& Name, TArray<FMCGraspAnimFrameData>& OutFrames);
+
+	// Find the grasp animation data asset, return nullptr if not found
+	static UMCGraspAnimDataAsset* GetAnimGraspDataAsset(const FString& Name);
 
 	// Converts grasp DataAssets into grasp structs
 	static FMCGraspAnimData ConvertAssetToStruct(const UMCGraspAnimDataAsset* DataAsset);

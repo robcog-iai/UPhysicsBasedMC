@@ -13,7 +13,7 @@ void UMCGraspEdAnimWriter::WriteToDataAsset(const FMCGraspAnimData& DataStruct)
 	// If asset alread exists, edit it
 	for (UMCGraspAnimDataAsset* DataAsset : UMCGraspAnimReader::LoadAllAssets())
 	{
-		if (DataAsset->AnimationName == DataStruct.Name)
+		if (DataAsset->Name == DataStruct.Name)
 		{
 			DataAsset->BoneNames = TArray<FString>();
 			for (FString BoneName : DataStruct.BoneNames)
@@ -34,3 +34,19 @@ void UMCGraspEdAnimWriter::WriteToDataAsset(const FMCGraspAnimData& DataStruct)
 
 	Factory->AddGraspDataAsset(DataStruct);
 }
+
+void UMCGraspEdAnimWriter::WriteToDataAsset2(const FString& InAnimName, const TArray<FString>& InBoneNames, const TArray<FMCGraspAnimFrameData>& InFrames)
+{
+	if (UMCGraspAnimDataAsset* DataAsset = UMCGraspAnimReader::GetAnimGraspDataAsset(InAnimName))
+	{
+		DataAsset->Name = InAnimName;
+		DataAsset->BoneNames = InBoneNames;
+		DataAsset->Frames = InFrames;	
+	}
+	else
+	{
+		UMCGraspEdAnimDataAssetFactory* GraspAnimFactory = NewObject<UMCGraspEdAnimDataAssetFactory>();
+		GraspAnimFactory->AddGraspDataAsset2(InAnimName, InBoneNames, InFrames);
+	}
+}
+

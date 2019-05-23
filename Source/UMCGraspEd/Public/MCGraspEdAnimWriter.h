@@ -5,7 +5,6 @@
 #include "CoreMinimal.h"
 #include "HAL/PlatformFilemanager.h"
 #include "Misc/LocalTimestampDirectoryVisitor.h"
-#include "MCGraspAnimStructs.h"
 #include "MCGraspAnimDataAsset.h"
 
 /**
@@ -16,4 +15,6 @@ class UMCGraspEdAnimWriter
 public:
 	// Overwrites or creates DataAsset for a specific grasp
 	static void WriteToDataAsset(const FMCGraspAnimData& DataStruct);
+
+	static void WriteToDataAsset2(const FString& InAnimName, const TArray<FString>& InBoneNames, const TArray<FMCGraspAnimFrameData>& InFrames);
 };

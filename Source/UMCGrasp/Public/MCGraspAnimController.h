@@ -6,7 +6,6 @@
 #include "Components/ActorComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "MCGraspAnimDataAsset.h"
-#include "MCGraspAnimStructs.h"
 #include "MCGraspAnimController.generated.h"
 
 /**
@@ -46,9 +45,6 @@ private:
 
 	// Prepare the skeletal mesh component physics and angular motors
 	bool LoadSkeletalMesh();
-
-	// Convert the animation grasps into controller friendly values
-	bool LoadAnimGrasps();
 
 	// Bind user inputs for updating the grasps and switching the animations
 	void SetupInputBindings();
@@ -117,7 +113,7 @@ private:
 
 	// An array the user can fill with grasps they want to use
 	UPROPERTY(EditAnywhere, Category = "Grasp Controller")
-	TArray<UMCGraspAnimDataAsset*> AnimGraspDataAssets;
+	TArray<UMCGraspAnimDataAsset*> GraspAnimsDA;
 
 	// Minimum spring value
 	UPROPERTY(EditAnywhere, Category = "Grasp Controller")
@@ -134,15 +130,12 @@ private:
 	// Force limit, 0 means no limit. 
 	UPROPERTY(EditAnywhere, Category = "Grasp Controller")
 	float ForceLimit;
-	
-	// Controller friendly conversion of the animation grasps
-	TArray<FMCGraspAnimData> GraspAnims;
 
 	// Skeletal mesh to apply the animation on
 	USkeletalMeshComponent* SkelComp;
 
 	// Currently active grasp animation index
-	int32 CurrAnimGraspIndex;
+	int32 CurrAnimIndex;
 
 	// Flag showing inf the grasp is ongoing
 	bool bGraspIsActive;
@@ -154,11 +147,11 @@ private:
 
 
 	// Current grasp loaded into hand
-	FMCGraspAnimData ActiveGraspAnim;
+	UMCGraspAnimDataAsset* ActiveAnimDA;
 
 	// When changing grasp type while grasping, the new grasp isn't applied immediately
 	// Instead it is saved in this variable and applied once the user stops grasping 
-	FMCGraspAnimData QueuedGrasAnim;
+	UMCGraspAnimDataAsset* QueuedAnimDA;
 
 	// Set to true when there is a grasp waiting to be applied
 	bool bGrasIsWaitingInQueue;
