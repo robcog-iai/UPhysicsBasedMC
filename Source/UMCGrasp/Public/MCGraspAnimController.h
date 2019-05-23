@@ -40,8 +40,12 @@ protected:
 #endif // WITH_EDITOR
 
 private:
-	// Init the component, return false is something went wrong
-	bool Init();
+	// Frame and array of frames (animation)
+	typedef TMap<FConstraintInstance*, FRotator> FFrame;
+	typedef TArray<FFrame> FAnimation;
+
+	// Init the component
+	void Init();
 
 	// Prepare the skeletal mesh component physics and angular motors
 	bool LoadSkeletalMesh();
@@ -49,20 +53,23 @@ private:
 	// Load the data from the animation data assets in a more optimized form, return true if at least one animation is loaded
 	bool LoadAnimationData();
 
-	// Set first grasp animation
-	void GotoFirstAnimation();
+	// Set the motors target value to the first frame
+	void DriveToFirstFrame();
+
+	// Set the motors target value to the final frame
+	void DriveToLastFrame();
 
 	// Bind user inputs for updating the grasps and switching the animations
 	void SetupInputBindings();
 
-	// Set the cached target to the first frame 
-	void SetTargetToIdle();
-
 	// Compute and set the cached target by interpolating between the two frames
-	void SetTargetUsingLerp(const TMap<FConstraintInstance*, FRotator>& FrameA, const TMap<FConstraintInstance*, FRotator>& FrameB, float Alpha);
+	void SetTargetUsingLerp(const FFrame& FrameA, const FFrame& FrameB, float Alpha);
 
 	// Set the drive parameters to the cached target
 	void DriveToTarget();
+
+	// Calculate the active frame relative to the input value (0 - 1)
+	int32 GetActiveFrameIndex(float Value);
 
 	/* Input callbacks */
 	// Update the grasp animation from the trigger input
@@ -73,13 +80,6 @@ private:
 
 	// Switch to the previous animation
 	void GotoPreviousAnimationCallback();
-
-
-	// Stops the grasping process and resets the booleans that were changed
-	void StopGrasping();
-
-	// Loads the current grasp data from the data asset
-	void SetActiveGrasp();
 
 private:
 #if WITH_EDITOR
@@ -100,17 +100,13 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Grasp Controller")
 	FName InputPrevAnimAction;
 
-	// An array the user can fill with grasps they want to use
-	UPROPERTY(EditAnywhere, Category = "Grasp Controller")
-	TArray<UMCGraspAnimDataAsset*> AnimationDataAssets;
-
 	// Idle spring value (used to keep the fingers steady when the trigger is released)
 	UPROPERTY(EditAnywhere, Category = "Grasp Controller")
 	float SpringIdle;
 
-	// Multiply the spring value relative to the trigger pressed value
+	// You can use this to increase the grasp strength proportionally with the input
 	UPROPERTY(EditAnywhere, Category = "Grasp Controller")
-	float SpringActiveMultiplier;
+	float SpringInputScale;
 
 	// Damping value
 	UPROPERTY(EditAnywhere, Category = "Grasp Controller")
@@ -120,50 +116,38 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Grasp Controller")
 	float ForceLimit;
 
+	// An array the user can fill with grasps they want to use
+	UPROPERTY(EditAnywhere, Category = "Grasp Controller")
+	TArray<UMCGraspAnimDataAsset*> AnimationDataAssets;
+
+	// Spring value during the actual grasp, this increases with the trigger input value
+	float SpringActive;
+
 	// Skeletal mesh to apply the animation on
 	USkeletalMeshComponent* SkelComp;
 
+	// Currently active grasp animation index
+	int32 ActiveAnimIdx;
 
-	typedef TMap<FConstraintInstance*, FRotator> FFrame;
-	typedef TArray<FFrame> FAnimation;
+	// Currently active animation step size between frames (1 / nr of frames),
+	// this will used to point in which frame we are relative to the trigger input
+	float ActiveAnimStepSize;
 
-	// Drive target (map between the constraint instance reference and the rotation)
+	// True if the grasp trigger is released
+	bool bIsIdle;
+
+	// True if the grasp trigger is pulled until the end
+	bool bIsMax;
+
+	// Rotation where the motor will try to go to (map between the constraint instance and the target rotation)	
 	FFrame DriveTarget;
 
-	// Selected animation
+	// Selected animation	
 	FAnimation ActiveAnimation;
 	
 	// Animation list
 	TArray<FAnimation> Animations;
 
-
-
-
-
-	// Cache the constraints references directly to the animation rotation data
-
-	// Currently active grasp animation index
-	int32 ActiveAnimIndex;
-
-	// Flag showing inf the grasp is ongoing
-	bool bGraspIsActive;
-
-
-
-
-	// Spring value during an active grasp
-	float SpringActive;
-
-	//// Current grasp loaded into hand
-	//UMCGraspAnimDataAsset* ActiveAnimDA;
-
-	//// When changing grasp type while grasping, the new grasp isn't applied immediately
-	//// Instead it is saved in this variable and applied once the user stops grasping 
-	//UMCGraspAnimDataAsset* QueuedAnimDA;
-
-	// Set to true when there is a grasp waiting to be applied
-	bool bGrasIsWaitingInQueue;
-
-	// bool that is used so the mesh goes into step 0 of it's current grasp when the game is started
-	bool bFirstUpdate;
+	// Animation names
+	TArray<FString> AnimationNames;
 };

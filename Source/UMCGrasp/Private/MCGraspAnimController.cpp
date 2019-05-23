@@ -19,35 +19,21 @@ UMCGraspAnimController::UMCGraspAnimController()
 	InputNextAnimAction = "LeftNextGraspAnim";
 	InputPrevAnimAction = "LeftPrevGraspAnim";
 
-	SpringIdle = 9000.f;
-	SpringActiveMultiplier = 5.f;
+	SpringIdle = 1000000.f;
+	SpringInputScale = 5.f;
 	Damping = 1000.f;
 	ForceLimit = 0.f;
-	ActiveAnimIndex = INDEX_NONE;
-	
-	
-	bGraspIsActive = false;
-	bFirstUpdate = true;
-	bGrasIsWaitingInQueue = false;
+	ActiveAnimIdx = INDEX_NONE;
+	bIsIdle = true;
+	bIsMax = false;
 }
 
 // Called when the game starts
 void UMCGraspAnimController::BeginPlay()
 {
 	Super::BeginPlay();
-
-	// Check if the skeletal mesh is valid and animations are loaded
-	if (Init())
-	{
-		// Bind the user input to the callbacks
-		//SetupInputBindings();
-
-		// The active spring value is at least the value of the idle
-		SpringActive = SpringIdle;
-
-		// Go to the first animation mode
-		GotoFirstAnimation();
-	}
+	
+	Init();
 }
 
 #if WITH_EDITOR
@@ -79,10 +65,32 @@ void UMCGraspAnimController::PostEditChangeProperty(struct FPropertyChangedEvent
 }
 #endif // WITH_EDITOR
 
-// Init component, return false is something went wrong
-bool UMCGraspAnimController::Init()
+// Init component
+void UMCGraspAnimController::Init()
 {
-	return LoadSkeletalMesh() && LoadAnimationData();
+	if (!LoadSkeletalMesh())
+	{
+		return;
+	}
+
+	if (!LoadAnimationData())
+	{
+		return;
+	}
+
+	// The active spring value is at least the value of idle (this increases when the trigger is pressed)
+	SpringActive = SpringIdle;
+
+	// Go to the first animations
+	ActiveAnimIdx = 0;
+	ActiveAnimation = Animations[0];	
+	ActiveAnimStepSize = 1.f / static_cast<float>(ActiveAnimation.Num() - 1);
+
+	// Set and drive to idle
+	DriveToFirstFrame();
+
+	// Bind the user input to the callbacks
+	SetupInputBindings();
 }
 
 // Prepare the skeletal mesh component physics and angular motors
@@ -122,11 +130,11 @@ bool UMCGraspAnimController::LoadAnimationData()
 	// Remove any unset references in the array
 	AnimationDataAssets.Remove(nullptr);
 
-	for (const auto& Animation : AnimationDataAssets)
+	for (const auto& AnimationDataAsset : AnimationDataAssets)
 	{
 		// Iterate frames from the animation
 		FAnimation CurrAnim;
-		for (const auto& Frame : Animation->Frames)
+		for (const auto& Frame : AnimationDataAsset->Frames)
 		{
 			// Iterate data from the frame and cache it
 			FFrame CurrFrame;
@@ -144,16 +152,24 @@ bool UMCGraspAnimController::LoadAnimationData()
 			CurrAnim.Add(CurrFrame);
 		}
 		Animations.Add(CurrAnim);
+		AnimationNames.Add(AnimationDataAsset->Name);
 	}
 	return Animations.Num() > 0;
 }
 
-// Set first grasp animation
-void UMCGraspAnimController::GotoFirstAnimation()
+// Set the motors target value to the first frame
+void UMCGraspAnimController::DriveToFirstFrame()
 {
-	ActiveAnimIndex = 0;
-	ActiveAnimation = Animations[0];
-	SetTargetToIdle();
+	SpringActive = SpringIdle;
+	DriveTarget = ActiveAnimation[0];
+	DriveToTarget();
+}
+
+// Set the motors target value to the final frame
+void UMCGraspAnimController::DriveToLastFrame()
+{
+	SpringActive = SpringIdle + (SpringIdle * SpringInputScale);
+	DriveTarget = ActiveAnimation[ActiveAnimation.Num()-1];
 	DriveToTarget();
 }
 
@@ -167,6 +183,7 @@ void UMCGraspAnimController::SetupInputBindings()
 			IC->BindAxis(InputAxisName, this, &UMCGraspAnimController::GraspUpdateCallback);
 			IC->BindAction(InputNextAnimAction, IE_Pressed, this, &UMCGraspAnimController::GotoNextAnimationCallback);
 			IC->BindAction(InputPrevAnimAction, IE_Pressed, this, &UMCGraspAnimController::GotoPreviousAnimationCallback);
+			UE_LOG(LogTemp, Warning, TEXT("%s::%d"), *FString(__func__), __LINE__);
 		}
 		else
 		{
@@ -177,12 +194,6 @@ void UMCGraspAnimController::SetupInputBindings()
 	{
 		UE_LOG(LogTemp, Error, TEXT("%s::%d No Player controller found.."), *FString(__func__), __LINE__);
 	}
-}
-
-// Set the cached target to the first frame 
-void UMCGraspAnimController::SetTargetToIdle()
-{
-	DriveTarget = ActiveAnimation[0];
 }
 
 // Compute and set the cached target by interpolating between the two frames
@@ -204,120 +215,89 @@ void UMCGraspAnimController::DriveToTarget()
 	}
 }
 
+// Calculate the active frame relative to the input value (0 - 1)
+int32 UMCGraspAnimController::GetActiveFrameIndex(float Value)
+{
+	return 0;
+}
+
 /* Input callbacks */
 // Forward the axis input value to the grasp animation executor
 void UMCGraspAnimController::GraspUpdateCallback(float Value)
 {
-	// Ensures the hand goes into the initial frame when this is called the first time
-	if (bFirstUpdate)
+	// If value is almost 1.0, go to the final frame directly
+	if (Value > 0.98f)
 	{
-		SetTargetToIdle();
-		DriveToTarget();
-		bFirstUpdate = false;
+		if (bIsMax)
+		{
+			return;
+		}
+		bIsIdle = false;
+		bIsMax = true;
+		DriveToLastFrame();
+		UE_LOG(LogTemp, Warning, TEXT("%s::%d MAX "), *FString(__func__), __LINE__);
 	}
-
-	if (Value > 0.05)
+	else if (Value > 0.05f)
 	{
-		if (!bGraspIsActive)
-		{
-			bGraspIsActive = true;
-		}
+		bIsIdle = false;
+		bIsMax = false;
 
-		// Calculate the new spring value of the motor
-		SpringActive = SpringIdle + (SpringIdle * SpringActiveMultiplier * Value);
+		// Increase the spring value proportional with the input
+		SpringActive = SpringIdle + (SpringIdle * SpringInputScale * Value);
+		
+		// Checks in which position we are between the frist frame (0.f) .. () ..  () .. and last frame ((Num()-1).f) 
+		float ValueOnTheFrameAxis = Value / ActiveAnimStepSize;
 
-		// Calculate step size relative to the number of frames in the animation
-		float StepSize = 1 / ((float) ActiveAnimation.Num() - 1);
+		// Fast floor by casting to in this gives us the nearest smaller frame index
+		int32 FrameIndex = static_cast<int32>(ValueOnTheFrameAxis);
 
-		// Calculates how many steps we have passed, given then current input
-		// When rounded down we know which step came before with this input
-		float StepIteratorCountFloat = Value / StepSize;
+		// Gets the value between [0.f,1.f] on how to blend between the frames e.g: 1.66f - 1.f = 0.66f
+		float Alpha = ValueOnTheFrameAxis - static_cast<float>(FrameIndex);
 
-		// We will be rounding down and a input of exactly 1 causes problems there
-		if (Value >= 1)
-		{
-			StepIteratorCountFloat = 0.999999 / StepSize;
-		}
-
-		// Uses the float to int cast to round down
-		int32 FrameIndex = (int32)StepIteratorCountFloat;
-
-		// We calculate how far the input is past the step that came before it
-		float Alpha = StepIteratorCountFloat - (float) FrameIndex;
-
+		// Set the driver target by interpolating between the nearest smaller frame and the following one
 		SetTargetUsingLerp(ActiveAnimation[FrameIndex], ActiveAnimation[FrameIndex + 1], Alpha);
 		DriveToTarget();
+
+		UE_LOG(LogTemp, Warning, TEXT("%s::%d \n\t Value=%f; \n\t ValueOnTheFrameAxis=%f; \n\t FrameIndex=%d; \n\t Alpha=%f; \n\t ActiveAnimStepSize=%f; \n\t Num=%d"),
+			*FString(__func__), __LINE__, Value, ValueOnTheFrameAxis, FrameIndex, Alpha, ActiveAnimStepSize, ActiveAnimation.Num());
 	}
-	else
+	else if(!bIsIdle)
 	{
-		if (bGraspIsActive)
-		{
-			// Stop grasping
-			StopGrasping();
-		}
+		bIsIdle = true;
+		bIsMax = false;
+		DriveToFirstFrame();
+		UE_LOG(LogTemp, Warning, TEXT("%s::%d MIN "), *FString(__func__), __LINE__);
 	}
 }
 
 // Switch to the next grasp animation
 void UMCGraspAnimController::GotoNextAnimationCallback()
 {
-	if (ActiveAnimIndex >= AnimationDataAssets.Num()-1)
+	if (bIsIdle)
 	{
-		ActiveAnimIndex = 0;
+		// Increase the index, if it is the last in the array, set it back to 0
+		ActiveAnimIdx = ActiveAnimIdx >= Animations.Num() - 1 ? 0 : ActiveAnimIdx + 1;
+		ActiveAnimation = Animations[ActiveAnimIdx];
+		ActiveAnimStepSize = 1.f / static_cast<float>(ActiveAnimation.Num() - 1);
+
+		DriveToFirstFrame();
+		UE_LOG(LogTemp, Warning, TEXT("%s::%d Active animation Idx/Name=[%d|%s]"),
+			*FString(__func__), __LINE__, ActiveAnimIdx, *AnimationNames[ActiveAnimIdx]);
 	}
-	else
-	{
-		ActiveAnimIndex++;
-	}
-	SetActiveGrasp();
 }
 
 // Switch to the previous animation
 void UMCGraspAnimController::GotoPreviousAnimationCallback()
 {
-	if (ActiveAnimIndex <= 0)
+	if (bIsIdle)
 	{
-		ActiveAnimIndex = AnimationDataAssets.Num() - 1;
-	} 
-	else 
-	{
-		ActiveAnimIndex--;
+		// Decrease the index, if it becomes smaller than 0, set it to the last the array
+		ActiveAnimIdx = ActiveAnimIdx <= 0 ? Animations.Num() - 1 : ActiveAnimIdx - 1;
+		ActiveAnimation = Animations[ActiveAnimIdx];
+		ActiveAnimStepSize = 1.f / static_cast<float>(ActiveAnimation.Num() - 1);
+
+		DriveToFirstFrame();
+		UE_LOG(LogTemp, Warning, TEXT("%s::%d Active animation Idx/Name=[%d|%s]"),
+			*FString(__func__), __LINE__, ActiveAnimIdx, *AnimationNames[ActiveAnimIdx]);
 	}
-	SetActiveGrasp();
-}
-
-
-
-void UMCGraspAnimController::StopGrasping()
-{
-	// Stop Grasp
-	SpringActive = SpringIdle;
-	//if (ActiveAnimDA->Frames.IsValidIndex(0))
-	//DriveToHandOrientationTarget(ActiveAnimDA->Frames[0]);
-
-	SetTargetToIdle();
-	DriveToTarget();
-
-
-	if (bGrasIsWaitingInQueue)
-	{
-		//ActiveAnim = QueuedAnim;
-		//ActiveAnimDA = QueuedAnimDA;
-		bGrasIsWaitingInQueue = false;
-	}
-	bGraspIsActive = false;
-}
-
-void UMCGraspAnimController::SetActiveGrasp()
-{
-	// if player is grasping put new grasp in queue, else change grasp immediately
-	if (bGraspIsActive)
-	{
-		//QueuedAnimDA = AnimationDataAssets[ActiveAnimIndex];
-		bGrasIsWaitingInQueue = true;
-		return;
-	}
-	//ActiveAnimDA = AnimationDataAssets[ActiveAnimIndex];
-
-
 }
