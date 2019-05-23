@@ -49,28 +49,6 @@ struct FMCGraspAnimFrameData
 	FMCGraspAnimFrameData(const TMap<FString, FMCGraspAnimBoneOrientation>& InFrameData) : BonesData(InFrameData) {}
 };
 
-// Contains the data of a grasp animation
-USTRUCT()
-struct FMCGraspAnimData
-{
-	GENERATED_BODY()
-
-	// Animation name
-	UPROPERTY(EditAnywhere, Category = "Grasp Controller")
-	FString Name;
-
-	// Bone names
-	UPROPERTY(EditAnywhere, Category = "Grasp Controller")
-	TArray<FString> BoneNames;
-
-	// The animation frames
-	UPROPERTY(EditAnywhere, Category = "Grasp Controller")
-	TArray<FMCGraspAnimFrameData> Frames;
-
-	// Default ctor
-	FMCGraspAnimData() {}
-};
-
 /**
  * Contains the data of a grasp animation
  */

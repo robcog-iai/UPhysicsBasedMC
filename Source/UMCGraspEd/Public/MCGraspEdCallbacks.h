@@ -106,7 +106,7 @@ private:
 	UDebugSkelMeshComponent* DebugMeshComponent;
 
 	// Our new grasp anim struct 
-	FMCGraspAnimData NewGraspAnimData = FMCGraspAnimData();
+	//FMCGraspAnimData NewGraspAnimData = FMCGraspAnimData();
 	TArray<FMCGraspAnimFrameData> NewFrames;
 
 	TArray<FString> NewBoneNames;

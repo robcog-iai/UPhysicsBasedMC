@@ -34,22 +34,6 @@ bool UMCGraspAnimReader::ReadFramesFromName(const FString& Name, TArray<FMCGrasp
 	return false;
 }
 
-FMCGraspAnimData UMCGraspAnimReader::ConvertAssetToStruct(const UMCGraspAnimDataAsset* DataAsset)
-{
-	FMCGraspAnimData DataStruct;
-
-	DataStruct.Name = DataAsset->Name;
-	for (FString BoneName : DataAsset->BoneNames)
-	{
-		DataStruct.BoneNames.Add(BoneName);
-	}
-	for (FMCGraspAnimFrameData Frame : DataAsset->Frames)
-	{
-		DataStruct.Frames.Add(Frame);
-	}
-
-	return DataStruct;
-}
 
 TArray<UMCGraspAnimDataAsset*> UMCGraspAnimReader::LoadAllAssets()
 {

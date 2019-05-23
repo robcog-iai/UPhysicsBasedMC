@@ -8,34 +8,8 @@
 #include "Runtime/AssetRegistry/Public/AssetRegistryModule.h"
 #include "Runtime/Engine/Classes/Engine/ObjectLibrary.h"
 
-void UMCGraspEdAnimWriter::WriteToDataAsset(const FMCGraspAnimData& DataStruct)
-{
-	// If asset alread exists, edit it
-	for (UMCGraspAnimDataAsset* DataAsset : UMCGraspAnimReader::LoadAllAssets())
-	{
-		if (DataAsset->Name == DataStruct.Name)
-		{
-			DataAsset->BoneNames = TArray<FString>();
-			for (FString BoneName : DataStruct.BoneNames)
-			{
-				DataAsset->BoneNames.Add(BoneName);
-			}
-			DataAsset->Frames = TArray<FMCGraspAnimFrameData>();
-			for (FMCGraspAnimFrameData Frame : DataStruct.Frames)
-			{
-				DataAsset->Frames.Add(Frame);
-			}
-			return;
-		}
-	}
 
-	// Else make a new one
-	auto Factory = NewObject<UMCGraspEdAnimDataAssetFactory>();
-
-	Factory->AddGraspDataAsset(DataStruct);
-}
-
-void UMCGraspEdAnimWriter::WriteToDataAsset2(const FString& InAnimName, const TArray<FString>& InBoneNames, const TArray<FMCGraspAnimFrameData>& InFrames)
+void UMCGraspEdAnimWriter::WriteToDataAsset(const FString& InAnimName, const TArray<FString>& InBoneNames, const TArray<FMCGraspAnimFrameData>& InFrames)
 {
 	if (UMCGraspAnimDataAsset* DataAsset = UMCGraspAnimReader::GetAnimGraspDataAsset(InAnimName))
 	{
@@ -46,7 +20,7 @@ void UMCGraspEdAnimWriter::WriteToDataAsset2(const FString& InAnimName, const TA
 	else
 	{
 		UMCGraspEdAnimDataAssetFactory* GraspAnimFactory = NewObject<UMCGraspEdAnimDataAssetFactory>();
-		GraspAnimFactory->AddGraspDataAsset2(InAnimName, InBoneNames, InFrames);
+		GraspAnimFactory->AddGraspDataAsset(InAnimName, InBoneNames, InFrames);
 	}
 }
 

@@ -18,10 +18,8 @@ class UMCGraspEdAnimDataAssetFactory : public UFactory
 public:
 
 	// Create DataAsset
-	UObject* CreateGraspDataAsset(UClass* InClass, UObject* InParent, FName InName, EObjectFlags Flags, const TCHAR* Parms, FMCGraspAnimData DataStruct);
-	UObject* CreateGraspDataAsset2(UClass* InClass, UObject* InParent, FName InName, EObjectFlags Flags, const TCHAR* Parms, const TArray<FMCGraspAnimFrameData>& Frames, const TArray<FString>& BoneNames);
+	UObject* CreateGraspDataAsset(UClass* InClass, UObject* InParent, FName InName, EObjectFlags Flags, const TCHAR* Parms, const TArray<FMCGraspAnimFrameData>& Frames, const TArray<FString>& BoneNames);
 
 	// Called by GraspAnimWriter to tell factory to create new DataAsset
-	void AddGraspDataAsset(const FMCGraspAnimData& DataStruct);
-	void AddGraspDataAsset2(const FString& InAnimName, const TArray<FString>& InBoneNames, const TArray<FMCGraspAnimFrameData>& InFrames);
+	void AddGraspDataAsset(const FString& InAnimName, const TArray<FString>& InBoneNames, const TArray<FMCGraspAnimFrameData>& InFrames);
 };

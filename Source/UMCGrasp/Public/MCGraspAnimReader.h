@@ -19,8 +19,8 @@ public:
 	// Find the grasp animation data asset, return nullptr if not found
 	static UMCGraspAnimDataAsset* GetAnimGraspDataAsset(const FString& Name);
 
-	// Converts grasp DataAssets into grasp structs
-	static FMCGraspAnimData ConvertAssetToStruct(const UMCGraspAnimDataAsset* DataAsset);
+	//// Converts grasp DataAssets into grasp structs
+	//static FMCGraspAnimData ConvertAssetToStruct(const UMCGraspAnimDataAsset* DataAsset);
 
 	// Returns all GraspDataAssets that can be read
 	static TArray<UMCGraspAnimDataAsset*> LoadAllAssets();

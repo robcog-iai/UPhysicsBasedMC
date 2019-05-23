@@ -13,8 +13,6 @@
 class UMCGraspEdAnimWriter
 {
 public:
-	// Overwrites or creates DataAsset for a specific grasp
-	static void WriteToDataAsset(const FMCGraspAnimData& DataStruct);
 
-	static void WriteToDataAsset2(const FString& InAnimName, const TArray<FString>& InBoneNames, const TArray<FMCGraspAnimFrameData>& InFrames);
+	static void WriteToDataAsset(const FString& InAnimName, const TArray<FString>& InBoneNames, const TArray<FMCGraspAnimFrameData>& InFrames);
 };

@@ -190,20 +190,16 @@ void UMCGraspEdCallbacks::SaveBoneDatasAsFrame()
 		CreateAnimationData(CalculatedBoneRotations);
 	}
 	//Show an error message if the new frame could not be added.
-	NewGraspAnimData.Frames.Add(NewFrameData);
-	//if (!NewGraspAnimData.AddNewFrame(NewFrameData)) 
-	//{
+	//NewGraspAnimData.Frames.Add(NewFrameData);
+	NewFrames.Add(NewFrameData);
 
-	//	ShowMessageBox(FText::FromString("Error"), FText::FromString("Could not add a new frame. Close and open the preview scene again and repeat your last steps."));
-	//}
 	ShowMessageBox(FText::FromString("Saved current position"), FText::FromString("The current hand position was saved. Either add more frames for the grasp or press save to save all your frames in a DataAsset."));
 }
 
 void UMCGraspEdCallbacks::WriteFramesToAsset()
 {
-	//You need at least 2 frames to create a DataAsset
-	if (NewGraspAnimData.Frames.Num() < 2) 
-	//if (NewFrames.Num() < 2)
+	//You need at least 2 frames to create a DataAsset	
+	if (NewFrames.Num() < 2)
 	{
 		ShowMessageBox(FText::FromString("Error"), FText::FromString("You did not create enough frames. A grasping animation needs at least 2 frames."));
 		return;
@@ -211,10 +207,7 @@ void UMCGraspEdCallbacks::WriteFramesToAsset()
 
 	//Save all frames under the given name and reset all boolean etc.
 	UMCGraspEdAnimWriter Write = UMCGraspEdAnimWriter();
-	//NewGraspAnimData.Name = NewGraspAnimName;
-	//Write.WriteToDataAsset(NewGraspAnimData);
-	Write.WriteToDataAsset2(NewGraspAnimName,NewBoneNames, NewFrames);
-	//NewGraspAnimData = FMCGraspAnimData(); // this should be the reset. todo add .Reset();
+	Write.WriteToDataAsset(NewGraspAnimName,NewBoneNames, NewFrames);
 	NewFrames.Empty();
 	bFirstCreatedFrameData = false;
 
@@ -272,14 +265,6 @@ void UMCGraspEdCallbacks::EditLoadedGraspAnim()
 
 	GraspDataAssetToEdit->Frames[CurrEditFrameIndex] = NewFrameData;
 
-
-	////Show an error message if the frame could not get overwritten.
-	//if (!GraspDataToEdit.ReplaceFrame(CurrEditFrameIndex, NewFrameData))
-	//{
-	//	ShowMessageBox(FText::FromString("Error"), FText::FromString("Could not edit the chosen frame."));
-	//	return;
-	//}
-
 	//UMCGraspEdAnimWriter::WriteToDataAsset(GraspDataToEdit);
 	ShowMessageBox(FText::FromString("Edited grasp"), FText::FromString("The grasp was successfully edited. (TODO test this)"));
 	//Reloads the saved step.
@@ -309,10 +294,10 @@ void UMCGraspEdCallbacks::SetPreviewMeshComponent(UDebugSkelMeshComponent * Comp
 
 void UMCGraspEdCallbacks::CreateAnimationData(TMap<FString, FRotator> FrameData)
 {
-	NewGraspAnimData.BoneNames = TArray<FString>();
+	//NewGraspAnimData.BoneNames = TArray<FString>();
 	for (auto& Elem : FrameData)
 	{
-		NewGraspAnimData.BoneNames.Add(Elem.Key);
+		//NewGraspAnimData.BoneNames.Add(Elem.Key);
 		NewBoneNames.Add(Elem.Key);
 	}
 }
@@ -360,7 +345,9 @@ void UMCGraspEdCallbacks::PlayOneFrame(TMap<FString, FVector> BoneStartLocations
 
 void UMCGraspEdCallbacks::DiscardAllFrames()
 {
-	NewGraspAnimData = FMCGraspAnimData();
+	NewGraspAnimName = "";
+	NewFrames.Empty();
+	NewBoneNames.Empty();
 	Reset();
 	ShowMessageBox(FText::FromString("Discard successful"), FText::FromString("All your recorded frames are discarded."));
 }
