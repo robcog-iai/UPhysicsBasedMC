@@ -19,8 +19,7 @@ UObject* UMCGraspEdAnimDataAssetFactory::CreateGraspDataAsset(UClass* InClass,
 	FName InName, 
 	EObjectFlags Flags, 
 	const TCHAR* Parms, 
-	const TArray<FMCGraspAnimFrameData>& InFrames,
-	const TArray<FString>& InBoneNames)
+	const TArray<FMCGraspAnimFrameData>& InFrames)
 {
 	FEditorDelegates::OnAssetPreImport.Broadcast(this, InClass, InParent, InName, Parms);
 
@@ -36,7 +35,6 @@ UObject* UMCGraspEdAnimDataAssetFactory::CreateGraspDataAsset(UClass* InClass,
 }
 
 void UMCGraspEdAnimDataAssetFactory::AddGraspDataAsset(const FString& InAnimName,
-	const TArray<FString>& InBoneNames,
 	const TArray<FMCGraspAnimFrameData>& InFrames)
 {
 	FString FinalPackageName = "/UPhysicsBasedMC/GraspingAnimations/" + InAnimName;
@@ -46,7 +44,7 @@ void UMCGraspEdAnimDataAssetFactory::AddGraspDataAsset(const FString& InAnimName
 	UPackage* OutermostPkg = Package->GetOutermost();
 
 	UObject* DataAsset = CreateGraspDataAsset(UMCGraspAnimDataAsset::StaticClass(),
-		OutermostPkg, FName(*InAnimName), RF_Standalone | RF_Public, NULL, InFrames, InBoneNames);
+		OutermostPkg, FName(*InAnimName), RF_Standalone | RF_Public, NULL, InFrames);
 
 	FAssetRegistryModule::AssetCreated(DataAsset);
 	DataAsset->MarkPackageDirty();

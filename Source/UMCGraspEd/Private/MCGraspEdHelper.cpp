@@ -1,6 +1,6 @@
 // Copyright 2017-2019, Institute for Artificial Intelligence - University of Bremen
 
-#include "MCGraspEdCallbacks.h"
+#include "MCGraspEdHelper.h"
 #include "Core.h"
 #include "Editor.h"
 #include "Components/SkeletalMeshComponent.h"
@@ -15,112 +15,30 @@
 
 #define LOCTEXT_NAMESPACE "FMCGraspEdModule"
 
-UMCGraspEdCallbacks::UMCGraspEdCallbacks()
+// Default ctor
+FMCGraspEdHelper::FMCGraspEdHelper()
 {
+	bFirstCreatedFrameData = false;
+	bSavedStartTransforms = false;
+	bContinuePlayGrasp = true;
+	bIsInit = false;
+	CurrEditFrameIndex = 0;
+	NewGraspAnimName = "";
+	CurrGraspName = "";
 }
 
-void UMCGraspEdCallbacks::ShowFrameEditWindow()
+// Init the helper functions
+void FMCGraspEdHelper::Init(UDebugSkelMeshComponent* InDebugMeshComponent)
 {
-	//Creates the edit menu with 2 editable textfields and a button
-	TSharedRef<SWindow> CookbookWindow = SNew(SWindow)
-		.Title(FText::FromString(TEXT("Edit Grasp Anima")))
-		.ClientSize(FVector2D(400, 200))
-		.SupportsMaximize(false)
-		.SupportsMinimize(false)
-		[
-			SNew(SVerticalBox)
-			+ SVerticalBox::Slot()
-			.HAlign(HAlign_Center)
-			.VAlign(VAlign_Center)
-			[
-				SAssignNew(GraspAnimBox, SEditableTextBox)
-				.Text(FText::FromString(TEXT("Name")))
-				.MinDesiredWidth(200)
-			]
-			+ SVerticalBox::Slot()
-				.HAlign(HAlign_Center)
-				.VAlign(VAlign_Center)
-				[
-					SAssignNew(FrameBox, SEditableTextBox)
-					.Text(FText::FromString(TEXT("Frame")))
-					.MinDesiredWidth(200)
-				]
-			+ SVerticalBox::Slot()
-				.HAlign(HAlign_Center)
-				.VAlign(VAlign_Center)
-				[
-					SNew(SButton)
-					.OnClicked_Raw(this, &UMCGraspEdCallbacks::OnEditButtonClicked)
-					.Content()
-					[
-							SAssignNew(ButtonLabel, STextBlock)
-							.Text(FText::FromString(TEXT("Load Frame")))
-						]
-
-					]
-				];
-	IMainFrameModule& MainFrameModule =
-		FModuleManager::LoadModuleChecked<IMainFrameModule>(TEXT
-		("MainFrame"));
-	if (MainFrameModule.GetParentWindow().IsValid())
+	DebugMeshComponent = InDebugMeshComponent;
+	if (DebugMeshComponent)
 	{
-		FSlateApplication::Get().AddWindowAsNativeChild
-		(CookbookWindow, MainFrameModule.GetParentWindow()
-			.ToSharedRef());
-	}
-	else
-	{
-		FSlateApplication::Get().AddWindow(CookbookWindow);
+		bIsInit = true;
 	}
 }
 
-void UMCGraspEdCallbacks::ShowSaveGraspAnimWindow()
-{
-	//Creates the save menu with 2 editable textfields and a button
-	TSharedRef<SWindow> CookbookWindow = SNew(SWindow)
-		.Title(FText::FromString(TEXT("Save")))
-		.ClientSize(FVector2D(400, 200))
-		.SupportsMaximize(false)
-		.SupportsMinimize(false)
-		[
-			SNew(SVerticalBox)
-			+ SVerticalBox::Slot()
-		.HAlign(HAlign_Center)
-		.VAlign(VAlign_Center)
-		[
-			SAssignNew(NewGraspAnimNameBox, SEditableTextBox)
-			.Text(FText::FromString(TEXT("Name")))
-		]
-	+ SVerticalBox::Slot()
-		.HAlign(HAlign_Center)
-		.VAlign(VAlign_Center)
-		[
-			SNew(SButton)
-			.OnClicked_Raw(this, &UMCGraspEdCallbacks::OnSaveButtonClicked)
-		.Content()
-		[
-			SAssignNew(ButtonLabel, STextBlock)
-			.Text(FText::FromString(TEXT("Save")))
-		]
-
-		]
-		];
-	IMainFrameModule& MainFrameModule =
-		FModuleManager::LoadModuleChecked<IMainFrameModule>(TEXT
-		("MainFrame"));
-	if (MainFrameModule.GetParentWindow().IsValid())
-	{
-		FSlateApplication::Get().AddWindowAsNativeChild
-		(CookbookWindow, MainFrameModule.GetParentWindow()
-			.ToSharedRef());
-	}
-	else
-	{
-		FSlateApplication::Get().AddWindow(CookbookWindow);
-	}
-}
-
-void UMCGraspEdCallbacks::SaveBoneDatasAsFrame()
+// Saves the current position of the displayed mesh to a new frame
+void FMCGraspEdHelper::SaveToFrame()
 {
 	if (!bSavedStartTransforms) 
 	{
@@ -185,7 +103,6 @@ void UMCGraspEdCallbacks::SaveBoneDatasAsFrame()
 	if (!bFirstCreatedFrameData)
 	{
 		bFirstCreatedFrameData = true;
-		CreateAnimationData(CalculatedBoneRotations);
 	}
 	//Show an error message if the new frame could not be added.
 	//NewGraspAnimData.Frames.Add(NewFrameData);
@@ -194,7 +111,8 @@ void UMCGraspEdCallbacks::SaveBoneDatasAsFrame()
 	ShowMessageBox(FText::FromString("Saved current position"), FText::FromString("The current hand position was saved. Either add more frames for the grasp or press save to save all your frames in a DataAsset."));
 }
 
-void UMCGraspEdCallbacks::WriteFramesToAsset()
+// Writes all currently recorded frames to the data asset.
+void FMCGraspEdHelper::WriteFramesToAsset()
 {
 	//You need at least 2 frames to create a DataAsset	
 	if (NewFrames.Num() < 2)
@@ -205,14 +123,15 @@ void UMCGraspEdCallbacks::WriteFramesToAsset()
 
 	//Save all frames under the given name and reset all boolean etc.
 	
-	WriteToDataAsset(NewGraspAnimName,NewBoneNames, NewFrames);
+	WriteToDataAsset(NewGraspAnimName, NewFrames);
 	NewFrames.Empty();
 	bFirstCreatedFrameData = false;
 
 	ShowMessageBox(FText::FromString("Saved grasp"), FText::FromString("Grasp was saved as a DataAsset into the GraspingAnimations folder."));
 }
 
-void UMCGraspEdCallbacks::EditLoadedGraspAnim()
+// Overwrites the currently loaded step with the currently displayed bone rotations.
+void FMCGraspEdHelper::EditLoadedGraspAnim()
 {
 	if (CurrGraspName.IsEmpty())
 	{
@@ -268,38 +187,8 @@ void UMCGraspEdCallbacks::EditLoadedGraspAnim()
 	ChangeBoneRotationsTo(CurrGraspName, CurrEditFrameIndex);
 }
 
-TMap<FName, FRotator> UMCGraspEdCallbacks::GetBoneRotations(USkeletalMeshComponent * SkeletalComponent)
-{
-	TMap<FName, FRotator> BoneRotations;
-	TArray<FName> BoneNames;
-	SkeletalComponent->GetBoneNames(BoneNames);
-	//Gets the rotations of every bone in the given mesh and saves them in a map with their bone name as key.
-	for (FName BoneName : BoneNames) 
-	{
-		int index = SkeletalComponent->GetBoneIndex(BoneName);
-		FTransform Transform = SkeletalComponent->GetBoneTransform(index);
-		FQuat Quat = Transform.GetRotation();
-		BoneRotations.Add(BoneName, Quat.Rotator());
-	}
-	return BoneRotations;
-}
-
-void UMCGraspEdCallbacks::SetPreviewMeshComponent(UDebugSkelMeshComponent * Component)
-{
-	DebugMeshComponent = Component;
-}
-
-void UMCGraspEdCallbacks::CreateAnimationData(TMap<FString, FRotator> FrameData)
-{
-	//NewGraspAnimData.BoneNames = TArray<FString>();
-	for (auto& Elem : FrameData)
-	{
-		//NewGraspAnimData.BoneNames.Add(Elem.Key);
-		NewBoneNames.Add(Elem.Key);
-	}
-}
-
-void UMCGraspEdCallbacks::ChangeBoneRotationsTo(const FString& GraspAnimName, int32 FrameIndex)
+// Loads a step from a grasp anim
+void FMCGraspEdHelper::ChangeBoneRotationsTo(const FString& GraspAnimName, int32 FrameIndex)
 {
 	TArray<FMCGraspAnimFrameData> Frames;
 	if (ReadFramesFromName(GraspAnimName, Frames))
@@ -325,12 +214,14 @@ void UMCGraspEdCallbacks::ChangeBoneRotationsTo(const FString& GraspAnimName, in
 	}
 }
 
-void UMCGraspEdCallbacks::ShowInstructions(FString Message)
+// Shows a help windows with the given message.	
+void FMCGraspEdHelper::ShowInstructions(FString Message)
 {
 	ShowMessageBox(FText::FromString("Help"), FText::FromString(Message));
 }
 
-void UMCGraspEdCallbacks::PlayOneFrame(TMap<FString, FVector> BoneStartLocations, TArray<FMCGraspAnimFrameData> Frames, int32 Index)
+// Shows the frame at the given index for the given HandAnimationData in the preview scene
+void FMCGraspEdHelper::PlayOneFrame(TMap<FString, FVector> BoneStartLocations, TArray<FMCGraspAnimFrameData> Frames, int32 Index)
 {
 	DebugMeshComponent->SkeletalMesh->Modify();
 
@@ -340,16 +231,17 @@ void UMCGraspEdCallbacks::PlayOneFrame(TMap<FString, FVector> BoneStartLocations
 	DebugMeshComponent->PreviewInstance->SetForceRetargetBasePose(true);
 }
 
-void UMCGraspEdCallbacks::DiscardAllFrames()
+// Discards all currently recorded frames.
+void FMCGraspEdHelper::DiscardAllFrames()
 {
 	NewGraspAnimName = "";
 	NewFrames.Empty();
-	NewBoneNames.Empty();
 	Reset();
 	ShowMessageBox(FText::FromString("Discard successful"), FText::FromString("All your recorded frames are discarded."));
 }
 
-void UMCGraspEdCallbacks::ShowFrame(bool bForward)
+// Shows a frame. bForward true if the next frame should get shown, false for the previous frame.
+void FMCGraspEdHelper::ShowFrame(bool bForward)
 {
 	TArray<FMCGraspAnimFrameData> Frames;
 	ReadFramesFromName(CurrGraspName, Frames);
@@ -396,8 +288,10 @@ void UMCGraspEdCallbacks::ShowFrame(bool bForward)
 	PlayOneFrame(BoneStartLocations, Frames, CurrEditFrameIndex);
 }
 
-void UMCGraspEdCallbacks::Reset()
+// Resets all variables used in this Class.
+void FMCGraspEdHelper::Reset()
 {
+	bIsInit = false;
 	bSavedStartTransforms = false;
 	StartBoneLocBoneSpace.Empty();
 	StartBoneTransCompSpace.Empty();
@@ -407,15 +301,9 @@ void UMCGraspEdCallbacks::Reset()
 	bFirstCreatedFrameData = false;
 }
 
-void UMCGraspEdCallbacks::ShowMessageBox(FText Title, FText Message)
-{
-	FMessageDialog* Instructions = new FMessageDialog();
 
-	//Creates the dialog window.
-	Instructions->Debugf(Message,&Title);
-}
-
-void UMCGraspEdCallbacks::SaveStartTransforms()
+// Saves all the transforms we need later on, before bones are moved
+void FMCGraspEdHelper::SaveStartTransforms()
 {
 	//Gets all locations of the bones in bone space
 	TArray<FName> BoneNames;
@@ -438,8 +326,17 @@ void UMCGraspEdCallbacks::SaveStartTransforms()
 	bSavedStartTransforms = true;
 }
 
+// Creates a message dialog box
+void FMCGraspEdHelper::ShowMessageBox(FText Title, FText Message)
+{
+	FMessageDialog* Instructions = new FMessageDialog();
 
-void UMCGraspEdCallbacks::ApplyFrame(const FMCGraspAnimFrameData& Frame)
+	//Creates the dialog window.
+	Instructions->Debugf(Message,&Title);
+}
+
+// Apply the given frame to the debug mesh
+void FMCGraspEdHelper::ApplyFrame(const FMCGraspAnimFrameData& Frame)
 {
 	for (const auto& BoneData : Frame.BonesData)
 	{
@@ -457,7 +354,7 @@ void UMCGraspEdCallbacks::ApplyFrame(const FMCGraspAnimFrameData& Frame)
 }
 
 // Get data asset, returns nullptr if not found
-UMCGraspAnimDataAsset* UMCGraspEdCallbacks::GetAnimGraspDataAsset(const FString& Name)
+UMCGraspAnimDataAsset* FMCGraspEdHelper::GetAnimGraspDataAsset(const FString& Name)
 {
 	for (UMCGraspAnimDataAsset* DataAsset : LoadAllAssets())
 	{
@@ -469,9 +366,8 @@ UMCGraspAnimDataAsset* UMCGraspEdCallbacks::GetAnimGraspDataAsset(const FString&
 	return nullptr;
 }
 
-
 // Read frames from the data asset file
-bool UMCGraspEdCallbacks::ReadFramesFromName(const FString& Name, TArray<FMCGraspAnimFrameData>& OutFrames)
+bool FMCGraspEdHelper::ReadFramesFromName(const FString& Name, TArray<FMCGraspAnimFrameData>& OutFrames)
 {
 	for (UMCGraspAnimDataAsset* DataAsset : LoadAllAssets())
 	{
@@ -484,8 +380,8 @@ bool UMCGraspEdCallbacks::ReadFramesFromName(const FString& Name, TArray<FMCGras
 	return false;
 }
 
-
-TArray<UMCGraspAnimDataAsset*> UMCGraspEdCallbacks::LoadAllAssets()
+// Returns all GraspDataAssets that can be read
+TArray<UMCGraspAnimDataAsset*> FMCGraspEdHelper::LoadAllAssets()
 {
 	FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>(FName("AssetRegistry"));
 	IAssetRegistry& AssetRegistry = AssetRegistryModule.Get();
@@ -497,7 +393,8 @@ TArray<UMCGraspAnimDataAsset*> UMCGraspEdCallbacks::LoadAllAssets()
 	return OnRegistryLoaded();
 }
 
-TArray<UMCGraspAnimDataAsset*> UMCGraspEdCallbacks::OnRegistryLoaded()
+// Finds all the GraspDataAssets in a hardcoded folder
+TArray<UMCGraspAnimDataAsset*> FMCGraspEdHelper::OnRegistryLoaded()
 {
 	FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>(FName("AssetRegistry"));
 	IAssetRegistry& AssetRegistry = AssetRegistryModule.Get();
@@ -522,24 +419,23 @@ TArray<UMCGraspAnimDataAsset*> UMCGraspEdCallbacks::OnRegistryLoaded()
 	return GraspAssets;
 }
 
-
-void UMCGraspEdCallbacks::WriteToDataAsset(const FString& InAnimName, const TArray<FString>& InBoneNames, const TArray<FMCGraspAnimFrameData>& InFrames)
+// Create and save data asset
+void FMCGraspEdHelper::WriteToDataAsset(const FString& InAnimName, const TArray<FMCGraspAnimFrameData>& InFrames)
 {
 	if (UMCGraspAnimDataAsset* DataAsset = GetAnimGraspDataAsset(InAnimName))
 	{
 		DataAsset->Name = InAnimName;
-		//DataAsset->BoneNames = InBoneNames;
 		DataAsset->Frames = InFrames;
 	}
 	else
 	{
 		UMCGraspEdAnimDataAssetFactory* GraspAnimFactory = NewObject<UMCGraspEdAnimDataAssetFactory>();
-		GraspAnimFactory->AddGraspDataAsset(InAnimName, InBoneNames, InFrames);
+		GraspAnimFactory->AddGraspDataAsset(InAnimName, InFrames);
 	}
 }
 
 
-FReply UMCGraspEdCallbacks::OnEditButtonClicked()
+FReply FMCGraspEdHelper::OnEditButtonClicked()
 {
 	CurrGraspName = GraspAnimBox->GetText().ToString();
 	FText FrameToEdit = FrameBox->GetText();
@@ -550,7 +446,7 @@ FReply UMCGraspEdCallbacks::OnEditButtonClicked()
 	return FReply::Handled();
 }
 
-FReply UMCGraspEdCallbacks::OnSaveButtonClicked()
+FReply FMCGraspEdHelper::OnSaveButtonClicked()
 {
 	NewGraspAnimName = NewGraspAnimNameBox->GetText().ToString();
 
@@ -558,4 +454,132 @@ FReply UMCGraspEdCallbacks::OnSaveButtonClicked()
 	WriteFramesToAsset();
 	return FReply::Handled();
 }
+
+
+TMap<FName, FRotator> FMCGraspEdHelper::GetBoneRotations(USkeletalMeshComponent * SkeletalComponent)
+{
+	TMap<FName, FRotator> BoneRotations;
+	TArray<FName> BoneNames;
+	SkeletalComponent->GetBoneNames(BoneNames);
+	//Gets the rotations of every bone in the given mesh and saves them in a map with their bone name as key.
+	for (FName BoneName : BoneNames)
+	{
+		int index = SkeletalComponent->GetBoneIndex(BoneName);
+		FTransform Transform = SkeletalComponent->GetBoneTransform(index);
+		FQuat Quat = Transform.GetRotation();
+		BoneRotations.Add(BoneName, Quat.Rotator());
+	}
+	return BoneRotations;
+}
+
+
+// Shows a window where you can select a frame to edit
+void FMCGraspEdHelper::ShowFrameEditWindow()
+{
+	//Creates the edit menu with 2 editable textfields and a button
+	TSharedRef<SWindow> CookbookWindow = SNew(SWindow)
+		.Title(FText::FromString(TEXT("Edit Grasp Animation")))
+		.ClientSize(FVector2D(400, 200))
+		.SupportsMaximize(false)
+		.SupportsMinimize(false)
+		[
+			SNew(SVerticalBox)
+			+ SVerticalBox::Slot()
+		.HAlign(HAlign_Center)
+		.VAlign(VAlign_Center)
+		[
+			SAssignNew(GraspAnimBox, SEditableTextBox)
+			.Text(FText::FromString(TEXT("Name")))
+		.MinDesiredWidth(200)
+		]
+	+ SVerticalBox::Slot()
+		.HAlign(HAlign_Center)
+		.VAlign(VAlign_Center)
+		[
+			SAssignNew(FrameBox, SEditableTextBox)
+			.Text(FText::FromString(TEXT("Frame")))
+		.MinDesiredWidth(200)
+		]
+	+ SVerticalBox::Slot()
+		.HAlign(HAlign_Center)
+		.VAlign(VAlign_Center)
+		[
+			SNew(SButton)
+			.OnClicked_Raw(this, &FMCGraspEdHelper::OnEditButtonClicked)
+		.Content()
+		[
+			SAssignNew(ButtonLabel, STextBlock)
+			.Text(FText::FromString(TEXT("Load Frame")))
+		]
+
+		]
+		];
+	IMainFrameModule& MainFrameModule =
+		FModuleManager::LoadModuleChecked<IMainFrameModule>(TEXT
+		("MainFrame"));
+	if (MainFrameModule.GetParentWindow().IsValid())
+	{
+		FSlateApplication::Get().AddWindowAsNativeChild
+		(CookbookWindow, MainFrameModule.GetParentWindow()
+			.ToSharedRef());
+	}
+	else
+	{
+		FSlateApplication::Get().AddWindow(CookbookWindow);
+	}
+}
+
+// Shows a window where you can set a name for the data asset
+void FMCGraspEdHelper::ShowSaveGraspAnimWindow()
+{
+	//Creates the save menu with 2 editable textfields and a button
+	TSharedRef<SWindow> CookbookWindow = SNew(SWindow)
+		.Title(FText::FromString(TEXT("Save")))
+		.ClientSize(FVector2D(400, 200))
+		.SupportsMaximize(false)
+		.SupportsMinimize(false)
+		[
+			SNew(SVerticalBox)
+			+ SVerticalBox::Slot()
+		.HAlign(HAlign_Center)
+		.VAlign(VAlign_Center)
+		[
+			SAssignNew(NewGraspAnimNameBox, SEditableTextBox)
+			.Text(FText::FromString(TEXT("Name")))
+		]
+	+ SVerticalBox::Slot()
+		.HAlign(HAlign_Center)
+		.VAlign(VAlign_Center)
+		[
+			SNew(SButton)
+			.OnClicked_Raw(this, &FMCGraspEdHelper::OnSaveButtonClicked)
+		.Content()
+		[
+			SAssignNew(ButtonLabel, STextBlock)
+			.Text(FText::FromString(TEXT("Save")))
+		]
+
+		]
+		];
+	IMainFrameModule& MainFrameModule =
+		FModuleManager::LoadModuleChecked<IMainFrameModule>(TEXT
+		("MainFrame"));
+	if (MainFrameModule.GetParentWindow().IsValid())
+	{
+		FSlateApplication::Get().AddWindowAsNativeChild
+		(CookbookWindow, MainFrameModule.GetParentWindow()
+			.ToSharedRef());
+	}
+	else
+	{
+		FSlateApplication::Get().AddWindow(CookbookWindow);
+	}
+}
+
+void FMCGraspEdHelper::ShowCreateHelp()
+{
+	FString Message = "Start:\nStarts the process of creating a new grasping animation. Always press this first.\n\nAdd Frame:\nSave the current bone positions as a frame/step for the animation. You need atleast 2 frames for an animation.\n\nSave:\nSaves all frames as a DataAsset, that can then be added to a GraspController.\n\nClear All:\nDeletes all frames.\n\n";
+	ShowInstructions(Message);
+}
+
 #undef LOCTEXT_NAMESPACE

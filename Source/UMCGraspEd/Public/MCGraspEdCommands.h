@@ -13,22 +13,23 @@ class UMCGraspEdCommands : public TCommands<UMCGraspEdCommands>
 public:
 	UMCGraspEdCommands() : TCommands<UMCGraspEdCommands>(
 		TEXT("Grasping"), // Context name for fast lookup
-		NSLOCTEXT("Contexts", "Grasping", "Grasping Plugin"), // Localized context name
+		NSLOCTEXT("Contexts", "AnimGrasp", "Animation Grasp Plugin"), // Localized context name
 		NAME_None, // Parent
 		UMCGraspEdStyle::GetStyleSetName()// Icon Style Set
 		) {}
 
+	// Describe and instantiate the commands 
 	virtual void RegisterCommands() override;
 
-	//The entries for the drop down menu.
-	TSharedPtr<FUICommandInfo> ShowCreateHelp;
-	TSharedPtr<FUICommandInfo> ShowEditHelp;
-	TSharedPtr<FUICommandInfo> CreateGraspAnim;
-	TSharedPtr<FUICommandInfo> LoadGraspAnim;
-	TSharedPtr<FUICommandInfo> SaveGraspPosition;
-	TSharedPtr<FUICommandInfo> EditGraspPosition;
-	TSharedPtr<FUICommandInfo> ShowNextFrame;
-	TSharedPtr<FUICommandInfo> ShowPreviousFrame;
-	TSharedPtr<FUICommandInfo> DiscardNewGraspAnim;
-	TSharedPtr<FUICommandInfo> Initialize;
+	// The commands for the drop down menu entries
+	TSharedPtr<FUICommandInfo> InitGraspCmd;
+	TSharedPtr<FUICommandInfo> ShowHelpNewGraspCmd;
+	TSharedPtr<FUICommandInfo> ShowEditGraspAnimHelpCommand;
+	TSharedPtr<FUICommandInfo> SaveAnimCmd;
+	TSharedPtr<FUICommandInfo> LoadGraspAnimFrameCommand;
+	TSharedPtr<FUICommandInfo> SaveFrameCmd;
+	TSharedPtr<FUICommandInfo> UpdateFraspAnimFrame;
+	TSharedPtr<FUICommandInfo> GotoNextGraspAnimFrameCommand;
+	TSharedPtr<FUICommandInfo> GotoPrevGraspAnimFrameCommand;
+	TSharedPtr<FUICommandInfo> ClearAnimCmd;
 };

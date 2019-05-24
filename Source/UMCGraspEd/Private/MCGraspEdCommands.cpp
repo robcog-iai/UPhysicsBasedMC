@@ -4,38 +4,37 @@
 
 #define LOCTEXT_NAMESPACE "FGraspingEditorModule"
 
-void UMCGraspEdCommands::RegisterCommands() {
-	// Register all the UI elements
+// Describe and instantiate the commands 
+void UMCGraspEdCommands::RegisterCommands() 
+{
+	UI_COMMAND(InitGraspCmd, "Init",
+		"Starts the process of creating or editing a grasp animation", EUserInterfaceActionType::Button, FInputChord());
 
-	UI_COMMAND(Initialize, "Start",
-		"Starts the process of creating a grasp animation", EUserInterfaceActionType::Button, FInputChord());
-
-	UI_COMMAND(SaveGraspPosition, "Add Frame",
+	UI_COMMAND(SaveFrameCmd, "Add Frame",
 		"Add current position to animation as a frame", EUserInterfaceActionType::Button, FInputChord());
 
-	UI_COMMAND(CreateGraspAnim, "Save",
-		"Save to data asset", EUserInterfaceActionType::Button, FInputChord());
+	UI_COMMAND(SaveAnimCmd, "Save",
+		"Save the grasp animation to a data asset", EUserInterfaceActionType::Button, FInputChord());
 
-	UI_COMMAND(DiscardNewGraspAnim, "Clear All",
-		"Discards all frames", EUserInterfaceActionType::Button, FInputChord());
+	UI_COMMAND(ClearAnimCmd, "Clear All",
+		"Clears all animation frames", EUserInterfaceActionType::Button, FInputChord());
 
-	UI_COMMAND(LoadGraspAnim, "Load Grasp Anim",
-		"Loads a graso animation at a specific frame", EUserInterfaceActionType::Button, FInputChord());
+	UI_COMMAND(LoadGraspAnimFrameCommand, "Load Frame",
+		"Loads a specific grasp animation frame", EUserInterfaceActionType::Button, FInputChord());
 
-	UI_COMMAND(EditGraspPosition, "Update Frame",
-		"Updates the loaded frame with current positions", EUserInterfaceActionType::Button, FInputChord());
+	UI_COMMAND(UpdateFraspAnimFrame, "Update Frame",
+		"Updates the loaded frame with the new data", EUserInterfaceActionType::Button, FInputChord());
 
-	UI_COMMAND(ShowNextFrame, "Goto Next Frame",
-		"Goto Next Frame", EUserInterfaceActionType::Button, FInputChord());
+	UI_COMMAND(GotoNextGraspAnimFrameCommand, "Goto Next Frame",
+		"Load next frame from the animation", EUserInterfaceActionType::Button, FInputChord());
 
-	UI_COMMAND(ShowPreviousFrame, "Goto Previous Frame",
-		"Goto Previous Frame", EUserInterfaceActionType::Button, FInputChord());
+	UI_COMMAND(GotoPrevGraspAnimFrameCommand, "Goto Previous Frame",
+		"Load previous frame from the animation", EUserInterfaceActionType::Button, FInputChord());
 
-	UI_COMMAND(ShowCreateHelp, "Help",
-		"create help", EUserInterfaceActionType::Button, FInputChord());
+	UI_COMMAND(ShowHelpNewGraspCmd, "Help",
+		"Help for creating a new grasp animation", EUserInterfaceActionType::Button, FInputChord());
 
-	UI_COMMAND(ShowEditHelp, "Help",
-		"edit help", EUserInterfaceActionType::Button, FInputChord());
+	UI_COMMAND(ShowEditGraspAnimHelpCommand, "Help",
+		"Help for editing an existing grasp animation", EUserInterfaceActionType::Button, FInputChord());
 }
-
 #undef LOCTEXT_NAMESPACE

@@ -1,20 +1,12 @@
 // Copyright 1998-2017 Epic Games, Inc. All Rights Reserved.
 
 #include "UMCGraspEd.h"
+#include "PersonaModule.h"
+#include "IPersonaToolkit.h"
+#include "ISkeletalMeshEditorModule.h"
+#include "MCGraspEdHelper.h"
 #include "MCGraspEdStyle.h"
 #include "MCGraspEdCommands.h"
-#include "MCGraspEdCallbacks.h"
-#include "PersonaModule.h"
-#include "IPersonaPreviewScene.h"
-#include "IPersonaToolkit.h"
-#include "Engine.h"
-#include "LevelEditor.h"
-#include "ISkeletalMeshEditor.h"
-#include "ISkeletalMeshEditorModule.h"
-#include "ISkeletonEditor.h"
-#include "Editor/UnrealEd/Classes/Animation/DebugSkelMeshComponent.h"
-#include "ISkeletonEditorModule.h"
-#include "Editor/AnimGraph/Classes/AnimPreviewInstance.h"
 
 #define LOCTEXT_NAMESPACE "FUMCGraspEd"
 
@@ -24,191 +16,98 @@ void FUMCGraspEd::StartupModule()
 	UMCGraspEdStyle::Initialize();
 	UMCGraspEdStyle::ReloadTextures();
 
-	//Initializes the drop down menu.
-	InitializeUIButtons();
+	// Creates the toolbar extension for the grasp animation creation and editing
+	CreateToolBarExtensions();
 
-	//Creates the button in the menu bar fo the skeleton editor.
-	CreateButton();
-
-	//Loads the Persona module and binds an action to its OnPreviewSceneCreatedDelegate
+	// Loads the Persona module and binds an action to its OnPreviewSceneCreatedDelegate
 	FPersonaModule& PersonaModule =
-		FModuleManager::Get().LoadModuleChecked<FPersonaModule>("Persona");
+		FModuleManager::Get().LoadModuleChecked<FPersonaModule>("Persona");	
+	PersonaModule.OnPreviewSceneCreated().AddLambda(
+		[this](const TSharedRef<IPersonaPreviewScene>& PreviewScene) { CallbackCreateGraspHelper(PreviewScene); });
+}
 
-	OnPreviewSceneCreatedDelegate = PersonaModule.OnPreviewSceneCreated().AddLambda([this](const TSharedRef<IPersonaPreviewScene>& param) { this->OnPreviewCreation(param); });
+// Called when a new preview scene is created, it sets the debug mesh and creates the grasp helper
+void FUMCGraspEd::CallbackCreateGraspHelper(const TSharedRef<IPersonaPreviewScene>& InPreviewScene)
+{
+	// Initialize the helper class with the debug mesh	
+	TSharedRef<IPersonaToolkit> PersonaToolKitRef = InPreviewScene.Get().GetPersonaToolkit();
+	UDebugSkelMeshComponent* DebugMeshComponent = PersonaToolKitRef.Get().GetPreviewMeshComponent();	
+
+	// Create / reset the helper class
+	if (!GraspEdHelper.IsValid())
+	{
+		GraspEdHelper = MakeShareable<FMCGraspEdHelper>(new FMCGraspEdHelper());
+	}
+	else
+	{
+		GraspEdHelper.Reset();
+		GraspEdHelper = MakeShareable<FMCGraspEdHelper>(new FMCGraspEdHelper());
+	}
+
+	GraspEdHelper->Init(DebugMeshComponent);
+
+	if (GraspEdHelper->IsInit())
+	{
+		// Map the dropdown entries commands to their callbacks
+		MapCommandsNewGrasp();
+		MapCommandsEditGrasp();
+	}
 }
 
 void FUMCGraspEd::ShutdownModule()
 {
 	// This function may be called during shutdown to clean up your module.  For modules that support dynamic reloading,
 	// we call this function before unloading the module.
-
 	UMCGraspEdCommands::Unregister();
 }
 
-void FUMCGraspEd::InitializeUIButtons()
+// Add the 'New Grasp' and 'Edit Grasp' toolbar extensions
+void FUMCGraspEd::CreateToolBarExtensions()
 {
-	UMCGraspEdCommands::Register();
-	EditorCallback = UMCGraspEdCallbacks();
-	PluginCommandListCreateSection = MakeShareable(new FUICommandList);
-	PluginCommandListEditSection = MakeShareable(new FUICommandList);
-	const UMCGraspEdCommands& Commands = UMCGraspEdCommands::Get();
-
-	//Commands for the "New Grasp Animation " button
-	PluginCommandListCreateSection->MapAction(
-		Commands.Initialize,
-		FExecuteAction::CreateRaw(this, &FUMCGraspEd::InitializeStartTransforms),
-		FCanExecuteAction()
-	);
-
-	PluginCommandListCreateSection->MapAction(
-		Commands.CreateGraspAnim,
-		FExecuteAction::CreateRaw(this, &FUMCGraspEd::ShowSaveGraspAnimWindow),
-		FCanExecuteAction()
-	);
-
-	PluginCommandListCreateSection->MapAction(
-		Commands.SaveGraspPosition,
-		FExecuteAction::CreateRaw(this, &FUMCGraspEd::SaveBoneDatasAsFrame),
-		FCanExecuteAction()
-	);
-
-	PluginCommandListCreateSection->MapAction(
-		Commands.DiscardNewGraspAnim,
-		FExecuteAction::CreateRaw(this, &FUMCGraspEd::DiscardAllFrames),
-		FCanExecuteAction()
-	);
-
-	PluginCommandListCreateSection->MapAction(
-		Commands.ShowCreateHelp,
-		FExecuteAction::CreateRaw(this, &FUMCGraspEd::ShowCreateHelp),
-		FCanExecuteAction()
-	);
-
-	//Commands for the "Edit Grasp Animation" button
-	PluginCommandListEditSection->MapAction(
-		Commands.Initialize,
-		FExecuteAction::CreateRaw(this, &FUMCGraspEd::InitializeStartTransforms),
-		FCanExecuteAction()
-	);
-
-	PluginCommandListEditSection->MapAction(
-		Commands.LoadGraspAnim,
-		FExecuteAction::CreateRaw(this, &FUMCGraspEd::ShowFrameEditWindow),
-		FCanExecuteAction()
-	); 
-
-	PluginCommandListEditSection->MapAction(
-		Commands.EditGraspPosition,
-		FExecuteAction::CreateRaw(this, &FUMCGraspEd::EditLoadedGraspAnim),
-		FCanExecuteAction()
-	);
-
-	PluginCommandListEditSection->MapAction(
-		Commands.ShowNextFrame,
-		FExecuteAction::CreateRaw(this, &FUMCGraspEd::ShowNextFrame),
-		FCanExecuteAction()
-	);
-
-	PluginCommandListEditSection->MapAction(
-		Commands.ShowPreviousFrame,
-		FExecuteAction::CreateRaw(this, &FUMCGraspEd::ShowPreviousFrame),
-		FCanExecuteAction()
-	);
-
-	PluginCommandListEditSection->MapAction(
-		Commands.ShowEditHelp,
-		FExecuteAction::CreateRaw(this, &FUMCGraspEd::ShowEditHelp),
-		FCanExecuteAction()
-	);
-}
-
-void FUMCGraspEd::CreateButton()
-{
-	//Load the ISkeletalMeshEditorModule and add a new button to its menu bar.
+	// Load the ISkeletalMeshEditorModule and add a new button to its menu bar.
 	ISkeletalMeshEditorModule& SkeletalMeshEditorModule =
 		FModuleManager::Get().LoadModuleChecked<ISkeletalMeshEditorModule>("SkeletonEditor");
-	// Add toolbar entry
-	TSharedPtr<FExtender> ToolbarExtender = MakeShareable(new FExtender);
-	//Creates the "New Grasp Animation" button
-	ToolbarExtender->AddToolBarExtension(
+
+	// Create a toolbar extender
+	TSharedPtr<FExtender> ToolBarExtender = MakeShareable(new FExtender);
+	
+	// Create the extensions
+	ToolBarExtender->AddToolBarExtension(
 		"Asset",
 		EExtensionHook::After,
-		PluginCommandListCreateSection,
-		FToolBarExtensionDelegate::CreateRaw(this, &FUMCGraspEd::AddCreateOptions)
+		NewGraspCommandList,
+		FToolBarExtensionDelegate::CreateRaw(this, &FUMCGraspEd::CallbackCreateNewGraspToolBar)
 	);
-	//Creates the "Edit Grasp Animation" button
-	ToolbarExtender->AddToolBarExtension(
+	ToolBarExtender->AddToolBarExtension(
 		"Asset",
 		EExtensionHook::After,
-		PluginCommandListEditSection,
-		FToolBarExtensionDelegate::CreateRaw(this, &FUMCGraspEd::AddEditOptions)
+		EditGraspCommandList,
+		FToolBarExtensionDelegate::CreateRaw(this, &FUMCGraspEd::CallbackCreateEditGraspToolBar)
 	);
 	
-	SkeletalMeshEditorModule.GetToolBarExtensibilityManager()->AddExtender(ToolbarExtender);
+	// Add the extensions to the toolbar
+	SkeletalMeshEditorModule.GetToolBarExtensibilityManager()->AddExtender(ToolBarExtender);
 }
 
-
-TSharedRef<SWidget> FUMCGraspEd::CreateOptionMenu()
+// Creates toolbar extension 'New Grasp'
+void FUMCGraspEd::CallbackCreateNewGraspToolBar(FToolBarBuilder & Builder)
 {
-	//Creates all of the drop down entries of the "New Grasp Animation" button.
-	FMenuBuilder CreateBuilder(false, PluginCommandListCreateSection.ToSharedRef());
-	
-	const UMCGraspEdCommands& Commands = UMCGraspEdCommands::Get();
-	CreateBuilder.BeginSection("New Grasp Animation");
-	{
-		CreateBuilder.AddMenuEntry(Commands.Initialize);
-		CreateBuilder.AddMenuEntry(Commands.SaveGraspPosition);
-		CreateBuilder.AddMenuEntry(Commands.CreateGraspAnim);
-		CreateBuilder.AddMenuEntry(Commands.DiscardNewGraspAnim);
-		CreateBuilder.AddMenuEntry(Commands.ShowCreateHelp);
-	}
-	CreateBuilder.EndSection();
-
-	return CreateBuilder.MakeWidget();
-}
-
-TSharedRef<SWidget> FUMCGraspEd::EditOptionMenu()
-{
-	//Creates all of the drop down entries of the "Edit Grasp Animation" button.
-	FMenuBuilder EditBuilder(false, PluginCommandListEditSection.ToSharedRef());
-	const UMCGraspEdCommands& Commands = UMCGraspEdCommands::Get();
-	EditBuilder.BeginSection("Edit Grasp Animation");
-	{
-		EditBuilder.AddMenuEntry(Commands.Initialize);
-		EditBuilder.AddMenuEntry(Commands.LoadGraspAnim);
-		EditBuilder.AddMenuEntry(Commands.EditGraspPosition);
-		EditBuilder.AddMenuEntry(Commands.ShowNextFrame);
-		EditBuilder.AddMenuEntry(Commands.ShowPreviousFrame);
-		EditBuilder.AddMenuEntry(Commands.ShowEditHelp);
-	}
-	EditBuilder.EndSection();
-
-	return EditBuilder.MakeWidget();
-}
-
-void FUMCGraspEd::AddCreateOptions(FToolBarBuilder & Builder)
-{
-	UMCGraspEdCommands GraspingEditorCommands;
-
-	//Adds the drop down menu to the button.
 	Builder.AddComboButton(
 		FUIAction(),
-		FOnGetContent::CreateRaw(this, &FUMCGraspEd::CreateOptionMenu),
-		LOCTEXT("Create", "New Grasp Anim"),
-		LOCTEXT("Create_Tooltip", "Options to create a grasping animation"),
+		FOnGetContent::CreateRaw(this, &FUMCGraspEd::CallbackCreateNewGraspEntries),
+		LOCTEXT("NewGrasp", "New Grasp"),
+		LOCTEXT("NewGrasp_Tooltip", "Buttons for creating a new grasp animation"),
 		FSlateIcon(UMCGraspEdStyle::GetStyleSetName(), "GraspingEditor.DebugOptionToolBar"),
 		false
 	);
 }
 
-void FUMCGraspEd::AddEditOptions(FToolBarBuilder & Builder)
+// Creates toolbar extension 'Edit Grasp'
+void FUMCGraspEd::CallbackCreateEditGraspToolBar(FToolBarBuilder & Builder)
 {
-	UMCGraspEdCommands GraspingEditorCommands;
-
-	//Adds the drop down menu to the button.
 	Builder.AddComboButton(
 		FUIAction(),
-		FOnGetContent::CreateRaw(this, &FUMCGraspEd::EditOptionMenu),
+		FOnGetContent::CreateRaw(this, &FUMCGraspEd::CallbackCreateEditGraspEntries),
 		LOCTEXT("Edit", "Edit Grasp Anim"),
 		LOCTEXT("Edit_Tooltip", "Options to edit an existing grasping animation"),
 		FSlateIcon(UMCGraspEdStyle::GetStyleSetName(), "GraspingEditor.DebugOptionToolBar"),
@@ -216,103 +115,270 @@ void FUMCGraspEd::AddEditOptions(FToolBarBuilder & Builder)
 	);
 }
 
-
-void FUMCGraspEd::OnPreviewCreation(const TSharedRef<IPersonaPreviewScene>& InPreviewScene)
+// Creates toolbar extension 'New Grasp' entries
+TSharedRef<SWidget> FUMCGraspEd::CallbackCreateNewGraspEntries()
 {
-	//When a preview scene is created get its DebugMeshComponent and also reset the EditorCallBack
-	TSharedRef<IPersonaToolkit> PersonaToolKitRef = InPreviewScene.Get().GetPersonaToolkit();
-	DebugMeshComponent = PersonaToolKitRef.Get().GetPreviewMeshComponent();
-	EditorCallback.Reset();
+	// Creates all of the drop down entries of the "New Grasp" button.
+	FMenuBuilder CreateBuilder(false, NewGraspCommandList.ToSharedRef());
+	
+	const UMCGraspEdCommands& Commands = UMCGraspEdCommands::Get();
+	CreateBuilder.BeginSection("New Grasp");
+	{
+		CreateBuilder.AddMenuEntry(Commands.InitGraspCmd);
+		CreateBuilder.AddMenuEntry(Commands.SaveFrameCmd);
+		CreateBuilder.AddMenuEntry(Commands.SaveAnimCmd);
+		CreateBuilder.AddMenuEntry(Commands.ClearAnimCmd);
+		CreateBuilder.AddMenuEntry(Commands.ShowHelpNewGraspCmd);
+	}
+	CreateBuilder.EndSection();
+
+	return CreateBuilder.MakeWidget();
 }
 
-void FUMCGraspEd::InitializeStartTransforms()
+// Creates toolbar extension 'Edit Grasp' entries
+TSharedRef<SWidget> FUMCGraspEd::CallbackCreateEditGraspEntries()
 {
-	EditorCallback.SetPreviewMeshComponent(DebugMeshComponent);
-	EditorCallback.SaveStartTransforms();
-	StartRotationsInitialized = true;
+	//Creates all of the drop down entries of the "Edit Grasp Animation" button.
+	FMenuBuilder EditBuilder(false, EditGraspCommandList.ToSharedRef());
+	const UMCGraspEdCommands& Commands = UMCGraspEdCommands::Get();
+	EditBuilder.BeginSection("Edit Grasp");
+	{
+		EditBuilder.AddMenuEntry(Commands.InitGraspCmd);
+		EditBuilder.AddMenuEntry(Commands.LoadGraspAnimFrameCommand);
+		EditBuilder.AddMenuEntry(Commands.UpdateFraspAnimFrame);
+		EditBuilder.AddMenuEntry(Commands.GotoNextGraspAnimFrameCommand);
+		EditBuilder.AddMenuEntry(Commands.GotoPrevGraspAnimFrameCommand);
+		EditBuilder.AddMenuEntry(Commands.ShowEditGraspAnimHelpCommand);
+	}
+	EditBuilder.EndSection();
+
+	return EditBuilder.MakeWidget();
 }
+
+// Map the dropdown entries for 'New Grasp'
+void FUMCGraspEd::MapCommandsNewGrasp()
+{
+	// Use this method to register commands. Usually done in StartupModule()
+	UMCGraspEdCommands::Register();
+
+	NewGraspCommandList = MakeShareable(new FUICommandList);
+	const UMCGraspEdCommands& Commands = UMCGraspEdCommands::Get();
+
+	if (!GraspEdHelper.IsValid())
+	{
+		return;
+	}
+
+	TSharedRef<FMCGraspEdHelper> GraspEdHelperRef = GraspEdHelper.ToSharedRef();
+	
+	NewGraspCommandList->MapAction(
+		Commands.InitGraspCmd,
+		FExecuteAction::CreateSP(GraspEdHelperRef, &FMCGraspEdHelper::SaveStartTransforms),
+		FCanExecuteAction()
+	);
+	NewGraspCommandList->MapAction(
+		Commands.SaveFrameCmd,
+		FExecuteAction::CreateSP(GraspEdHelperRef, &FMCGraspEdHelper::SaveToFrame),
+		FCanExecuteAction()
+	);
+	NewGraspCommandList->MapAction(
+		Commands.SaveAnimCmd,
+		FExecuteAction::CreateSP(GraspEdHelperRef, &FMCGraspEdHelper::ShowSaveGraspAnimWindow),
+		FCanExecuteAction()
+	);
+	NewGraspCommandList->MapAction(
+		Commands.ClearAnimCmd,
+		FExecuteAction::CreateSP(GraspEdHelperRef, &FMCGraspEdHelper::DiscardAllFrames),
+		FCanExecuteAction()
+	);
+	NewGraspCommandList->MapAction(
+		Commands.ShowHelpNewGraspCmd,
+		FExecuteAction::CreateSP(GraspEdHelperRef, &FMCGraspEdHelper::ShowCreateHelp),
+		FCanExecuteAction()
+	);
+
+}
+
+// Map the dropdown entries for 'Edit Grasp'
+void FUMCGraspEd::MapCommandsEditGrasp()
+{
+	EditGraspCommandList = MakeShareable(new FUICommandList);
+	const UMCGraspEdCommands& Commands = UMCGraspEdCommands::Get();
+
+	EditGraspCommandList->MapAction(
+		Commands.LoadGraspAnimFrameCommand,
+		FExecuteAction::CreateRaw(this, &FUMCGraspEd::ShowFrameEditWindow),
+		FCanExecuteAction()
+	);
+	EditGraspCommandList->MapAction(
+		Commands.UpdateFraspAnimFrame,
+		FExecuteAction::CreateRaw(this, &FUMCGraspEd::EditLoadedGraspAnim),
+		FCanExecuteAction()
+	);
+	EditGraspCommandList->MapAction(
+		Commands.GotoNextGraspAnimFrameCommand,
+		FExecuteAction::CreateRaw(this, &FUMCGraspEd::ShowNextFrame),
+		FCanExecuteAction()
+	);
+	EditGraspCommandList->MapAction(
+		Commands.GotoPrevGraspAnimFrameCommand,
+		FExecuteAction::CreateRaw(this, &FUMCGraspEd::ShowPreviousFrame),
+		FCanExecuteAction()
+	);
+	EditGraspCommandList->MapAction(
+		Commands.ShowEditGraspAnimHelpCommand,
+		FExecuteAction::CreateRaw(this, &FUMCGraspEd::ShowEditHelp),
+		FCanExecuteAction()
+	);
+}
+
 
 void FUMCGraspEd::ShowFrameEditWindow()
 {
-	if (!StartRotationsInitialized)
+	if (GraspEdHelper.IsValid())
 	{
-		FString Message = "Please press start before editing any grasps";
-		EditorCallback.ShowInstructions(Message);
-		return;
+		if (GraspEdHelper->IsInit())
+		{
+			GraspEdHelper->ShowFrameEditWindow();
+		}
+		else
+		{
+			FString Message = "Please press init before anything";
+			GraspEdHelper->ShowInstructions(Message);
+		}
 	}
-	EditorCallback.SetPreviewMeshComponent(DebugMeshComponent);
-	EditorCallback.ShowFrameEditWindow();
 }
 
 void FUMCGraspEd::WriteFramesToAsset()
 {
-	//Writes all currently recorded frames to a DataAsset
-	EditorCallback.SetPreviewMeshComponent(DebugMeshComponent);
-	EditorCallback.WriteFramesToAsset();
+	if (GraspEdHelper.IsValid())
+	{
+		if (GraspEdHelper->IsInit())
+		{
+			GraspEdHelper->WriteFramesToAsset();
+		}
+		else
+		{
+			FString Message = "Please press init before anything";
+			GraspEdHelper->ShowInstructions(Message);
+		}
+	}	
 }
 
 void FUMCGraspEd::ShowSaveGraspAnimWindow()
 {
-	//Shows a window where you can enter a new for a newly created grasping stlye
-	EditorCallback.SetPreviewMeshComponent(DebugMeshComponent);
-	EditorCallback.ShowSaveGraspAnimWindow();
-
+	if (GraspEdHelper.IsValid())
+	{
+		if (GraspEdHelper->IsInit())
+		{
+			GraspEdHelper->ShowSaveGraspAnimWindow();
+		}
+		else
+		{
+			FString Message = "Please press init before anything";
+			GraspEdHelper->ShowInstructions(Message);
+		}
+	}
 }
 
 void FUMCGraspEd::SaveBoneDatasAsFrame()
 {
-	if(!StartRotationsInitialized)
+	if (GraspEdHelper.IsValid())
 	{
-		FString Message = "Please press start before creating any frames";
-		EditorCallback.ShowInstructions(Message);
-		return;
+		if (GraspEdHelper->IsInit())
+		{
+			GraspEdHelper->SaveToFrame();
+		}
+		else
+		{
+			FString Message = "Please press init before anything";
+			GraspEdHelper->ShowInstructions(Message);
+		}
 	}
-	//Saves the current mesh position as a frame
-	EditorCallback.SetPreviewMeshComponent(DebugMeshComponent);
-	EditorCallback.SaveBoneDatasAsFrame();
 }
 
 void FUMCGraspEd::EditLoadedGraspAnim()
 {
-	//Overwrites the loaded step for a grasping stlye with the currently displayed hand position
-	EditorCallback.SetPreviewMeshComponent(DebugMeshComponent);
-	EditorCallback.EditLoadedGraspAnim();
+	if (GraspEdHelper.IsValid())
+	{
+		if (GraspEdHelper->IsInit())
+		{
+			GraspEdHelper->EditLoadedGraspAnim();
+		}
+		else
+		{
+			FString Message = "Please press init before anything";
+			GraspEdHelper->ShowInstructions(Message);
+		}
+	}
 }
 
 void FUMCGraspEd::ShowCreateHelp()
 {
-	//Shows help for the "Create grasp" button
-	FString Message = "Start:\nStarts the process of creating a new grasping animation. Always press this first.\n\nAdd Frame:\nSave the current bone positions as a frame/step for the animation. You need atleast 2 frames for an animation.\n\nSave:\nSaves all frames as a DataAsset, that can then be added to a GraspController.\n\nClear All:\nDeletes all frames.\n\n";
-	EditorCallback.ShowInstructions(Message);
+	if (GraspEdHelper.IsValid())
+	{
+		FString Message = "Start:\nStarts the process of creating a new grasping animation. Always press this first.\n\nAdd Frame:\nSave the current bone positions as a frame/step for the animation. You need atleast 2 frames for an animation.\n\nSave:\nSaves all frames as a DataAsset, that can then be added to a GraspController.\n\nClear All:\nDeletes all frames.\n\n";
+		GraspEdHelper->ShowInstructions(Message);
+	}
 }
 
 void FUMCGraspEd::ShowEditHelp()
 {
-	//Shows help for the "Edit grasp" button
-	FString Message = "Load Grasp Animation:\nLoads the specified animation at the specified frame.\n\nUpdate Frame:\nUpdates the current frame with the current bone rotations. You can't edit frame 0.\n\nGoto Next Frame:\nGoes to the next frame.\n\nGoto Privious Frame:\nGoes to privious frame.\n\n";
-	EditorCallback.ShowInstructions(Message);
+	if (GraspEdHelper.IsValid())
+	{
+		FString Message = "Load Grasp Animation:\nLoads the specified animation at the specified frame.\n\nUpdate Frame:\nUpdates the current frame with the current bone rotations. You can't edit frame 0.\n\nGoto Next Frame:\nGoes to the next frame.\n\nGoto Privious Frame:\nGoes to privious frame.\n\n";
+		GraspEdHelper->ShowInstructions(Message);
+	}
 }
 
 void FUMCGraspEd::DiscardAllFrames()
 {
-	//Discards all currently recorded frames
-	EditorCallback.DiscardAllFrames();
+	if (GraspEdHelper.IsValid())
+	{
+		if (GraspEdHelper->IsInit())
+		{
+			GraspEdHelper->DiscardAllFrames();
+		}
+		else
+		{
+			FString Message = "Please press init before anything";
+			GraspEdHelper->ShowInstructions(Message);
+		}
+	}
 }
 
 void FUMCGraspEd::ShowNextFrame()
 {
-	//Shows the next frame depending on the one currently displayed
-	EditorCallback.SetPreviewMeshComponent(DebugMeshComponent);
-	EditorCallback.ShowFrame(true);
+	if (GraspEdHelper.IsValid())
+	{
+		if (GraspEdHelper->IsInit())
+		{
+			GraspEdHelper->ShowFrame(true);
+		}
+		else
+		{
+			FString Message = "Please press init before anything";
+			GraspEdHelper->ShowInstructions(Message);
+		}
+	}
 }
 
 void FUMCGraspEd::ShowPreviousFrame()
 {
-	//Shows the previous frame depending on the one currently displayed
-	EditorCallback.SetPreviewMeshComponent(DebugMeshComponent);
-	EditorCallback.ShowFrame(false);
+	if (GraspEdHelper.IsValid())
+	{
+		if (GraspEdHelper->IsInit())
+		{
+			GraspEdHelper->ShowFrame(false);
+		}
+		else
+		{
+			FString Message = "Please press init before anything";
+			GraspEdHelper->ShowInstructions(Message);
+		}
+	}
 }
 
 #undef LOCTEXT_NAMESPACE
 	
-IMPLEMENT_MODULE(FUMCGraspEd, URealisticGrasping)
+IMPLEMENT_MODULE(FUMCGraspEd, UMCGraspEd)

@@ -4,44 +4,35 @@
 
 #include "CoreMinimal.h"
 #include "ModuleManager.h"
-#include "Runtime/SlateCore/Public/Widgets/SWidget.h"
+#include "Widgets/SWidget.h"
 #include "IPersonaPreviewScene.h"
-#include "Runtime/Core/Public/Templates/SharedPointer.h"
-#include "Runtime/Slate/Public/Framework/MultiBox/MultiBoxBuilder.h"
-#include "Editor/UnrealEd/Classes/Animation/DebugSkelMeshComponent.h"
-#include "MCGraspEdCallbacks.h"
-#include "PersonaModule.h"
-#include "IPersonaPreviewScene.h"
-#include "IPersonaToolkit.h"
-#include <functional>
 
 class FUMCGraspEd : public IModuleInterface
 {
 public:
-
 	/** IModuleInterface implementation */
 	virtual void StartupModule() override;
 	virtual void ShutdownModule() override;
+
 private:
+	// Called when a new preview scene is created, it sets the debug mesh and creates the grasp helper
+	void CallbackCreateGraspHelper(const TSharedRef<IPersonaPreviewScene>& InPreviewScene);
 
-	void InitializeUIButtons();
-	void CreateButton();
+	// Add the 'New Grasp' and 'Edit Grasp' toolbar extensions with the dropdown entries
+	void CreateToolBarExtensions();
+	
+	// Callbacks for extending the toolbar with the combo buttons and its entries
+	void CallbackCreateNewGraspToolBar(FToolBarBuilder& Builder);
+	void CallbackCreateEditGraspToolBar(FToolBarBuilder& Builder);
+	TSharedRef<SWidget> CallbackCreateNewGraspEntries();
+	TSharedRef<SWidget> CallbackCreateEditGraspEntries();
 
-	//Create the "Create grasp" button
-	TSharedRef<SWidget> CreateOptionMenu();
-	void AddCreateOptions(FToolBarBuilder& Builder);
-	TSharedPtr<class FUICommandList> PluginCommandListCreateSection;
+	// Map dropdown entries
+	void MapCommandsNewGrasp();
+	void MapCommandsEditGrasp();
 
-	//Create the "Edit grasp" button
-	TSharedRef<SWidget> EditOptionMenu();
-	void AddEditOptions(FToolBarBuilder& Builder);
-	TSharedPtr<class FUICommandList> PluginCommandListEditSection;
-
-	//Gets called when a new preview scene is created
-	void OnPreviewCreation(const TSharedRef<IPersonaPreviewScene>& InPreviewScene);
-
-	//Prepares and calls actions on the EditorCallback
-	void InitializeStartTransforms();
+	// Prepares and calls actions on the EditorCallback
+	//void Init();
 	void ShowFrameEditWindow();
 	void WriteFramesToAsset();
 	void ShowSaveGraspAnimWindow();
@@ -53,12 +44,11 @@ private:
 	void ShowNextFrame();
 	void ShowPreviousFrame();
 
-	UMCGraspEdCallbacks EditorCallback;
+private:
+	// Command lists
+	TSharedPtr<class FUICommandList> NewGraspCommandList;
+	TSharedPtr<class FUICommandList> EditGraspCommandList;
 
-	FDelegateHandle OnPreviewSceneCreatedDelegate;
-
-	//The MeshComponent currently displayed in a preview scene.
-	UDebugSkelMeshComponent* DebugMeshComponent;
-
-	bool StartRotationsInitialized = false;
+	// Grasp helper pointer
+	TSharedPtr<class FMCGraspEdHelper> GraspEdHelper;
 };
