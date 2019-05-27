@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "ModuleManager.h"
-#include "Widgets/SWidget.h"
 #include "IPersonaPreviewScene.h"
 
 class FUMCGraspEd : public IModuleInterface
@@ -24,31 +23,16 @@ private:
 	// Callbacks for extending the toolbar with the combo buttons and its entries
 	void CallbackCreateNewGraspToolBar(FToolBarBuilder& Builder);
 	void CallbackCreateEditGraspToolBar(FToolBarBuilder& Builder);
-	TSharedRef<SWidget> CallbackCreateNewGraspEntries();
-	TSharedRef<SWidget> CallbackCreateEditGraspEntries();
+	TSharedRef<class SWidget> CallbackCreateNewGraspEntries();
+	TSharedRef<class SWidget> CallbackCreateEditGraspEntries();
 
-	// Map dropdown entries
-	void MapCommandsNewGrasp();
-	void MapCommandsEditGrasp();
-
-	// Prepares and calls actions on the EditorCallback
-	//void Init();
-	void ShowFrameEditWindow();
-	void WriteFramesToAsset();
-	void ShowSaveGraspAnimWindow();
-	void SaveBoneDatasAsFrame();
-	void EditLoadedGraspAnim();
-	void ShowCreateHelp();
-	void ShowEditHelp();
-	void DiscardAllFrames();
-	void ShowNextFrame();
-	void ShowPreviousFrame();
+	// Map the dropdown entries actions
+	void MapCommands();
 
 private:
 	// Command lists
-	TSharedPtr<class FUICommandList> NewGraspCommandList;
-	TSharedPtr<class FUICommandList> EditGraspCommandList;
+	TSharedPtr<class FUICommandList> CommandsList;
 
-	// Grasp helper pointer
-	TSharedPtr<class FMCGraspEdHelper> GraspEdHelper;
+	// Holds the functions to which the actions are bound
+	TSharedPtr<class FMCGraspEdUtils> GraspEdUtils;
 };
