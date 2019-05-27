@@ -20,7 +20,7 @@ FMCGraspEdUtils::FMCGraspEdUtils()
 	bIsInit = false;
 
 	CurrEditFrameIndex = 0;
-	CurrGraspName = "";
+	CurrEditGraspName = "";
 }
 
 // Init component
@@ -189,7 +189,7 @@ void FMCGraspEdUtils::ClearAll()
 	InitialBoneCompSpaceTransf.Empty();
 
 	CurrEditFrameIndex = 0;
-	CurrGraspName = "";
+	CurrEditGraspName = "";
 	AnimFrames.Empty();
 
 	ShowMessageBox(FText::FromString("Clear All"), FText::FromString("All your recorded frames are discarded."));
@@ -264,13 +264,13 @@ void FMCGraspEdUtils::ShowLoadFrameWindow()
 // Overwrites the currently loaded step with the currently displayed bone rotations.
 void FMCGraspEdUtils::UpdateFrame()
 {
-	if (CurrGraspName.IsEmpty())
+	if (CurrEditGraspName.IsEmpty())
 	{
 		ShowMessageBox(FText::FromString("Error"), FText::FromString("Could not edit grasping animation. You did not load any grasping animation."));
 		return;
 	}
 	
-	UMCGraspAnimDataAsset* GraspDataAssetToEdit = GetAnimGraspDataAsset(CurrGraspName);
+	UMCGraspAnimDataAsset* GraspDataAssetToEdit = GetDataAsset(CurrEditGraspName);
 	if (!GraspDataAssetToEdit)
 	{
 		ShowMessageBox(FText::FromString("Error"), FText::FromString("Could not find the grasp animation."));
@@ -313,16 +313,19 @@ void FMCGraspEdUtils::UpdateFrame()
 
 	GraspDataAssetToEdit->Frames[CurrEditFrameIndex] = NewFrameData;
 
-	ShowMessageBox(FText::FromString("Edited grasp"), FText::FromString("The grasp was successfully edited. (TODO test this)"));
-	//Reloads the saved step.
-	ChangeBoneRotationsTo(CurrGraspName, CurrEditFrameIndex);
+	// Reloads the saved step.
+	// TODO Load frame could be switched with: 
+	// ApplyFrame(NewFrameData);
+	LoadFrame(CurrEditGraspName, CurrEditFrameIndex);
+
+	ShowMessageBox(FText::FromString("Load Frame"), FText::FromString("The grasp was successfully edited. (TODO test this)"));
 }
 
 // Loads the next frame
 void FMCGraspEdUtils::ShowNextFrame()
 {
 	TArray<FMCGraspAnimFrameData> Frames;
-	ReadFramesFromName(CurrGraspName, Frames);
+	GetFramesFromAssetName(CurrEditGraspName, Frames);
 
 	int32 LastFrameIndex = Frames.Num() - 1;
 	DebugMeshComponent->SkeletalMesh->Modify();
@@ -354,7 +357,7 @@ void FMCGraspEdUtils::ShowNextFrame()
 void FMCGraspEdUtils::ShowPreviousFrame()
 {
 	TArray<FMCGraspAnimFrameData> Frames;
-	ReadFramesFromName(CurrGraspName, Frames);
+	GetFramesFromAssetName(CurrEditGraspName, Frames);
 
 	int32 LastFrameIndex = Frames.Num() - 1;
 	DebugMeshComponent->SkeletalMesh->Modify();
@@ -407,12 +410,11 @@ FReply FMCGraspEdUtils::OnSaveCallback()
 // Called from the load frame windows, it loads a frame to the debug mesh
 FReply FMCGraspEdUtils::OnLoadCallback()
 {
-	CurrGraspName = NameTextBox->GetText().ToString();
-	FText FrameToEdit = FrameNrTextBox->GetText();
-	CurrEditFrameIndex = FCString::Atoi(*FrameToEdit.ToString());
+	CurrEditGraspName = NameTextBox->GetText().ToString();
+	int32 FrameNr = FCString::Atoi(*FrameNrTextBox->GetText().ToString());
 
-	// Changes bone rotations to the given step for the given grasping stlye
-	ChangeBoneRotationsTo(CurrGraspName, CurrEditFrameIndex);
+	// Changes bone rotations to the given step for the given grasping style
+	LoadFrame(CurrEditGraspName, FrameNr);
 	return FReply::Handled();
 }
 
@@ -427,7 +429,7 @@ void FMCGraspEdUtils::WriteToAsset(const FString& InAssetName)
 	}
 
 	// Check if the data asset already exists, or create a new one
-	if (UMCGraspAnimDataAsset* ExistingDataAsset = GetAnimGraspDataAsset(InAssetName))
+	if (UMCGraspAnimDataAsset* ExistingDataAsset = GetDataAsset(InAssetName))
 	{
 		ExistingDataAsset->Name = InAssetName;
 		ExistingDataAsset->Frames = AnimFrames;
@@ -461,47 +463,11 @@ void FMCGraspEdUtils::WriteToAsset(const FString& InAssetName)
 	}
 }
 
-// Creates a message dialog box
-void FMCGraspEdUtils::ShowMessageBox(FText Title, FText Message)
-{
-	FMessageDialog* Instructions = new FMessageDialog();
-
-	//Creates the dialog window.
-	Instructions->Debugf(Message, &Title);
-}
-
-// Get data asset, returns nullptr if not found
-UMCGraspAnimDataAsset* FMCGraspEdUtils::GetAnimGraspDataAsset(const FString& Name)
-{
-	for (UMCGraspAnimDataAsset* DataAsset : LoadAllAssets())
-	{
-		if (DataAsset->Name.Equals(Name))
-		{
-			return DataAsset;
-		}
-	}
-	return nullptr;
-}
-
-// Read frames from the data asset file
-bool FMCGraspEdUtils::ReadFramesFromName(const FString& Name, TArray<FMCGraspAnimFrameData>& OutFrames)
-{
-	for (UMCGraspAnimDataAsset* DataAsset : LoadAllAssets())
-	{
-		if (DataAsset->Name.Equals(Name))
-		{
-			OutFrames = DataAsset->Frames;
-			return true;
-		}
-	}
-	return false;
-}
-
-// Loads a step from a grasp anim
-void FMCGraspEdUtils::ChangeBoneRotationsTo(const FString& GraspAnimName, int32 FrameIndex)
+// Apply animation frame using the asset name and frame index
+void FMCGraspEdUtils::LoadFrame(const FString& GraspAnimName, int32 FrameIndex)
 {
 	TArray<FMCGraspAnimFrameData> Frames;
-	if (ReadFramesFromName(GraspAnimName, Frames))
+	if (GetFramesFromAssetName(GraspAnimName, Frames))
 	{
 		if (Frames.IsValidIndex(FrameIndex))
 		{
@@ -553,67 +519,65 @@ void FMCGraspEdUtils::ApplyFrame(const FMCGraspAnimFrameData& Frame)
 	}
 }
 
-// Returns all GraspDataAssets that can be read
-TArray<UMCGraspAnimDataAsset*> FMCGraspEdUtils::LoadAllAssets()
+// Read frames from the data asset file
+bool FMCGraspEdUtils::GetFramesFromAssetName(const FString& InName, TArray<FMCGraspAnimFrameData>& OutFrames)
 {
-	FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>(FName("AssetRegistry"));
-	IAssetRegistry& AssetRegistry = AssetRegistryModule.Get();
-	while (AssetRegistry.IsLoadingAssets())
+	for (UMCGraspAnimDataAsset* DataAsset : GetAllDataAssets())
 	{
-		UE_LOG(LogTemp, Error, TEXT("%s::%d Loading.."), *FString(__func__), __LINE__);
+		if (DataAsset->Name.Equals(InName))
+		{
+			OutFrames = DataAsset->Frames;
+			return true;
+		}
 	}
+	return false;
+}
 
-	return GetAlAnimDataAssets();
+// Get data asset, returns nullptr if not found
+UMCGraspAnimDataAsset* FMCGraspEdUtils::GetDataAsset(const FString& Name)
+{
+	for (UMCGraspAnimDataAsset* DataAsset : GetAllDataAssets())
+	{
+		if (DataAsset->Name.Equals(Name))
+		{
+			return DataAsset;
+		}
+	}
+	return nullptr;
 }
 
 // Finds all the GraspDataAssets in a hardcoded folder
-TArray<UMCGraspAnimDataAsset*> FMCGraspEdUtils::GetAlAnimDataAssets()
+TArray<UMCGraspAnimDataAsset*> FMCGraspEdUtils::GetAllDataAssets()
 {
 	FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>(FName("AssetRegistry"));
 	IAssetRegistry& AssetRegistry = AssetRegistryModule.Get();
 
 	FARFilter Filter;
 	Filter.ClassNames = { TEXT("MCGraspAnimDataAsset") };
-	Filter.PackagePaths.Add("/UPhysicsBasedMC/GraspAnimations");
+	Filter.PackagePaths.Add("/UPhysicsBasedMC/GraspAnimations");	
 
 	TArray<FAssetData> AssetList;
-
 	AssetRegistry.GetAssets(Filter, AssetList);
 
 	TArray<UMCGraspAnimDataAsset*> GraspAssets;
-
 	for (const FAssetData& DataAsset : AssetList)
 	{
 		UObject* Obj = DataAsset.GetAsset();
-		if (Obj->GetClass()->IsChildOf(UMCGraspAnimDataAsset::StaticClass())) {
+		if (Obj->GetClass()->IsChildOf(UMCGraspAnimDataAsset::StaticClass())) 
+		{
 			GraspAssets.Add(Cast<UMCGraspAnimDataAsset>(Obj));
 		}
 	}
-
 	return GraspAssets;
 }
 
-
-
-
-TMap<FName, FRotator> FMCGraspEdUtils::GetBoneRotations(USkeletalMeshComponent * SkeletalComponent)
+// Creates a message dialog box
+void FMCGraspEdUtils::ShowMessageBox(FText Title, FText Message)
 {
-	TMap<FName, FRotator> BoneRotations;
-	TArray<FName> BoneNames;
-	SkeletalComponent->GetBoneNames(BoneNames);
-	//Gets the rotations of every bone in the given mesh and saves them in a map with their bone name as key.
-	for (FName BoneName : BoneNames)
-	{
-		int index = SkeletalComponent->GetBoneIndex(BoneName);
-		FTransform Transform = SkeletalComponent->GetBoneTransform(index);
-		FQuat Quat = Transform.GetRotation();
-		BoneRotations.Add(BoneName, Quat.Rotator());
-	}
-	return BoneRotations;
+	FMessageDialog* Instructions = new FMessageDialog();
+
+	//Creates the dialog window.
+	Instructions->Debugf(Message, &Title);
 }
-
-
-
-
 
 #undef LOCTEXT_NAMESPACE

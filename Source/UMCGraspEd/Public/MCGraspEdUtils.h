@@ -67,7 +67,7 @@ private:
 	void WriteToAsset(const FString& InAssetName);
 
 	// Loads a step from a grasp anim
-	void ChangeBoneRotationsTo(const FString& GraspAnimName, int32 FrameIndex);
+	void LoadFrame(const FString& GraspAnimName, int32 FrameIndex);
 
 	// Shows the frame at the given index for the given HandAnimationData in the preview scene
 	void ShowFrame(TMap<FString, FVector> BoneStartLocations, TArray<FMCGraspAnimFrameData> Frames, int32 Index);
@@ -75,23 +75,17 @@ private:
 	// Apply the given frame to the debug mesh
 	void ApplyFrame(const FMCGraspAnimFrameData& Frame);
 
-	// Creates a message dialog box
-	void ShowMessageBox(FText Title, FText Message);
-
 	// Read frames from the data asset file
-	bool ReadFramesFromName(const FString& Name, TArray<FMCGraspAnimFrameData>& OutFrames);
+	bool GetFramesFromAssetName(const FString& Name, TArray<FMCGraspAnimFrameData>& OutFrames);
 
 	// Find the grasp animation data asset, return nullptr if not found
-	UMCGraspAnimDataAsset* GetAnimGraspDataAsset(const FString& Name);
-
-	// Returns all GraspDataAssets that can be read
-	TArray<UMCGraspAnimDataAsset*> LoadAllAssets();
+	UMCGraspAnimDataAsset* GetDataAsset(const FString& Name);
 
 	// Finds all the GraspDataAssets in a hardcoded folder
-	TArray<UMCGraspAnimDataAsset*> GetAlAnimDataAssets();
+	TArray<UMCGraspAnimDataAsset*> GetAllDataAssets();
 
-	// Creates a map with the names of the bones as FName and their current rotations as FRotator for a given USkeletalMeshComponent.
-	TMap<FName, FRotator> GetBoneRotations(USkeletalMeshComponent*  SkeletalComponent);
+	// Creates a message dialog box
+	void ShowMessageBox(FText Title, FText Message);
 
 private:
 	// True when the debug mesh component reference is set
@@ -121,6 +115,10 @@ private:
 	
 	FString NewGraspAnimName;
 	int32 CurrEditFrameIndex;
-	FString CurrGraspName;
+	
+	FString CurrEditGraspName;
+
+	// TODO The currently loaded data asset for editing
+	UMCGraspAnimDataAsset* CurrEditDataAsset;
 
 };
