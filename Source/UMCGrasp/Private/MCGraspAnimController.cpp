@@ -235,7 +235,6 @@ void UMCGraspAnimController::GraspUpdateCallback(float Value)
 		bIsIdle = false;
 		bIsMax = true;
 		DriveToLastFrame();
-		UE_LOG(LogTemp, Warning, TEXT("%s::%d MAX "), *FString(__func__), __LINE__);
 	}
 	else if (Value > 0.05f)
 	{
@@ -258,15 +257,14 @@ void UMCGraspAnimController::GraspUpdateCallback(float Value)
 		SetTargetUsingLerp(ActiveAnimation[FrameIndex], ActiveAnimation[FrameIndex + 1], Alpha);
 		DriveToTarget();
 
-		UE_LOG(LogTemp, Warning, TEXT("%s::%d \n\t Value=%f; \n\t ValueOnTheFrameAxis=%f; \n\t FrameIndex=%d; \n\t Alpha=%f; \n\t ActiveAnimStepSize=%f; \n\t Num=%d"),
-			*FString(__func__), __LINE__, Value, ValueOnTheFrameAxis, FrameIndex, Alpha, ActiveAnimStepSize, ActiveAnimation.Num());
+		//UE_LOG(LogTemp, Warning, TEXT("%s::%d \n\t Value=%f; \n\t ValueOnTheFrameAxis=%f; \n\t FrameIndex=%d; \n\t Alpha=%f; \n\t ActiveAnimStepSize=%f; \n\t Num=%d"),
+		//	*FString(__func__), __LINE__, Value, ValueOnTheFrameAxis, FrameIndex, Alpha, ActiveAnimStepSize, ActiveAnimation.Num());
 	}
 	else if(!bIsIdle)
 	{
 		bIsIdle = true;
 		bIsMax = false;
 		DriveToFirstFrame();
-		UE_LOG(LogTemp, Warning, TEXT("%s::%d MIN "), *FString(__func__), __LINE__);
 	}
 }
 

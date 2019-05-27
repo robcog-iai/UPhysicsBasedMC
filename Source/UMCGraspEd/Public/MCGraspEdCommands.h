@@ -22,14 +22,15 @@ public:
 	virtual void RegisterCommands() override;
 
 	// The commands for the drop down menu entries
-	TSharedPtr<FUICommandInfo> InitGraspCmd;
-	TSharedPtr<FUICommandInfo> ShowHelpNewGraspCmd;
-	TSharedPtr<FUICommandInfo> ShowEditGraspAnimHelpCommand;
+	TSharedPtr<FUICommandInfo> SaveMeshInitialStateCmd;
+	TSharedPtr<FUICommandInfo> AddFrameCmd;
 	TSharedPtr<FUICommandInfo> SaveAnimCmd;
-	TSharedPtr<FUICommandInfo> LoadGraspAnimFrameCommand;
-	TSharedPtr<FUICommandInfo> SaveFrameCmd;
-	TSharedPtr<FUICommandInfo> UpdateFraspAnimFrame;
-	TSharedPtr<FUICommandInfo> GotoNextGraspAnimFrameCommand;
-	TSharedPtr<FUICommandInfo> GotoPrevGraspAnimFrameCommand;
-	TSharedPtr<FUICommandInfo> ClearAnimCmd;
+	TSharedPtr<FUICommandInfo> ClearAllCmd;
+	TSharedPtr<FUICommandInfo> HelpNewGraspCmd;
+
+	TSharedPtr<FUICommandInfo> LoadFrameCmd;
+	TSharedPtr<FUICommandInfo> UpdateFrameCmd;
+	TSharedPtr<FUICommandInfo> NextFrameCmd;
+	TSharedPtr<FUICommandInfo> PrevFrameCmd;
+	TSharedPtr<FUICommandInfo> HelpEditGraspCmd;
 };
