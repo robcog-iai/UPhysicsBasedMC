@@ -52,6 +52,12 @@ public:
 		float PRot, float IRot, float DRot, float MaxRot,
 		FTransform InOffset);
 
+	// Reset the location pid controller
+	void ResetLoc(float P, float I, float D, float Max);
+
+	// Reset the rotation pid controller
+	void ResetRot(float P, float I, float D, float Max);
+
 	// Call the update function pointer
 	void Update(float DeltaTime);
 

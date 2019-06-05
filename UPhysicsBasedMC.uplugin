@@ -25,6 +25,10 @@
 			"LoadingPhase": "Default"
 		},
 		{
+			"Name": "UMC6DControllerGUI",
+			"Type": "Editor"
+		},
+		{
 			"Name": "UMCGrasp",
 			"Type": "Runtime",
 			"LoadingPhase": "Default"
@@ -34,7 +38,7 @@
 			"Type": "Runtime",
 			"LoadingPhase": "Default"
 		},
-        {
+		{
 			"Name": "UMCGraspEd",
 			"Type": "Editor"
 		}

@@ -183,6 +183,18 @@ void FMC6DController::Init(USceneComponent* InTarget,
 	}
 }
 
+// Reset the location pid controller
+void FMC6DController::ResetLoc(float P, float I, float D, float Max)
+{
+	PIDLoc.Init(P, I, D, Max);
+}
+
+// Call the update function pointer
+void FMC6DController::ResetRot(float P, float I, float D, float Max)
+{
+	PIDRot.Init(P, I, D, Max);
+}
+
 // Call the update function pointer
 void FMC6DController::Update(float DeltaTime)
 {
@@ -280,7 +292,7 @@ void FMC6DController::Update_Skel_Velocity_Offset(float DeltaTime)
 	SelfAsSkeletalMeshComp->SetPhysicsLinearVelocity(OutLoc);
 
 	/* Rotation */
-	const FVector DeltaRotAsVector = GetRotationDelta(SelfAsStaticMeshComp->GetComponentQuat(), CurrentTargetOffset.GetRotation());
+	const FVector DeltaRotAsVector = GetRotationDelta(SelfAsSkeletalMeshComp->GetComponentQuat(), CurrentTargetOffset.GetRotation());
 	const FVector OutRot = PIDRot.Update(DeltaRotAsVector, DeltaTime);
 	SelfAsSkeletalMeshComp->SetPhysicsAngularVelocityInRadians(OutRot);
 }
@@ -300,6 +312,11 @@ void FMC6DController::Update_Skel_Acceleration_Offset(float DeltaTime)
 	const FVector DeltaRotAsVector = GetRotationDelta(SelfAsSkeletalMeshComp->GetComponentQuat(), CurrentTargetOffset.GetRotation());
 	const FVector OutRot = PIDRot.Update(DeltaRotAsVector, DeltaTime);
 	SelfAsSkeletalMeshComp->AddTorqueInRadians(OutRot, NAME_None, true); // Acceleration based (mass will have no effect)
+
+	GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Red,
+		FString::Printf(TEXT("LOC=[X=%.2f; Y=%.2f; Z=%.2f;] Size=[%.2f]"), OutLoc.X, OutLoc.Y, OutLoc.Z, OutLoc.Size()));
+	GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Green,
+		FString::Printf(TEXT("ROT=[X=%.2f; Y=%.2f; Z=%.2f;] Size=[%.2f]"), OutRot.X, OutRot.Y, OutRot.Z, OutRot.Size()));
 }
 
 void FMC6DController::Update_Skel_Force_Offset(float DeltaTime)
