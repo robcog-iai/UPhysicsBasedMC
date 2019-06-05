@@ -183,7 +183,6 @@ void UMCGraspAnimController::SetupInputBindings()
 			IC->BindAxis(InputAxisName, this, &UMCGraspAnimController::GraspUpdateCallback);
 			IC->BindAction(InputNextAnimAction, IE_Pressed, this, &UMCGraspAnimController::GotoNextAnimationCallback);
 			IC->BindAction(InputPrevAnimAction, IE_Pressed, this, &UMCGraspAnimController::GotoPreviousAnimationCallback);
-			UE_LOG(LogTemp, Warning, TEXT("%s::%d"), *FString(__func__), __LINE__);
 		}
 		else
 		{
