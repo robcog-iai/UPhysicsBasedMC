@@ -89,6 +89,14 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
+	// Reset the location PID
+	UFUNCTION(BlueprintCallable)
+	void ResetLocationPID(bool bClearErrors = true);
+
+	// Reset the location PID
+	UFUNCTION(BlueprintCallable)
+	void ResetRotationPID(bool bClearErrors = true);
+
 #if WITH_EDITOR
 private:
 	// Input for changing the PID values on the fly
@@ -118,6 +126,33 @@ public:
 	EMC6DHandType HandType;
 #endif // WITH_EDITOR
 
+public:
+	// Location PID controller values
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Movement Control|Location", meta = (ClampMin = 0))
+	float PLoc;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Movement Control|Location", meta = (ClampMin = 0))
+	float ILoc;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Movement Control|Location", meta = (ClampMin = 0))
+	float DLoc;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Movement Control|Location", meta = (ClampMin = 0))
+	float MaxLoc;
+
+	// Rotation PID controller values
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Movement Control|Rotation", meta = (ClampMin = 0))
+	float PRot;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Movement Control|Rotation", meta = (ClampMin = 0))
+	float IRot;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Movement Control|Rotation", meta = (ClampMin = 0))
+	float DRot;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Movement Control|Rotation", meta = (ClampMin = 0))
+	float MaxRot;
+
 private:
 	// Control a skeletal mesh
 	UPROPERTY(EditAnywhere, Category = "Movement Control")
@@ -144,31 +179,7 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Movement Control")
 	EMC6DControlType ControlType;
 
-	// Location PID controller values
-	UPROPERTY(EditAnywhere, Category = "Movement Control|Location", meta = (ClampMin = 0))
-	float PLoc;
 
-	UPROPERTY(EditAnywhere, Category = "Movement Control|Location", meta = (ClampMin = 0))
-	float ILoc;
-
-	UPROPERTY(EditAnywhere, Category = "Movement Control|Location", meta = (ClampMin = 0))
-	float DLoc;
-
-	UPROPERTY(EditAnywhere, Category = "Movement Control|Location", meta = (ClampMin = 0))
-	float MaxLoc;
-
-	// Rotation PID controller values
-	UPROPERTY(EditAnywhere, Category = "Movement Control|Rotation", meta = (ClampMin = 0))
-	float PRot;
-
-	UPROPERTY(EditAnywhere, Category = "Movement Control|Rotation", meta = (ClampMin = 0))
-	float IRot;
-
-	UPROPERTY(EditAnywhere, Category = "Movement Control|Rotation", meta = (ClampMin = 0))
-	float DRot;
-
-	UPROPERTY(EditAnywhere, Category = "Movement Control|Rotation", meta = (ClampMin = 0))
-	float MaxRot;
 
 #if WITH_EDITOR
 	// Change PID values at runtime 

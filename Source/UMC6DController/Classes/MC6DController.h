@@ -53,10 +53,10 @@ public:
 		FTransform InOffset);
 
 	// Reset the location pid controller
-	void ResetLoc(float P, float I, float D, float Max);
+	void ResetLoc(float P, float I, float D, float Max, bool bClearErrors = true);
 
 	// Reset the rotation pid controller
-	void ResetRot(float P, float I, float D, float Max);
+	void ResetRot(float P, float I, float D, float Max, bool bClearErrors = true);
 
 	// Call the update function pointer
 	void Update(float DeltaTime);

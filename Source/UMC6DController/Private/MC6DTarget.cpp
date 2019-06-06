@@ -246,6 +246,18 @@ void UMC6DTarget::TickComponent(float DeltaTime, ELevelTick TickType, FActorComp
 #endif UMC_WITH_CHART
 }
 
+// Reset the location PID
+void  UMC6DTarget::ResetLocationPID(bool bClearErrors /* = true*/)
+{
+	Controller.ResetLoc(PLoc, ILoc, DLoc, MaxLoc, bClearErrors);
+}
+
+// Reset the location PID
+void  UMC6DTarget::ResetRotationPID(bool bClearErrors /* = true*/)
+{
+	Controller.ResetRot(PRot, IRot, DRot, MaxRot, bClearErrors);
+}
+
 #if WITH_EDITOR
 // Input for changing the PID values on the fly
 void UMC6DTarget::SetupInputBindings()
@@ -313,26 +325,31 @@ void UMC6DTarget::SwitchTerm()
 void UMC6DTarget::SelectP()
 {
 	ActiveTerm = EMC6DTermSelection::P;
+	GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Green, FString::Printf(TEXT("P")));
 }
 
 void UMC6DTarget::SelectI()
 {
 	ActiveTerm = EMC6DTermSelection::I;
+	GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Green, FString::Printf(TEXT("I")));
 }
 
 void UMC6DTarget::SelectD()
 {
 	ActiveTerm = EMC6DTermSelection::D;
+	GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Green, FString::Printf(TEXT("D")));
 }
 
 void UMC6DTarget::SelectMax()
 {
 	ActiveTerm = EMC6DTermSelection::Max;
+	GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Green, FString::Printf(TEXT("Max")));
 }
 
 void UMC6DTarget::SelectDelta()
 {
 	ActiveTerm = EMC6DTermSelection::Delta;
+	GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Green, FString::Printf(TEXT("Delta")));
 }
 
 void UMC6DTarget::IncSelection()

@@ -179,15 +179,15 @@ void FMC6DController::Init(USceneComponent* InTarget,
 }
 
 // Reset the location pid controller
-void FMC6DController::ResetLoc(float P, float I, float D, float Max)
+void FMC6DController::ResetLoc(float P, float I, float D, float Max, bool bClearErrors /* = true*/)
 {
-	PIDLoc.Init(P, I, D, Max);
+	PIDLoc.Init(P, I, D, Max, bClearErrors);
 }
 
 // Call the update function pointer
-void FMC6DController::ResetRot(float P, float I, float D, float Max)
+void FMC6DController::ResetRot(float P, float I, float D, float Max, bool bClearErrors /* = true*/)
 {
-	PIDRot.Init(P, I, D, Max);
+	PIDRot.Init(P, I, D, Max, bClearErrors);
 }
 
 // Call the update function pointer
@@ -346,11 +346,6 @@ void FMC6DController::Update_Skel_Acceleration_Offset(float DeltaTime)
 	const FVector DeltaRotAsVector = GetRotationDelta(SelfAsSkeletalMeshComp->GetComponentQuat(), CurrentTargetOffset.GetRotation());
 	const FVector OutRot = PIDRot.Update(DeltaRotAsVector, DeltaTime);
 	SelfAsSkeletalMeshComp->AddTorqueInRadians(OutRot, NAME_None, true); // Acceleration based (mass will have no effect)
-
-	GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Red,
-		FString::Printf(TEXT("LOC=[X=%.2f; Y=%.2f; Z=%.2f;] Size=[%.2f]"), OutLoc.X, OutLoc.Y, OutLoc.Z, OutLoc.Size()));
-	GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Green,
-		FString::Printf(TEXT("ROT=[X=%.2f; Y=%.2f; Z=%.2f;] Size=[%.2f]"), OutRot.X, OutRot.Y, OutRot.Z, OutRot.Size()));
 
 #if UMC_WITH_CHART
 	SetDebugChartData(DeltaLoc, OutLoc, DeltaRotAsVector, OutRot);
