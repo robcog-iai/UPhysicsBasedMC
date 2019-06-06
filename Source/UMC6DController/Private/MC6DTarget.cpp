@@ -240,6 +240,10 @@ void UMC6DTarget::TickComponent(float DeltaTime, ELevelTick TickType, FActorComp
 
 	// Apply target location to the referenced mesh
 	Controller.Update(DeltaTime);
+
+#if UMC_WITH_CHART
+	Controller.GetDebugChartData(ChartData.LocErr, ChartData.LocPID, ChartData.RotErr, ChartData.RotPID);
+#endif UMC_WITH_CHART
 }
 
 #if WITH_EDITOR
@@ -330,7 +334,6 @@ void UMC6DTarget::SelectDelta()
 {
 	ActiveTerm = EMC6DTermSelection::Delta;
 }
-
 
 void UMC6DTarget::IncSelection()
 {

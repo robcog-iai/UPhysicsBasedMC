@@ -53,5 +53,7 @@ public class UMC6DController : ModuleRules
 				// ... add any modules that your module loads dynamically here ...
 			}
 			);
+
+		PublicDefinitions.Add("UMC_WITH_CHART=1");
 	}
 }

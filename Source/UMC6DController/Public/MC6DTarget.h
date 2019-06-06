@@ -40,6 +40,26 @@ enum class EMC6DMovementTypeSelection : uint8
 };
 #endif // WITH_EDITOR
 
+// #if UMC_WITH_CHART // USTRUCT must not be inside preprocessor blocks, except for WITH_EDITORONLY_DATA
+//#if WITH_EDITORONLY_DATA // Blueprint exposed struct members cannot be editor only
+USTRUCT(BlueprintType)
+struct FMCChartData
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MC Loc")
+	FVector LocErr;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MC Loc")
+	FVector LocPID;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MC Rot")
+	FVector RotErr;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MC Rot")
+	FVector RotPID;
+};
+//#endif // WITH_EDITORONLY_DATA
 
 /**
  * 6D physics based movement applied to the skeletal or static mesh pointed to
@@ -84,13 +104,21 @@ private:
 	void DecSelection();
 #endif // WITH_EDITOR
 
-private:
+// #if UMC_WITH_CHART // UPROPERTY must not be inside preprocessor blocks, except for WITH_EDITORONLY_DATA
+//#if WITH_EDITORONLY_DATA // Blueprint exposed struct members cannot be editor only
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MC Chart")
+	FMCChartData ChartData;
+//#endif // WITH_EDITORONLY_DATA
+
 #if WITH_EDITOR
+public:
 	// Hand type, to point to the right XRMotionControllers
 	UPROPERTY(EditAnywhere, Category = "Movement Control")
 	EMC6DHandType HandType;
 #endif // WITH_EDITOR
 
+private:
 	// Control a skeletal mesh
 	UPROPERTY(EditAnywhere, Category = "Movement Control")
 	bool bUseSkeletalMesh;
@@ -156,7 +184,6 @@ private:
 
 	// Currently selected pid term for online editing
 	EMC6DTermSelection ActiveTerm;
-
 #endif // WITH_EDITOR
 
 	// Update fallback function binding
