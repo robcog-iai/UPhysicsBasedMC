@@ -40,6 +40,26 @@ enum class EMC6DMovementTypeSelection : uint8
 };
 #endif // WITH_EDITOR
 
+// #if UMC_WITH_CHART // USTRUCT must not be inside preprocessor blocks, except for WITH_EDITORONLY_DATA
+//#if WITH_EDITORONLY_DATA // Blueprint exposed struct members cannot be editor only
+USTRUCT(BlueprintType)
+struct FMCChartData
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MC Loc")
+	FVector LocErr;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MC Loc")
+	FVector LocPID;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MC Rot")
+	FVector RotErr;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MC Rot")
+	FVector RotPID;
+};
+//#endif // WITH_EDITORONLY_DATA
 
 /**
  * 6D physics based movement applied to the skeletal or static mesh pointed to
@@ -69,6 +89,14 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
+	// Reset the location PID
+	UFUNCTION(BlueprintCallable)
+	void ResetLocationPID(bool bClearErrors = true);
+
+	// Reset the location PID
+	UFUNCTION(BlueprintCallable)
+	void ResetRotationPID(bool bClearErrors = true);
+
 #if WITH_EDITOR
 private:
 	// Input for changing the PID values on the fly
@@ -84,13 +112,48 @@ private:
 	void DecSelection();
 #endif // WITH_EDITOR
 
-private:
+// #if UMC_WITH_CHART // UPROPERTY must not be inside preprocessor blocks, except for WITH_EDITORONLY_DATA
+//#if WITH_EDITORONLY_DATA // Blueprint exposed struct members cannot be editor only
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MC Chart")
+	FMCChartData ChartData;
+//#endif // WITH_EDITORONLY_DATA
+
 #if WITH_EDITOR
+public:
 	// Hand type, to point to the right XRMotionControllers
 	UPROPERTY(EditAnywhere, Category = "Movement Control")
 	EMC6DHandType HandType;
 #endif // WITH_EDITOR
 
+public:
+	// Location PID controller values
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Movement Control|Location", meta = (ClampMin = 0))
+	float PLoc;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Movement Control|Location", meta = (ClampMin = 0))
+	float ILoc;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Movement Control|Location", meta = (ClampMin = 0))
+	float DLoc;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Movement Control|Location", meta = (ClampMin = 0))
+	float MaxLoc;
+
+	// Rotation PID controller values
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Movement Control|Rotation", meta = (ClampMin = 0))
+	float PRot;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Movement Control|Rotation", meta = (ClampMin = 0))
+	float IRot;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Movement Control|Rotation", meta = (ClampMin = 0))
+	float DRot;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Movement Control|Rotation", meta = (ClampMin = 0))
+	float MaxRot;
+
+private:
 	// Control a skeletal mesh
 	UPROPERTY(EditAnywhere, Category = "Movement Control")
 	bool bUseSkeletalMesh;
@@ -116,31 +179,7 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Movement Control")
 	EMC6DControlType ControlType;
 
-	// Location PID controller values
-	UPROPERTY(EditAnywhere, Category = "Movement Control|Location", meta = (ClampMin = 0))
-	float PLoc;
 
-	UPROPERTY(EditAnywhere, Category = "Movement Control|Location", meta = (ClampMin = 0))
-	float ILoc;
-
-	UPROPERTY(EditAnywhere, Category = "Movement Control|Location", meta = (ClampMin = 0))
-	float DLoc;
-
-	UPROPERTY(EditAnywhere, Category = "Movement Control|Location", meta = (ClampMin = 0))
-	float MaxLoc;
-
-	// Rotation PID controller values
-	UPROPERTY(EditAnywhere, Category = "Movement Control|Rotation", meta = (ClampMin = 0))
-	float PRot;
-
-	UPROPERTY(EditAnywhere, Category = "Movement Control|Rotation", meta = (ClampMin = 0))
-	float IRot;
-
-	UPROPERTY(EditAnywhere, Category = "Movement Control|Rotation", meta = (ClampMin = 0))
-	float DRot;
-
-	UPROPERTY(EditAnywhere, Category = "Movement Control|Rotation", meta = (ClampMin = 0))
-	float MaxRot;
 
 #if WITH_EDITOR
 	// Change PID values at runtime 
@@ -156,7 +195,6 @@ private:
 
 	// Currently selected pid term for online editing
 	EMC6DTermSelection ActiveTerm;
-
 #endif // WITH_EDITOR
 
 	// Update fallback function binding

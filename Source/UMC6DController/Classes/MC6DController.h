@@ -18,7 +18,7 @@ public:
 	FMC6DController();
 
 	// Destructor
-	~FMC6DController();
+	~FMC6DController() = default;
 
 	// Init as skeletal mesh
 	void Init(USceneComponent* InTarget,
@@ -53,35 +53,37 @@ public:
 		FTransform InOffset);
 
 	// Reset the location pid controller
-	void ResetLoc(float P, float I, float D, float Max);
+	void ResetLoc(float P, float I, float D, float Max, bool bClearErrors = true);
 
 	// Reset the rotation pid controller
-	void ResetRot(float P, float I, float D, float Max);
+	void ResetRot(float P, float I, float D, float Max, bool bClearErrors = true);
 
 	// Call the update function pointer
 	void Update(float DeltaTime);
 
+#if UMC_WITH_CHART
+	// Get the chart data
+	void GetDebugChartData(FVector& OutLocErr, FVector& OutLocPID, FVector& OutRotErr, FVector& OutRotPID);
+#endif // UMC_WITH_CHART
+
 private:
+#if UMC_WITH_CHART
+	// Set the chart data
+	void SetDebugChartData(const FVector& InLocErr, const FVector& InLocPID, const FVector& InRotErr, const FVector& InRotPID);
+#endif // UMC_WITH_CHART
+
 	// Get the location delta (error)
-	FORCEINLINE FVector GetRotationDelta(const FQuat& From, const FQuat& To)
-	{
-		// TODO test internal versions as well using FQuat/FRotator SLerp / Lerp
-		// Get the delta between the quaternions
-		FQuat DeltaQuat = To * From.Inverse();
-
-		// Avoid taking the long path around the sphere
-		// // See void FQuat::EnforceShortestArcWith(const FQuat& OtherQuat)
-		//	const float CosTheta = ToQuat | FromQuat;
-		//	if (CosTheta < 0)
-		if (DeltaQuat.W < 0.f)
-		{
-			DeltaQuat *= -1.f;
-		}
-		// The W part of the vector is always ~1.f, not relevant for applying the rotation
-		return FVector(DeltaQuat.X, DeltaQuat.Y, DeltaQuat.Z);
-	}
+	FVector GetRotationDelta(const FQuat& From, const FQuat& To);
 
 private:
+#if UMC_WITH_CHART
+	// Cached data for chart visualization
+	FVector LocErr;
+	FVector LocPID;
+	FVector RotErr;
+	FVector RotPID;
+#endif // UMC_WITH_CHART
+
 	// Target (goal) component (to which transform to move to)
 	USceneComponent* TargetSceneComp;
 

@@ -10,11 +10,6 @@ FMC6DController::FMC6DController()
 	UpdateFunctionPointer = &FMC6DController::Update_NONE;
 }
 
-// Destructor
-FMC6DController::~FMC6DController() 
-{
-}
-
 // Init as skeletal mesh
 void FMC6DController::Init(USceneComponent* InTarget,
 	USkeletalMeshComponent* InSelfAsSkeletalMesh,
@@ -184,21 +179,60 @@ void FMC6DController::Init(USceneComponent* InTarget,
 }
 
 // Reset the location pid controller
-void FMC6DController::ResetLoc(float P, float I, float D, float Max)
+void FMC6DController::ResetLoc(float P, float I, float D, float Max, bool bClearErrors /* = true*/)
 {
-	PIDLoc.Init(P, I, D, Max);
+	PIDLoc.Init(P, I, D, Max, bClearErrors);
 }
 
 // Call the update function pointer
-void FMC6DController::ResetRot(float P, float I, float D, float Max)
+void FMC6DController::ResetRot(float P, float I, float D, float Max, bool bClearErrors /* = true*/)
 {
-	PIDRot.Init(P, I, D, Max);
+	PIDRot.Init(P, I, D, Max, bClearErrors);
 }
 
 // Call the update function pointer
 void FMC6DController::Update(float DeltaTime)
 {
 	(this->*UpdateFunctionPointer)(DeltaTime);
+}
+
+#if UMC_WITH_CHART
+// Get the debug chart data
+void FMC6DController::GetDebugChartData(FVector& OutLocErr, FVector& OutLocPID, FVector& OutRotErr, FVector& OutRotPID)
+{
+	OutLocErr = LocErr;
+	OutLocPID = LocPID;
+	OutRotErr = RotErr;
+	OutRotPID = RotPID;
+}
+
+// Set the chart data
+void FMC6DController::SetDebugChartData(const FVector& InLocErr, const FVector& InLocPID, const FVector& InRotErr, const FVector& InRotPID)
+{
+	LocErr = InLocErr;
+	LocPID = InLocPID;
+	RotErr = InRotErr;
+	RotPID = InRotPID;
+}
+#endif // UMC_WITH_CHART
+
+// Get the location delta (error)
+FORCEINLINE FVector FMC6DController::GetRotationDelta(const FQuat& From, const FQuat& To)
+{
+	// TODO test internal versions as well using FQuat/FRotator SLerp / Lerp
+	// Get the delta between the quaternions
+	FQuat DeltaQuat = To * From.Inverse();
+
+	// Avoid taking the long path around the sphere
+	// // See void FQuat::EnforceShortestArcWith(const FQuat& OtherQuat)
+	//	const float CosTheta = ToQuat | FromQuat;
+	//	if (CosTheta < 0)
+	if (DeltaQuat.W < 0.f)
+	{
+		DeltaQuat *= -1.f;
+	}
+	// The W part of the vector is always ~1.f, not relevant for applying the rotation
+	return FVector(DeltaQuat.X, DeltaQuat.Y, DeltaQuat.Z);
 }
 
 // Default update function
@@ -313,10 +347,9 @@ void FMC6DController::Update_Skel_Acceleration_Offset(float DeltaTime)
 	const FVector OutRot = PIDRot.Update(DeltaRotAsVector, DeltaTime);
 	SelfAsSkeletalMeshComp->AddTorqueInRadians(OutRot, NAME_None, true); // Acceleration based (mass will have no effect)
 
-	GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Red,
-		FString::Printf(TEXT("LOC=[X=%.2f; Y=%.2f; Z=%.2f;] Size=[%.2f]"), OutLoc.X, OutLoc.Y, OutLoc.Z, OutLoc.Size()));
-	GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Green,
-		FString::Printf(TEXT("ROT=[X=%.2f; Y=%.2f; Z=%.2f;] Size=[%.2f]"), OutRot.X, OutRot.Y, OutRot.Z, OutRot.Size()));
+#if UMC_WITH_CHART
+	SetDebugChartData(DeltaLoc, OutLoc, DeltaRotAsVector, OutRot);
+#endif // UMC_WITH_CHART
 }
 
 void FMC6DController::Update_Skel_Force_Offset(float DeltaTime)
