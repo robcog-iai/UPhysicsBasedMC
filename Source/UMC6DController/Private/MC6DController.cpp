@@ -501,10 +501,6 @@ void FMC6DController::Update_Static_Position_Offset(float DeltaTime)
 	/* Location and Rotation */
 	SelfAsStaticMeshComp->SetWorldTransform(CurrentTargetOffset,
 		false, (FHitResult*)nullptr, ETeleportType::TeleportPhysics);
-
-#if UMC_WITH_CHART
-	SetDebugChartData(DeltaLoc, OutLoc, DeltaRotAsVector, OutRot);
-#endif // UMC_WITH_CHART
 }
 
 void FMC6DController::Update_Static_Velocity_Offset(float DeltaTime)
