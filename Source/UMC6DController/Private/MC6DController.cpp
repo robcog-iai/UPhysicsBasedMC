@@ -260,6 +260,10 @@ void FMC6DController::Update_Skel_Velocity(float DeltaTime)
 	const FVector DeltaRotAsVector = GetRotationDelta(SelfAsStaticMeshComp->GetComponentQuat(), TargetSceneComp->GetComponentQuat());
 	const FVector OutRot = PIDRot.Update(DeltaRotAsVector, DeltaTime);
 	SelfAsSkeletalMeshComp->SetPhysicsAngularVelocityInRadians(OutRot);
+
+#if UMC_WITH_CHART
+	SetDebugChartData(DeltaLoc, OutLoc, DeltaRotAsVector, OutRot);
+#endif // UMC_WITH_CHART
 }
 
 void FMC6DController::Update_Skel_Acceleration(float DeltaTime)
@@ -273,6 +277,10 @@ void FMC6DController::Update_Skel_Acceleration(float DeltaTime)
 	const FVector DeltaRotAsVector = GetRotationDelta(SelfAsStaticMeshComp->GetComponentQuat(), TargetSceneComp->GetComponentQuat());
 	const FVector OutRot = PIDRot.Update(DeltaRotAsVector, DeltaTime);
 	SelfAsSkeletalMeshComp->AddTorqueInRadians(OutRot, NAME_None, true); // Acceleration based (mass will have no effect)
+
+#if UMC_WITH_CHART
+	SetDebugChartData(DeltaLoc, OutLoc, DeltaRotAsVector, OutRot);
+#endif // UMC_WITH_CHART
 }
 
 void FMC6DController::Update_Skel_Force(float DeltaTime)
@@ -286,6 +294,10 @@ void FMC6DController::Update_Skel_Force(float DeltaTime)
 	const FVector DeltaRotAsVector = GetRotationDelta(SelfAsStaticMeshComp->GetComponentQuat(), TargetSceneComp->GetComponentQuat());
 	const FVector OutRot = PIDRot.Update(DeltaRotAsVector, DeltaTime);
 	SelfAsSkeletalMeshComp->AddTorqueInRadians(OutRot);
+
+#if UMC_WITH_CHART
+	SetDebugChartData(DeltaLoc, OutLoc, DeltaRotAsVector, OutRot);
+#endif // UMC_WITH_CHART
 }
 
 void FMC6DController::Update_Skel_Impulse(float DeltaTime)
@@ -299,6 +311,10 @@ void FMC6DController::Update_Skel_Impulse(float DeltaTime)
 	const FVector DeltaRotAsVector = GetRotationDelta(SelfAsStaticMeshComp->GetComponentQuat(), TargetSceneComp->GetComponentQuat());
 	const FVector OutRot = PIDRot.Update(DeltaRotAsVector, DeltaTime);
 	SelfAsSkeletalMeshComp->AddAngularImpulseInRadians(OutRot);
+
+#if UMC_WITH_CHART
+	SetDebugChartData(DeltaLoc, OutLoc, DeltaRotAsVector, OutRot);
+#endif // UMC_WITH_CHART
 }
 
 
@@ -329,6 +345,10 @@ void FMC6DController::Update_Skel_Velocity_Offset(float DeltaTime)
 	const FVector DeltaRotAsVector = GetRotationDelta(SelfAsSkeletalMeshComp->GetComponentQuat(), CurrentTargetOffset.GetRotation());
 	const FVector OutRot = PIDRot.Update(DeltaRotAsVector, DeltaTime);
 	SelfAsSkeletalMeshComp->SetPhysicsAngularVelocityInRadians(OutRot);
+
+#if UMC_WITH_CHART
+	SetDebugChartData(DeltaLoc, OutLoc, DeltaRotAsVector, OutRot);
+#endif // UMC_WITH_CHART
 }
 
 void FMC6DController::Update_Skel_Acceleration_Offset(float DeltaTime)
@@ -367,6 +387,10 @@ void FMC6DController::Update_Skel_Force_Offset(float DeltaTime)
 	const FVector DeltaRotAsVector = GetRotationDelta(SelfAsSkeletalMeshComp->GetComponentQuat(), CurrentTargetOffset.GetRotation());
 	const FVector OutRot = PIDRot.Update(DeltaRotAsVector, DeltaTime);
 	SelfAsSkeletalMeshComp->AddTorqueInRadians(OutRot);
+
+#if UMC_WITH_CHART
+	SetDebugChartData(DeltaLoc, OutLoc, DeltaRotAsVector, OutRot);
+#endif // UMC_WITH_CHART
 }
 
 void FMC6DController::Update_Skel_Impulse_Offset(float DeltaTime)
@@ -384,6 +408,10 @@ void FMC6DController::Update_Skel_Impulse_Offset(float DeltaTime)
 	const FVector DeltaRotAsVector = GetRotationDelta(SelfAsSkeletalMeshComp->GetComponentQuat(), CurrentTargetOffset.GetRotation());
 	const FVector OutRot = PIDRot.Update(DeltaRotAsVector, DeltaTime);
 	SelfAsSkeletalMeshComp->AddAngularImpulseInRadians(OutRot);
+
+#if UMC_WITH_CHART
+	SetDebugChartData(DeltaLoc, OutLoc, DeltaRotAsVector, OutRot);
+#endif // UMC_WITH_CHART
 }
 
 
@@ -405,6 +433,10 @@ void FMC6DController::Update_Static_Velocity(float DeltaTime)
 	const FVector DeltaRotAsVector = GetRotationDelta(SelfAsStaticMeshComp->GetComponentQuat(), TargetSceneComp->GetComponentQuat());
 	const FVector OutRot = PIDRot.Update(DeltaRotAsVector, DeltaTime);
 	SelfAsStaticMeshComp->SetPhysicsAngularVelocityInRadians(OutRot);
+
+#if UMC_WITH_CHART
+	SetDebugChartData(DeltaLoc, OutLoc, DeltaRotAsVector, OutRot);
+#endif // UMC_WITH_CHART
 }
 
 void FMC6DController::Update_Static_Acceleration(float DeltaTime)
@@ -418,6 +450,10 @@ void FMC6DController::Update_Static_Acceleration(float DeltaTime)
 	const FVector DeltaRotAsVector = GetRotationDelta(SelfAsStaticMeshComp->GetComponentQuat(), TargetSceneComp->GetComponentQuat());
 	const FVector OutRot = PIDRot.Update(DeltaRotAsVector, DeltaTime);
 	SelfAsStaticMeshComp->AddTorqueInRadians(OutRot, NAME_None, true); // Acceleration based (mass will have no effect)
+
+#if UMC_WITH_CHART
+	SetDebugChartData(DeltaLoc, OutLoc, DeltaRotAsVector, OutRot);
+#endif // UMC_WITH_CHART
 }
 
 void FMC6DController::Update_Static_Force(float DeltaTime)
@@ -431,6 +467,10 @@ void FMC6DController::Update_Static_Force(float DeltaTime)
 	const FVector DeltaRotAsVector = GetRotationDelta(SelfAsStaticMeshComp->GetComponentQuat(), TargetSceneComp->GetComponentQuat());
 	const FVector OutRot = PIDRot.Update(DeltaRotAsVector, DeltaTime);
 	SelfAsStaticMeshComp->AddTorqueInRadians(OutRot);
+
+#if UMC_WITH_CHART
+	SetDebugChartData(DeltaLoc, OutLoc, DeltaRotAsVector, OutRot);
+#endif // UMC_WITH_CHART
 }
 
 void FMC6DController::Update_Static_Impulse(float DeltaTime)
@@ -444,6 +484,10 @@ void FMC6DController::Update_Static_Impulse(float DeltaTime)
 	const FVector DeltaRotAsVector = GetRotationDelta(SelfAsStaticMeshComp->GetComponentQuat(), TargetSceneComp->GetComponentQuat());
 	const FVector OutRot = PIDRot.Update(DeltaRotAsVector, DeltaTime);
 	SelfAsStaticMeshComp->AddAngularImpulseInRadians(OutRot);
+
+#if UMC_WITH_CHART
+	SetDebugChartData(DeltaLoc, OutLoc, DeltaRotAsVector, OutRot);
+#endif // UMC_WITH_CHART
 }
 
 
@@ -457,6 +501,10 @@ void FMC6DController::Update_Static_Position_Offset(float DeltaTime)
 	/* Location and Rotation */
 	SelfAsStaticMeshComp->SetWorldTransform(CurrentTargetOffset,
 		false, (FHitResult*)nullptr, ETeleportType::TeleportPhysics);
+
+#if UMC_WITH_CHART
+	SetDebugChartData(DeltaLoc, OutLoc, DeltaRotAsVector, OutRot);
+#endif // UMC_WITH_CHART
 }
 
 void FMC6DController::Update_Static_Velocity_Offset(float DeltaTime)
@@ -474,6 +522,10 @@ void FMC6DController::Update_Static_Velocity_Offset(float DeltaTime)
 	const FVector DeltaRotAsVector = GetRotationDelta(SelfAsStaticMeshComp->GetComponentQuat(), CurrentTargetOffset.GetRotation());
 	const FVector OutRot = PIDRot.Update(DeltaRotAsVector, DeltaTime);
 	SelfAsStaticMeshComp->SetPhysicsAngularVelocityInRadians(OutRot);
+
+#if UMC_WITH_CHART
+	SetDebugChartData(DeltaLoc, OutLoc, DeltaRotAsVector, OutRot);
+#endif // UMC_WITH_CHART
 }
 
 void FMC6DController::Update_Static_Acceleration_Offset(float DeltaTime)
@@ -491,6 +543,10 @@ void FMC6DController::Update_Static_Acceleration_Offset(float DeltaTime)
 	const FVector DeltaRotAsVector = GetRotationDelta(SelfAsStaticMeshComp->GetComponentQuat(), CurrentTargetOffset.GetRotation());
 	const FVector OutRot = PIDRot.Update(DeltaRotAsVector, DeltaTime);
 	SelfAsStaticMeshComp->AddTorqueInRadians(OutRot, NAME_None, true); // Acceleration based (mass will have no effect)
+
+#if UMC_WITH_CHART
+	SetDebugChartData(DeltaLoc, OutLoc, DeltaRotAsVector, OutRot);
+#endif // UMC_WITH_CHART
 }
 
 void FMC6DController::Update_Static_Force_Offset(float DeltaTime)
@@ -508,6 +564,10 @@ void FMC6DController::Update_Static_Force_Offset(float DeltaTime)
 	const FVector DeltaRotAsVector = GetRotationDelta(SelfAsStaticMeshComp->GetComponentQuat(), CurrentTargetOffset.GetRotation());
 	const FVector OutRot = PIDRot.Update(DeltaRotAsVector, DeltaTime);
 	SelfAsStaticMeshComp->AddTorqueInRadians(OutRot); 
+
+#if UMC_WITH_CHART
+	SetDebugChartData(DeltaLoc, OutLoc, DeltaRotAsVector, OutRot);
+#endif // UMC_WITH_CHART
 }
 
 void FMC6DController::Update_Static_Impulse_Offset(float DeltaTime)
@@ -525,4 +585,8 @@ void FMC6DController::Update_Static_Impulse_Offset(float DeltaTime)
 	const FVector DeltaRotAsVector = GetRotationDelta(SelfAsStaticMeshComp->GetComponentQuat(), CurrentTargetOffset.GetRotation());
 	const FVector OutRot = PIDRot.Update(DeltaRotAsVector, DeltaTime);
 	SelfAsStaticMeshComp->AddAngularImpulseInRadians(OutRot);
+
+#if UMC_WITH_CHART
+	SetDebugChartData(DeltaLoc, OutLoc, DeltaRotAsVector, OutRot);
+#endif // UMC_WITH_CHART
 }
