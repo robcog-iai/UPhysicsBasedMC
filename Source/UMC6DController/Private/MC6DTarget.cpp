@@ -38,15 +38,15 @@ UMC6DTarget::UMC6DTarget()
 
 	// PID values (acc)
 	ControlType = EMC6DControlType::Acceleration;
-	PLoc = 750.0f;
-	ILoc = 10.0f;
-	DLoc = 75.0f;
-	MaxLoc = 2500.f;
+	PLoc = 2000.0f;
+	ILoc = 100.0f;
+	DLoc = 50.0f;
+	MaxLoc = 10000.f;
 
-	PRot = 1500.0f;
-	IRot = 10.0f;
+	PRot = 2000.0f;
+	IRot = 100.0f;
 	DRot = 400.0f;
-	MaxRot = 5000.0f;
+	MaxRot = 25000.0f;
 }
 
 // Called when the game starts
@@ -219,15 +219,15 @@ void UMC6DTarget::PostEditChangeProperty(struct FPropertyChangedEvent& PropertyC
 		}
 		else if (ControlType == EMC6DControlType::Acceleration || ControlType == EMC6DControlType::Force)
 		{
-			PLoc = 750.0f;
-			ILoc = 10.0f;
-			DLoc = 75.0f;
-			MaxLoc = 2500.f;
+			PLoc = 2000.0f;
+			ILoc = 100.0f;
+			DLoc = 50.0f;
+			MaxLoc = 10000.f;
 
-			PRot = 1500.0f;
-			IRot = 10.0f;
+			PRot = 2000.0f;
+			IRot = 100.0f;
 			DRot = 400.0f;
-			MaxRot = 5000.0f;
+			MaxRot = 25000.0f;
 		}
 	}
 }
