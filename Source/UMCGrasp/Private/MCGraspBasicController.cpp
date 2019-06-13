@@ -140,6 +140,11 @@ void UMCGraspBasicController::Update_Genesis(float Value)
 	{
 		PrevInputVal = Value;
 
+		if (HandType == EMCGraspBasicHandType::Right)
+		{
+			Value *= -1.f;
+		}
+
 		// Apply target to fingers
 		for (auto& ConstraintInstance : SkeletalMesh->Constraints)
 		{

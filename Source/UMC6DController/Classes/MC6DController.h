@@ -118,28 +118,28 @@ private:
 	// Skeletal updates
 	void Update_Skel_Position(float DeltaTime);
 	void Update_Skel_Velocity(float DeltaTime);
+	void Update_Skel_Impulse(float DeltaTime);
 	void Update_Skel_Acceleration(float DeltaTime);
 	void Update_Skel_Force(float DeltaTime);
-	void Update_Skel_Impulse(float DeltaTime);
 
 	// Skeletal updates with offset
 	void Update_Skel_Position_Offset(float DeltaTime);
 	void Update_Skel_Velocity_Offset(float DeltaTime);
+	void Update_Skel_Impulse_Offset(float DeltaTime);
 	void Update_Skel_Acceleration_Offset(float DeltaTime);
 	void Update_Skel_Force_Offset(float DeltaTime);
-	void Update_Skel_Impulse_Offset(float DeltaTime);
 
 	// Static mesh updates
 	void Update_Static_Position(float DeltaTime);
 	void Update_Static_Velocity(float DeltaTime);
+	void Update_Static_Impulse(float DeltaTime);
 	void Update_Static_Acceleration (float DeltaTime);
 	void Update_Static_Force(float DeltaTime);
-	void Update_Static_Impulse(float DeltaTime);
 
 	// Static mesh updates with offset
 	void Update_Static_Position_Offset(float DeltaTime);
 	void Update_Static_Velocity_Offset(float DeltaTime);
+	void Update_Static_Impulse_Offset(float DeltaTime);
 	void Update_Static_Acceleration_Offset(float DeltaTime);
 	void Update_Static_Force_Offset(float DeltaTime);
-	void Update_Static_Impulse_Offset(float DeltaTime);
 };

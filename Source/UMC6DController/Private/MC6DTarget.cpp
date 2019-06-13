@@ -262,21 +262,21 @@ void  UMC6DTarget::ResetRotationPID(bool bClearErrors /* = true*/)
 // Input for changing the PID values on the fly
 void UMC6DTarget::SetupInputBindings()
 {
-	if (APlayerController* PC = GetWorld()->GetFirstPlayerController())
-	{
-		if (UInputComponent* IC = PC->InputComponent)
-		{
-			IC->BindAction("SwitchMovementType", IE_Pressed, this, &UMC6DTarget::SwitchMovementType);
-			IC->BindAction("SwitchTerm", IE_Pressed, this, &UMC6DTarget::SwitchTerm);
-			IC->BindAction("SelectP", IE_Pressed, this, &UMC6DTarget::SelectP);
-			IC->BindAction("SelectI", IE_Pressed, this, &UMC6DTarget::SelectI);
-			IC->BindAction("SelectD", IE_Pressed, this, &UMC6DTarget::SelectD);
-			IC->BindAction("SelectMax", IE_Pressed, this, &UMC6DTarget::SelectMax);
-			IC->BindAction("SelectDelta", IE_Pressed, this, &UMC6DTarget::SelectDelta);
-			IC->BindAction("IncSelection", IE_Pressed, this, &UMC6DTarget::IncSelection);
-			IC->BindAction("DecSelection", IE_Pressed, this, &UMC6DTarget::DecSelection);
-		}
-	}
+	//if (APlayerController* PC = GetWorld()->GetFirstPlayerController())
+	//{
+	//	if (UInputComponent* IC = PC->InputComponent)
+	//	{
+	//		IC->BindAction("SwitchMovementType", IE_Pressed, this, &UMC6DTarget::SwitchMovementType);
+	//		IC->BindAction("SwitchTerm", IE_Pressed, this, &UMC6DTarget::SwitchTerm);
+	//		IC->BindAction("SelectP", IE_Pressed, this, &UMC6DTarget::SelectP);
+	//		IC->BindAction("SelectI", IE_Pressed, this, &UMC6DTarget::SelectI);
+	//		IC->BindAction("SelectD", IE_Pressed, this, &UMC6DTarget::SelectD);
+	//		IC->BindAction("SelectMax", IE_Pressed, this, &UMC6DTarget::SelectMax);
+	//		IC->BindAction("SelectDelta", IE_Pressed, this, &UMC6DTarget::SelectDelta);
+	//		IC->BindAction("IncSelection", IE_Pressed, this, &UMC6DTarget::IncSelection);
+	//		IC->BindAction("DecSelection", IE_Pressed, this, &UMC6DTarget::DecSelection);
+	//	}
+	//}
 }
 
 void UMC6DTarget::SwitchMovementType()
