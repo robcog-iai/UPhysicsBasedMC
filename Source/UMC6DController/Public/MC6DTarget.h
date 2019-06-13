@@ -97,21 +97,6 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void ResetRotationPID(bool bClearErrors = true);
 
-#if WITH_EDITOR
-private:
-	// Input for changing the PID values on the fly
-	void SetupInputBindings();
-	void SwitchMovementType();
-	void SwitchTerm();
-	void SelectP();
-	void SelectI();
-	void SelectD();
-	void SelectMax();
-	void SelectDelta();
-	void IncSelection();
-	void DecSelection();
-#endif // WITH_EDITOR
-
 // #if UMC_WITH_CHART // UPROPERTY must not be inside preprocessor blocks, except for WITH_EDITORONLY_DATA
 //#if WITH_EDITORONLY_DATA // Blueprint exposed struct members cannot be editor only
 public:
@@ -127,6 +112,10 @@ public:
 #endif // WITH_EDITOR
 
 public:
+	// Control type location 
+	UPROPERTY(EditAnywhere, Category = "Movement Control|Location")
+	EMC6DControlType LocControlType;
+
 	// Location PID controller values
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Movement Control|Location", meta = (ClampMin = 0))
 	float PLoc;
@@ -139,6 +128,10 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Movement Control|Location", meta = (ClampMin = 0))
 	float MaxLoc;
+
+	// Control type (location and rotation)
+	UPROPERTY(EditAnywhere, Category = "Movement Control|Rotation")
+	EMC6DControlType RotControlType;
 
 	// Rotation PID controller values
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Movement Control|Rotation", meta = (ClampMin = 0))
@@ -173,29 +166,6 @@ private:
 	// Static mesh actor to control
 	UPROPERTY(EditAnywhere, Category = "Movement Control", meta = (editcondition = "bUseStaticMesh"))
 	AStaticMeshActor* StaticMeshActor;
-
-	/* Control */
-	// Control type (location and rotation)
-	UPROPERTY(EditAnywhere, Category = "Movement Control")
-	EMC6DControlType ControlType;
-
-
-
-#if WITH_EDITOR
-	// Change PID values at runtime 
-	UPROPERTY(EditAnywhere, Category = "Movement Control|Dynamic")
-	bool bDynamicController;
-
-	// The delta to add or remove to the pid values
-	UPROPERTY(EditAnywhere, Category = "Movement Control|Dynamic", meta = (editcondition = "bDynamicController"))
-	float EditDelta;
-
-	// Currently selected movement type for online editing
-	EMC6DMovementTypeSelection ActiveMovementType;
-
-	// Currently selected pid term for online editing
-	EMC6DTermSelection ActiveTerm;
-#endif // WITH_EDITOR
 
 	// Update fallback function binding
 	FMC6DController Controller;

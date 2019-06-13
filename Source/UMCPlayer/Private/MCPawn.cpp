@@ -19,4 +19,11 @@ AMCPawn::AMCPawn()
 	// Create camera component
 	VRCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("VRCamera"));
 	VRCamera->SetupAttachment(GetRootComponent());
+
+#if WITH_EDITORONLY_DATA
+	if (VRCamera)
+	{
+		VRCamera->SetWorldScale3D(FVector(0.25));
+	}
+#endif // WITH_EDITORONLY_DATA
 }
