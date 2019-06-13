@@ -143,6 +143,7 @@ void UMCGraspBasicController::Update_Genesis(float Value)
 		if (HandType == EMCGraspBasicHandType::Right)
 		{
 			Value *= -1.f;
+			UE_LOG(LogTemp, Warning, TEXT("%s::%d"), *FString(__func__), __LINE__);
 		}
 
 		// Apply target to fingers
