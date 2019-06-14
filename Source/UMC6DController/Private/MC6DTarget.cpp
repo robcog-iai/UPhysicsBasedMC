@@ -34,16 +34,16 @@ UMC6DTarget::UMC6DTarget()
 
 	// PID values (acc)
 	LocControlType = EMC6DControlType::Acceleration;
-	RotControlType = EMC6DControlType::Acceleration;
-	PLoc = 2000.0f;
-	ILoc = 100.0f;
-	DLoc = 50.0f;
-	MaxLoc = 10000.f;
+	PLoc = DEF_PLoc_Acc;
+	ILoc = DEF_ILoc_Acc;
+	DLoc = DEF_DLoc_Acc;
+	MaxLoc = DEF_MaxLoc_Acc;
 
-	PRot = 2000.0f;
-	IRot = 100.0f;
-	DRot = 400.0f;
-	MaxRot = 25000.0f;
+	RotControlType = EMC6DControlType::Velocity;
+	PRot = DEF_PRot_Vel;
+	IRot = DEF_IRot_Vel;
+	DRot = DEF_DRot_Vel;
+	MaxRot = DEF_MaxRot_Vel;
 }
 
 // Called when the game starts
@@ -197,34 +197,34 @@ void UMC6DTarget::PostEditChangeProperty(struct FPropertyChangedEvent& PropertyC
 	{
 		if (LocControlType == EMC6DControlType::Velocity)
 		{
-			PLoc = 10.0f;
-			ILoc = 0.1f;
-			DLoc = 1.0f;
-			MaxLoc = 20.f;
+			PLoc = DEF_PLoc_Vel;
+			ILoc = DEF_ILoc_Vel;
+			DLoc = DEF_DLoc_Vel;
+			MaxLoc = DEF_MaxLoc_Vel;
 		}
 		else if (LocControlType == EMC6DControlType::Acceleration || LocControlType == EMC6DControlType::Force)
 		{
-			PLoc = 2000.0f;
-			ILoc = 100.0f;
-			DLoc = 50.0f;
-			MaxLoc = 10000.f;
+			PLoc = DEF_PLoc_Acc;
+			ILoc = DEF_ILoc_Acc;
+			DLoc = DEF_DLoc_Acc;
+			MaxLoc = DEF_MaxLoc_Acc;
 		}
 	}
 	else if (PropertyName == GET_MEMBER_NAME_CHECKED(UMC6DTarget, RotControlType))
 	{
 		if (RotControlType == EMC6DControlType::Velocity)
 		{
-			PRot = 12.0f;
-			IRot = 0.1f;
-			DRot = 1.0f;
-			MaxRot = 15.f;
+			PRot = DEF_PRot_Vel;
+			IRot = DEF_IRot_Vel;
+			DRot = DEF_DRot_Vel;
+			MaxRot = DEF_MaxRot_Vel;
 		}
 		else if (RotControlType == EMC6DControlType::Acceleration || RotControlType == EMC6DControlType::Force)
 		{
-			PRot = 2000.0f;
-			IRot = 100.0f;
-			DRot = 400.0f;
-			MaxRot = 25000.0f;
+			PRot = DEF_PRot_Acc;
+			IRot = DEF_IRot_Acc;
+			DRot = DEF_DRot_Acc;
+			MaxRot = DEF_MaxRot_Acc;
 		}
 	}
 }

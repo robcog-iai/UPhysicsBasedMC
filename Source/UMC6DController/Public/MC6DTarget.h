@@ -169,4 +169,27 @@ private:
 
 	// Update fallback function binding
 	FMC6DController Controller;
+
+	/* Constants */
+	// Loc
+	constexpr static float DEF_PLoc_Vel = 20.f;
+	constexpr static float DEF_ILoc_Vel = 0.f;
+	constexpr static float DEF_DLoc_Vel = 1.f;
+	constexpr static float DEF_MaxLoc_Vel = 20.f;
+
+	constexpr static float DEF_PLoc_Acc = 2000.f;
+	constexpr static float DEF_ILoc_Acc = 100.f;
+	constexpr static float DEF_DLoc_Acc = 50.f;
+	constexpr static float DEF_MaxLoc_Acc = 10000.f;
+
+	// Rot
+	constexpr static float DEF_PRot_Vel = 100.f;
+	constexpr static float DEF_IRot_Vel = 0.f;
+	constexpr static float DEF_DRot_Vel = 20.f;
+	constexpr static float DEF_MaxRot_Vel = 750.f;
+
+	constexpr static float DEF_PRot_Acc = 2000.f;
+	constexpr static float DEF_IRot_Acc = 100.f;
+	constexpr static float DEF_DRot_Acc = 50.f;
+	constexpr static float DEF_MaxRot_Acc = 10000.f;
 };

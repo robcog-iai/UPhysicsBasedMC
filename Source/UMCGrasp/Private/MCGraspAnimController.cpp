@@ -18,10 +18,10 @@ UMCGraspAnimController::UMCGraspAnimController()
 	InputAxisName = "LeftGrasp";
 	InputNextAnimAction = "LeftNextGraspAnim";
 	InputPrevAnimAction = "LeftPrevGraspAnim";
-
-	SpringIdle = 1000000.f;
+	
+	SpringIdle = 1000000000.f;
 	SpringInputScale = 5.f;
-	Damping = 1000.f;
+	Damping = 100000000.f;
 	ForceLimit = 0.f;
 	ActiveAnimIdx = INDEX_NONE;
 	bIsIdle = true;
@@ -83,8 +83,19 @@ void UMCGraspAnimController::Init()
 
 	// Go to the first animations
 	ActiveAnimIdx = 0;
-	ActiveAnimation = Animations[0];	
+	ActiveAnimation = Animations[0];
 	ActiveAnimStepSize = 1.f / static_cast<float>(ActiveAnimation.Num() - 1);
+
+	if (HandType == EMCGraspAnimHandType::Left)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("L:%s"),
+			*AnimationNames[ActiveAnimIdx]), true, FVector2D(1.5f, 1.5f));
+	}
+	else
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("R:%s"),
+			*AnimationNames[ActiveAnimIdx]), true, FVector2D(1.5f, 1.5f));
+	}
 
 	// Set and drive to idle
 	DriveToFirstFrame();
@@ -280,6 +291,16 @@ void UMCGraspAnimController::GotoNextAnimationCallback()
 		DriveToFirstFrame();
 		UE_LOG(LogTemp, Warning, TEXT("%s::%d Active animation Idx/Name=[%d|%s]"),
 			*FString(__func__), __LINE__, ActiveAnimIdx, *AnimationNames[ActiveAnimIdx]);
+		if (HandType == EMCGraspAnimHandType::Left)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("L:%s"),
+				*AnimationNames[ActiveAnimIdx]), true, FVector2D(1.5f,1.5f));
+		}
+		else
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("R:%s"),
+				*AnimationNames[ActiveAnimIdx]), true, FVector2D(1.5f, 1.5f));
+		}
 	}
 }
 
@@ -296,5 +317,15 @@ void UMCGraspAnimController::GotoPreviousAnimationCallback()
 		DriveToFirstFrame();
 		UE_LOG(LogTemp, Warning, TEXT("%s::%d Active animation Idx/Name=[%d|%s]"),
 			*FString(__func__), __LINE__, ActiveAnimIdx, *AnimationNames[ActiveAnimIdx]);
+		if (HandType == EMCGraspAnimHandType::Left)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("L:%s"),
+				*AnimationNames[ActiveAnimIdx]), true, FVector2D(1.5f, 1.5f));
+		}
+		else
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("R:%s"),
+				*AnimationNames[ActiveAnimIdx]), true, FVector2D(1.5f, 1.5f));
+		}
 	}
 }
