@@ -3,14 +3,11 @@
 
 using UnrealBuildTool;
 
-public class UMC6DController : ModuleRules
+public class UMC6DControllerGUI : ModuleRules
 {
-	public UMC6DController(ReadOnlyTargetRules Target) : base(Target)
+	public UMC6DControllerGUI(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
-		
-		//// https://answers.unrealengine.com/questions/258689/how-to-include-private-header-files-of-other-modul.html
-		//string EnginePath = Path.GetFullPath(Target.RelativeEnginePath);
 
 		PublicIncludePaths.AddRange(
 			new string[] {
@@ -31,7 +28,8 @@ public class UMC6DController : ModuleRules
 			new string[]
 			{
 				"Core",
-				"UPIDController",
+				"InputCore",
+				"UMC6DController",
 				// ... add other public dependencies that you statically link with here ...
 			}
 			);
@@ -42,7 +40,9 @@ public class UMC6DController : ModuleRules
 			{
 				"CoreUObject",
 				"Engine",
-				"HeadMountedDisplay", // UMotionControllerComponent
+				"Slate",
+				"SlateCore",
+				//"KantanChartsSlate",
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);
@@ -54,6 +54,14 @@ public class UMC6DController : ModuleRules
 			}
 			);
 
-		PublicDefinitions.Add("UMC_WITH_CHART=1");
+		string KantanCharts = PrivateDependencyModuleNames.Find(DependencyName => DependencyName.Equals("KantanChartsSlate"));
+		if (string.IsNullOrEmpty(KantanCharts))
+		{
+			PublicDefinitions.Add("UMC_WITH_KANTAN=0");
+		}
+		else
+		{
+			PublicDefinitions.Add("UMC_WITH_KANTAN=1");
+		}
 	}
 }

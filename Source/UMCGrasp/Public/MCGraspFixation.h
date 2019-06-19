@@ -5,7 +5,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/SphereComponent.h"
-#include "MCFixationGrasp.generated.h"
+#include "MCGraspFixation.generated.h"
 
 // Forward declaration
 class AStaticMeshActor;
@@ -15,7 +15,7 @@ class ASkeletalMeshActor;
 * Hand type
 */
 UENUM()
-enum class EMCFixationGraspHandType : uint8
+enum class EMCGraspFixationHandType : uint8
 {
 	Left					UMETA(DisplayName = "Left"),
 	Right					UMETA(DisplayName = "Right"),
@@ -30,14 +30,14 @@ DECLARE_MULTICAST_DELEGATE_ThreeParams(FMCGraspEnd, UObject* /*Self*/, UObject* 
 /**
  * Sphere area that fixates objects to the owner according to some rules
  */
-UCLASS(ClassGroup=(MC), meta=(BlueprintSpawnableComponent, DisplayName = "MC Fixation Grasp"))
-class UMCGRASP_API UMCFixationGrasp : public USphereComponent
+UCLASS(ClassGroup=(MC), meta=(BlueprintSpawnableComponent, DisplayName = "MC Grasp Fixation"))
+class UMCGRASP_API UMCGraspFixation : public USphereComponent
 {
 	GENERATED_BODY()
 	
 public:
 	// Constructor
-	UMCFixationGrasp();
+	UMCGraspFixation();
 
 protected:
 	// Called when the game starts
@@ -88,9 +88,11 @@ public:
 	FMCGraspEnd OnGraspEnd;
 
 private:
+#if WITH_EDITOR
 	// Hand type, to listen to the right inputs
 	UPROPERTY(EditAnywhere, Category = "Fixation Grasp")
-	EMCFixationGraspHandType HandType;
+	EMCGraspFixationHandType HandType;
+#endif // WITH_EDITOR
 
 	// Input action name
 	UPROPERTY(EditAnywhere, Category = "Fixation Grasp")

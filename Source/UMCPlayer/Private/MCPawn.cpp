@@ -3,7 +3,6 @@
 
 #include "MCPawn.h"
 
-
 // Sets default values
 AMCPawn::AMCPawn()
 {
@@ -20,26 +19,11 @@ AMCPawn::AMCPawn()
 	// Create camera component
 	VRCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("VRCamera"));
 	VRCamera->SetupAttachment(GetRootComponent());
+
+#if WITH_EDITORONLY_DATA
+	if (VRCamera)
+	{
+		VRCamera->SetWorldScale3D(FVector(0.25));
+	}
+#endif // WITH_EDITORONLY_DATA
 }
-
-// Called when the game starts or when spawned
-void AMCPawn::BeginPlay()
-{
-	Super::BeginPlay();
-	
-}
-
-// Called every frame
-void AMCPawn::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-}
-
-// Called to bind functionality to input
-void AMCPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
-{
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
-}
-

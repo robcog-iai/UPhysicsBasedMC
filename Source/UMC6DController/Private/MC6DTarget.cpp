@@ -23,45 +23,27 @@ UMC6DTarget::UMC6DTarget()
 	DisplayModelSource = FName("SteamVR");
 	bHiddenInGame = true;
 	MotionSource = FXRMotionControllerBase::LeftHandSourceId;
+
+	HandType = EMC6DHandType::Left;
 #endif // WITH_EDITOR
 
 	// Default values
-	HandType = EMC6DHandType::Left;
 	bUseSkeletalMesh = true;
 	bApplyToAllSkeletalBodies = false;
 	bUseStaticMesh = false;
 
-	//// Control type
-	//ControlType = EMCControlType::Position;
-
-	//// PID values (vel)
-	//ControlType = EMCControlType::Velocity;
-	//PLoc = 10.0f;
-	//ILoc = 0.1f;
-	//DLoc = 1.0f;
-	//MaxLoc = 20.f;
-
-	//PRot = 12.0f;
-	//IRot = 0.1f;
-	//DRot = 1.0f;
-	//MaxRot = 15.f;
-
 	// PID values (acc)
-	ControlType = EMC6DControlType::Acceleration;
-	PLoc = 750.0f;
-	ILoc = 10.0f;
-	DLoc = 75.0f;
-	MaxLoc = 2500.f;
+	LocControlType = EMC6DControlType::Acceleration;
+	PLoc = DEF_PLoc_Acc;
+	ILoc = DEF_ILoc_Acc;
+	DLoc = DEF_DLoc_Acc;
+	MaxLoc = DEF_MaxLoc_Acc;
 
-	PRot = 1500.0f;
-	IRot = 10.0f;
-	DRot = 400.0f;
-	MaxRot = 5000.0f;
-}
-
-// Destructor
-UMC6DTarget::~UMC6DTarget()
-{
+	RotControlType = EMC6DControlType::Velocity;
+	PRot = DEF_PRot_Vel;
+	IRot = DEF_IRot_Vel;
+	DRot = DEF_DRot_Vel;
+	MaxRot = DEF_MaxRot_Vel;
 }
 
 // Called when the game starts
@@ -88,14 +70,14 @@ void UMC6DTarget::BeginPlay()
 			// Initialize update callbacks with/without offset
 			if (UMC6DOffset* OffsetComp = Cast<UMC6DOffset>(SkeletalMeshActor->GetComponentByClass(UMC6DOffset::StaticClass())))
 			{
-				ControllerUpdateCallbacks.Init(this, SkelMeshComp, bApplyToAllSkeletalBodies, ControlType,
-					PLoc, ILoc, DLoc, MaxLoc, PRot, IRot, DRot, MaxRot,
+				Controller.Init(this, SkelMeshComp, bApplyToAllSkeletalBodies, LocControlType,
+					PLoc, ILoc, DLoc, MaxLoc, RotControlType, PRot, IRot, DRot, MaxRot,
 					OffsetComp->GetComponentTransform());
 			}
 			else
 			{
-				ControllerUpdateCallbacks.Init(this, SkelMeshComp, bApplyToAllSkeletalBodies, ControlType,
-					PLoc, ILoc, DLoc, MaxLoc, PRot, IRot, DRot, MaxRot);
+				Controller.Init(this, SkelMeshComp, bApplyToAllSkeletalBodies, LocControlType,
+					PLoc, ILoc, DLoc, MaxLoc, RotControlType, PRot, IRot, DRot, MaxRot);
 			}
 			// Enable Tick
 			SetComponentTickEnabled(true);
@@ -128,14 +110,14 @@ void UMC6DTarget::BeginPlay()
 			// Initialize update callbacks with/without offset
 			if (UMC6DOffset* OffsetComp = Cast<UMC6DOffset>(StaticMeshActor->GetComponentByClass(UMC6DOffset::StaticClass())))
 			{
-				ControllerUpdateCallbacks.Init(this, StaticMeshComp, ControlType,
-					PLoc, ILoc, DLoc, MaxLoc, PRot, IRot, DRot, MaxRot,
+				Controller.Init(this, StaticMeshComp, LocControlType,
+					PLoc, ILoc, DLoc, MaxLoc, RotControlType, PRot, IRot, DRot, MaxRot,
 					OffsetComp->GetComponentTransform());
 			}
 			else
 			{
-				ControllerUpdateCallbacks.Init(this, StaticMeshComp, ControlType,
-					PLoc, ILoc, DLoc, MaxLoc, PRot, IRot, DRot, MaxRot);
+				Controller.Init(this, StaticMeshComp, LocControlType,
+					PLoc, ILoc, DLoc, MaxLoc, RotControlType, PRot, IRot, DRot, MaxRot);
 			}
 			// Enable Tick
 			SetComponentTickEnabled(true);
@@ -158,7 +140,6 @@ void UMC6DTarget::BeginPlay()
 	}
 	// Could not set the update controller, tick remains disabled
 }
-
 
 #if WITH_EDITOR
 // Called when a property is changed in the editor
@@ -212,6 +193,40 @@ void UMC6DTarget::PostEditChangeProperty(struct FPropertyChangedEvent& PropertyC
 			MotionSource = FXRMotionControllerBase::RightHandSourceId;
 		}
 	}
+	else if (PropertyName == GET_MEMBER_NAME_CHECKED(UMC6DTarget, LocControlType))
+	{
+		if (LocControlType == EMC6DControlType::Velocity)
+		{
+			PLoc = DEF_PLoc_Vel;
+			ILoc = DEF_ILoc_Vel;
+			DLoc = DEF_DLoc_Vel;
+			MaxLoc = DEF_MaxLoc_Vel;
+		}
+		else if (LocControlType == EMC6DControlType::Acceleration || LocControlType == EMC6DControlType::Force)
+		{
+			PLoc = DEF_PLoc_Acc;
+			ILoc = DEF_ILoc_Acc;
+			DLoc = DEF_DLoc_Acc;
+			MaxLoc = DEF_MaxLoc_Acc;
+		}
+	}
+	else if (PropertyName == GET_MEMBER_NAME_CHECKED(UMC6DTarget, RotControlType))
+	{
+		if (RotControlType == EMC6DControlType::Velocity)
+		{
+			PRot = DEF_PRot_Vel;
+			IRot = DEF_IRot_Vel;
+			DRot = DEF_DRot_Vel;
+			MaxRot = DEF_MaxRot_Vel;
+		}
+		else if (RotControlType == EMC6DControlType::Acceleration || RotControlType == EMC6DControlType::Force)
+		{
+			PRot = DEF_PRot_Acc;
+			IRot = DEF_IRot_Acc;
+			DRot = DEF_DRot_Acc;
+			MaxRot = DEF_MaxRot_Acc;
+		}
+	}
 }
 #endif // WITH_EDITOR
 
@@ -221,5 +236,21 @@ void UMC6DTarget::TickComponent(float DeltaTime, ELevelTick TickType, FActorComp
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 	// Apply target location to the referenced mesh
-	ControllerUpdateCallbacks.Update(DeltaTime);
+	Controller.Update(DeltaTime);
+
+#if UMC_WITH_CHART
+	Controller.GetDebugChartData(ChartData.LocErr, ChartData.LocPID, ChartData.RotErr, ChartData.RotPID);
+#endif UMC_WITH_CHART
+}
+
+// Reset the location PID
+void  UMC6DTarget::ResetLocationPID(bool bClearErrors /* = true*/)
+{
+	Controller.ResetLoc(PLoc, ILoc, DLoc, MaxLoc, bClearErrors);
+}
+
+// Reset the location PID
+void  UMC6DTarget::ResetRotationPID(bool bClearErrors /* = true*/)
+{
+	Controller.ResetRot(PRot, IRot, DRot, MaxRot, bClearErrors);
 }

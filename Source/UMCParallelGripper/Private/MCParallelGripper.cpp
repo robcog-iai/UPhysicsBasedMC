@@ -25,8 +25,11 @@ UMCParallelGripper::UMCParallelGripper()
 	UMCParallelGripper::SetupConstraint(LeftFingerConstraint);
 	UMCParallelGripper::SetupConstraint(RightFingerConstraint);
 
-	// Default values
+#if WITH_EDITOR
 	HandType = EMCPGHandType::Left;
+#endif // WITH_EDITOR
+
+	// Default values
 	InputAxisName = "LeftGrasp";
 	ControlType = EMCGripperControlType::LinearDrive;
 

@@ -7,20 +7,17 @@
 FMC6DController::FMC6DController()
 {
 	bApplyToAllChildBodies = false;
-	UpdateFunctionPointer = &FMC6DController::Update_NONE;
-}
-
-// Destructor
-FMC6DController::~FMC6DController() 
-{
+	LocUpdateFunctionPointer = &FMC6DController::Loc_Update_NONE;
+	RotUpdateFunctionPointer = &FMC6DController::Rot_Update_NONE;
 }
 
 // Init as skeletal mesh
 void FMC6DController::Init(USceneComponent* InTarget,
 	USkeletalMeshComponent* InSelfAsSkeletalMesh,
 	bool bApplyToAllBodies,
-	EMC6DControlType ControlType,
+	EMC6DControlType LocControlType,
 	float PLoc, float ILoc, float DLoc, float MaxLoc,
+	EMC6DControlType RotControlType,
 	float PRot, float IRot, float DRot, float MaxRot)
 {
 	// Set target and self
@@ -33,25 +30,48 @@ void FMC6DController::Init(USceneComponent* InTarget,
 	PIDRot.Init(PRot, IRot, DRot, MaxRot);
 
 	// Bind update function depending on the control type
-	switch (ControlType)
+	switch (LocControlType)
 	{
 	case EMC6DControlType::Position:
-		UpdateFunctionPointer = &FMC6DController::Update_Skel_Position;
+		LocUpdateFunctionPointer = &FMC6DController::Loc_Update_Skel_Position;
 		break;
 	case EMC6DControlType::Velocity:
-		UpdateFunctionPointer = &FMC6DController::Update_Skel_Velocity;
+		LocUpdateFunctionPointer = &FMC6DController::Loc_Update_Skel_Velocity;
 		break;
 	case EMC6DControlType::Acceleration:
-		UpdateFunctionPointer = &FMC6DController::Update_Skel_Acceleration;
+		LocUpdateFunctionPointer = &FMC6DController::Loc_Update_Skel_Acceleration;
 		break;
 	case EMC6DControlType::Force:
-		UpdateFunctionPointer = &FMC6DController::Update_Skel_Force;
+		LocUpdateFunctionPointer = &FMC6DController::Loc_Update_Skel_Force;
 		break;
 	case EMC6DControlType::Impulse:
-		UpdateFunctionPointer = &FMC6DController::Update_Skel_Impulse;
+		LocUpdateFunctionPointer = &FMC6DController::Loc_Update_Skel_Impulse;
 		break;
 	default:
-		UpdateFunctionPointer = &FMC6DController::Update_NONE;
+		LocUpdateFunctionPointer = &FMC6DController::Loc_Update_NONE;
+		break;
+	}
+
+	// Bind update function depending on the control type
+	switch (RotControlType)
+	{
+	case EMC6DControlType::Position:
+		RotUpdateFunctionPointer = &FMC6DController::Rot_Update_Skel_Position;
+		break;
+	case EMC6DControlType::Velocity:
+		RotUpdateFunctionPointer = &FMC6DController::Rot_Update_Skel_Velocity;
+		break;
+	case EMC6DControlType::Acceleration:
+		RotUpdateFunctionPointer = &FMC6DController::Rot_Update_Skel_Acceleration;
+		break;
+	case EMC6DControlType::Force:
+		RotUpdateFunctionPointer = &FMC6DController::Rot_Update_Skel_Force;
+		break;
+	case EMC6DControlType::Impulse:
+		RotUpdateFunctionPointer = &FMC6DController::Rot_Update_Skel_Impulse;
+		break;
+	default:
+		RotUpdateFunctionPointer = &FMC6DController::Rot_Update_NONE;
 		break;
 	}
 }
@@ -60,8 +80,9 @@ void FMC6DController::Init(USceneComponent* InTarget,
 void FMC6DController::Init(USceneComponent* InTarget,
 	USkeletalMeshComponent* InSelfAsSkeletalMesh,
 	bool bApplyToAllBodies,
-	EMC6DControlType ControlType,
+	EMC6DControlType LocControlType,
 	float PLoc, float ILoc, float DLoc, float MaxLoc,
+	EMC6DControlType RotControlType,
 	float PRot, float IRot, float DRot, float MaxRot,
 	FTransform InOffset)
 {
@@ -78,25 +99,47 @@ void FMC6DController::Init(USceneComponent* InTarget,
 	PIDRot.Init(PRot, IRot, DRot, MaxRot);
 
 	// Bind update function depending on the control type
-	switch (ControlType)
+	switch (LocControlType)
 	{
 	case EMC6DControlType::Position:
-		UpdateFunctionPointer = &FMC6DController::Update_Skel_Position_Offset;
+		LocUpdateFunctionPointer = &FMC6DController::Loc_Update_Skel_Position_Offset;
 		break;
 	case EMC6DControlType::Velocity:
-		UpdateFunctionPointer = &FMC6DController::Update_Skel_Velocity_Offset;
+		LocUpdateFunctionPointer = &FMC6DController::Loc_Update_Skel_Velocity_Offset;
 		break;
 	case EMC6DControlType::Acceleration:
-		UpdateFunctionPointer = &FMC6DController::Update_Skel_Acceleration_Offset;
+		LocUpdateFunctionPointer = &FMC6DController::Loc_Update_Skel_Acceleration_Offset;
 		break;
 	case EMC6DControlType::Force:
-		UpdateFunctionPointer = &FMC6DController::Update_Skel_Force_Offset;
+		LocUpdateFunctionPointer = &FMC6DController::Loc_Update_Skel_Force_Offset;
 		break;
 	case EMC6DControlType::Impulse:
-		UpdateFunctionPointer = &FMC6DController::Update_Skel_Impulse_Offset;
+		LocUpdateFunctionPointer = &FMC6DController::Loc_Update_Skel_Impulse_Offset;
 		break;
 	default:
-		UpdateFunctionPointer = &FMC6DController::Update_NONE;
+		LocUpdateFunctionPointer = &FMC6DController::Loc_Update_NONE;
+		break;
+	}
+
+	switch (RotControlType)
+	{
+	case EMC6DControlType::Position:
+		RotUpdateFunctionPointer = &FMC6DController::Rot_Update_Skel_Position_Offset;
+		break;
+	case EMC6DControlType::Velocity:
+		RotUpdateFunctionPointer = &FMC6DController::Rot_Update_Skel_Velocity_Offset;
+		break;
+	case EMC6DControlType::Acceleration:
+		RotUpdateFunctionPointer = &FMC6DController::Rot_Update_Skel_Acceleration_Offset;
+		break;
+	case EMC6DControlType::Force:
+		RotUpdateFunctionPointer = &FMC6DController::Rot_Update_Skel_Force_Offset;
+		break;
+	case EMC6DControlType::Impulse:
+		RotUpdateFunctionPointer = &FMC6DController::Rot_Update_Skel_Impulse_Offset;
+		break;
+	default:
+		RotUpdateFunctionPointer = &FMC6DController::Rot_Update_NONE;
 		break;
 	}
 }
@@ -104,8 +147,9 @@ void FMC6DController::Init(USceneComponent* InTarget,
 // Init as static mesh
 void FMC6DController::Init(USceneComponent* InTarget,
 	UStaticMeshComponent* InSelfAsStaticMesh,
-	EMC6DControlType ControlType,
+	EMC6DControlType LocControlType,
 	float PLoc, float ILoc, float DLoc, float MaxLoc,
+	EMC6DControlType RotControlType,
 	float PRot, float IRot, float DRot, float MaxRot)
 {
 	// Set target and self
@@ -117,25 +161,47 @@ void FMC6DController::Init(USceneComponent* InTarget,
 	PIDRot.Init(PRot, IRot, DRot, MaxRot);
 
 	// Bind update function depending on the control type
-	switch (ControlType)
+	switch (LocControlType)
 	{
 	case EMC6DControlType::Position:
-		UpdateFunctionPointer = &FMC6DController::Update_Static_Position;
+		LocUpdateFunctionPointer = &FMC6DController::Loc_Update_Static_Position;
 		break;
 	case EMC6DControlType::Velocity:
-		UpdateFunctionPointer = &FMC6DController::Update_Static_Velocity;
+		LocUpdateFunctionPointer = &FMC6DController::Loc_Update_Static_Velocity;
 		break;
 	case EMC6DControlType::Acceleration:
-		UpdateFunctionPointer = &FMC6DController::Update_Static_Acceleration;
+		LocUpdateFunctionPointer = &FMC6DController::Loc_Update_Static_Acceleration;
 		break;
 	case EMC6DControlType::Force:
-		UpdateFunctionPointer = &FMC6DController::Update_Static_Force;
+		LocUpdateFunctionPointer = &FMC6DController::Loc_Update_Static_Force;
 		break;
 	case EMC6DControlType::Impulse:
-		UpdateFunctionPointer = &FMC6DController::Update_Static_Impulse;
+		LocUpdateFunctionPointer = &FMC6DController::Loc_Update_Static_Impulse;
 		break;
 	default:
-		UpdateFunctionPointer = &FMC6DController::Update_NONE;
+		LocUpdateFunctionPointer = &FMC6DController::Loc_Update_NONE;
+		break;
+	}
+
+	switch (RotControlType)
+	{
+	case EMC6DControlType::Position:
+		RotUpdateFunctionPointer = &FMC6DController::Rot_Update_Static_Position;
+		break;
+	case EMC6DControlType::Velocity:
+		RotUpdateFunctionPointer = &FMC6DController::Rot_Update_Static_Velocity;
+		break;
+	case EMC6DControlType::Acceleration:
+		RotUpdateFunctionPointer = &FMC6DController::Rot_Update_Static_Acceleration;
+		break;
+	case EMC6DControlType::Force:
+		RotUpdateFunctionPointer = &FMC6DController::Rot_Update_Static_Force;
+		break;
+	case EMC6DControlType::Impulse:
+		RotUpdateFunctionPointer = &FMC6DController::Rot_Update_Static_Impulse;
+		break;
+	default:
+		RotUpdateFunctionPointer = &FMC6DController::Rot_Update_NONE;
 		break;
 	}
 }
@@ -143,8 +209,9 @@ void FMC6DController::Init(USceneComponent* InTarget,
 // Init as static mesh with an offset
 void FMC6DController::Init(USceneComponent* InTarget,
 	UStaticMeshComponent* InSelfAsStaticMesh,
-	EMC6DControlType ControlType,
+	EMC6DControlType LocControlType,
 	float PLoc, float ILoc, float DLoc, float MaxLoc,
+	EMC6DControlType RotControlType,
 	float PRot, float IRot, float DRot, float MaxRot,
 	FTransform InOffset)
 {
@@ -160,528 +227,675 @@ void FMC6DController::Init(USceneComponent* InTarget,
 	PIDRot.Init(PRot, IRot, DRot, MaxRot);
 
 	// Bind update function depending on the control type
-	switch (ControlType)
+	switch (LocControlType)
 	{
 	case EMC6DControlType::Position:
-		UpdateFunctionPointer = &FMC6DController::Update_Static_Position_Offset;
+		LocUpdateFunctionPointer = &FMC6DController::Loc_Update_Static_Position_Offset;
 		break;
 	case EMC6DControlType::Velocity:
-		UpdateFunctionPointer = &FMC6DController::Update_Static_Velocity_Offset;
+		LocUpdateFunctionPointer = &FMC6DController::Loc_Update_Static_Velocity_Offset;
 		break;
 	case EMC6DControlType::Acceleration:
-		UpdateFunctionPointer = &FMC6DController::Update_Static_Acceleration_Offset;
+		LocUpdateFunctionPointer = &FMC6DController::Loc_Update_Static_Acceleration_Offset;
 		break;
 	case EMC6DControlType::Force:
-		UpdateFunctionPointer = &FMC6DController::Update_Static_Force_Offset;
+		LocUpdateFunctionPointer = &FMC6DController::Loc_Update_Static_Force_Offset;
 		break;
 	case EMC6DControlType::Impulse:
-		UpdateFunctionPointer = &FMC6DController::Update_Static_Impulse_Offset;
+		LocUpdateFunctionPointer = &FMC6DController::Loc_Update_Static_Impulse_Offset;
 		break;
 	default:
-		UpdateFunctionPointer = &FMC6DController::Update_NONE;
+		LocUpdateFunctionPointer = &FMC6DController::Loc_Update_NONE;
 		break;
 	}
+
+	switch (RotControlType)
+	{
+	case EMC6DControlType::Position:
+		RotUpdateFunctionPointer = &FMC6DController::Rot_Update_Static_Position_Offset;
+		break;
+	case EMC6DControlType::Velocity:
+		RotUpdateFunctionPointer = &FMC6DController::Rot_Update_Static_Velocity_Offset;
+		break;
+	case EMC6DControlType::Acceleration:
+		RotUpdateFunctionPointer = &FMC6DController::Rot_Update_Static_Acceleration_Offset;
+		break;
+	case EMC6DControlType::Force:
+		RotUpdateFunctionPointer = &FMC6DController::Rot_Update_Static_Force_Offset;
+		break;
+	case EMC6DControlType::Impulse:
+		RotUpdateFunctionPointer = &FMC6DController::Rot_Update_Static_Impulse_Offset;
+		break;
+	default:
+		RotUpdateFunctionPointer = &FMC6DController::Rot_Update_NONE;
+		break;
+	}
+}
+
+// Reset the location pid controller
+void FMC6DController::ResetLoc(float P, float I, float D, float Max, bool bClearErrors /* = true*/)
+{
+	PIDLoc.Init(P, I, D, Max, bClearErrors);
+}
+
+// Call the update function pointer
+void FMC6DController::ResetRot(float P, float I, float D, float Max, bool bClearErrors /* = true*/)
+{
+	PIDRot.Init(P, I, D, Max, bClearErrors);
 }
 
 // Call the update function pointer
 void FMC6DController::Update(float DeltaTime)
 {
-	(this->*UpdateFunctionPointer)(DeltaTime);
+	(this->*LocUpdateFunctionPointer)(DeltaTime);
+	(this->*RotUpdateFunctionPointer)(DeltaTime);
+}
+
+#if UMC_WITH_CHART
+// Get the debug chart data
+void FMC6DController::GetDebugChartData(FVector& OutLocErr, FVector& OutLocPID, FVector& OutRotErr, FVector& OutRotPID)
+{
+	OutLocErr = LocErr;
+	OutLocPID = LocPID;
+	OutRotErr = RotErr;
+	OutRotPID = RotPID;
+}
+
+// Set the location chart data
+void FMC6DController::SetLocDebugChartData(const FVector& InLocErr, const FVector& InLocPID)
+{
+	LocErr = InLocErr;
+	LocPID = InLocPID;
+}
+
+// Set the rotation chart data
+void FMC6DController::SetRotDebugChartData(const FVector& InRotErr, const FVector& InRotPID)
+{
+	RotErr = InRotErr;
+	RotPID = InRotPID;
+}
+#endif // UMC_WITH_CHART
+
+// Get the location delta (error)
+FORCEINLINE FVector FMC6DController::GetRotationDelta(const FQuat& From, const FQuat& To)
+{
+	// TODO test internal versions as well using FQuat/FRotator SLerp / Lerp
+	// Get the delta between the quaternions
+	FQuat DeltaQuat = To * From.Inverse();
+
+	// Avoid taking the long path around the sphere
+	// // See void FQuat::EnforceShortestArcWith(const FQuat& OtherQuat)
+	//	const float CosTheta = ToQuat | FromQuat;
+	//	if (CosTheta < 0)
+	if (DeltaQuat.W < 0.f)
+	{
+		DeltaQuat *= -1.f;
+	}
+	// The W part of the vector is always ~1.f, not relevant for applying the rotation
+	return FVector(DeltaQuat.X, DeltaQuat.Y, DeltaQuat.Z);
 }
 
 // Default update function
-void FMC6DController::Update_NONE(float DeltaTime)
+void FMC6DController::Loc_Update_NONE(float DeltaTime)
+{
+	UE_LOG(LogTemp, Warning, TEXT(">> %s::%d"), *FString(__func__), __LINE__);
+}
+
+void FMC6DController::Rot_Update_NONE(float DeltaTime)
 {
 	UE_LOG(LogTemp, Warning, TEXT(">> %s::%d"), *FString(__func__), __LINE__);
 }
 
 
-// Skeletal updates
-void FMC6DController::Update_Skel_Position(float DeltaTime)
+/* Skeletal updates */
+// Loc
+void FMC6DController::Loc_Update_Skel_Position(float DeltaTime)
 {
-	SelfAsSkeletalMeshComp->SetWorldTransform(TargetSceneComp->GetComponentTransform(),
+	SelfAsSkeletalMeshComp->SetWorldLocation(TargetSceneComp->GetComponentLocation(),
 		false, (FHitResult*)nullptr, ETeleportType::TeleportPhysics);
 }
 
-void FMC6DController::Update_Skel_Velocity(float DeltaTime)
+void FMC6DController::Loc_Update_Skel_Velocity(float DeltaTime)
 {
-	/* Location */
 	const FVector DeltaLoc = TargetSceneComp->GetComponentLocation() - SelfAsSkeletalMeshComp->GetComponentLocation();
 	const FVector OutLoc = PIDLoc.Update(DeltaLoc, DeltaTime);
-	SelfAsSkeletalMeshComp->SetPhysicsLinearVelocity(OutLoc);
-
-	/* Rotation */
-	const FQuat FromQuat = SelfAsStaticMeshComp->GetComponentQuat();
-	const FQuat ToQuat = TargetSceneComp->GetComponentQuat();
-	FQuat DeltaQuat = ToQuat * FromQuat.Inverse();
-
-	// Avoid taking the long path around the sphere
-	// // See void FQuat::EnforceShortestArcWith(const FQuat& OtherQuat)
-	//	const float CosTheta = ToQuat | FromQuat;
-	//	if (CosTheta < 0)
-	if (DeltaQuat.W < 0.f)
+	if (bApplyToAllChildBodies)
 	{
-		DeltaQuat *= -1.f;
+		SelfAsSkeletalMeshComp->SetAllPhysicsLinearVelocity(OutLoc);
 	}
-	// The W part of the vector is always ~1.f, not relevant for applying the rotation
-	const FVector DeltaRotAsVector = FVector(DeltaQuat.X, DeltaQuat.Y, DeltaQuat.Z);
-	const FVector OutRot = PIDRot.Update(DeltaRotAsVector, DeltaTime);
-	SelfAsSkeletalMeshComp->SetPhysicsAngularVelocityInRadians(OutRot);
+	else
+	{
+		SelfAsSkeletalMeshComp->SetPhysicsLinearVelocity(OutLoc);
+	}
+
+#if UMC_WITH_CHART
+	SetLocDebugChartData(DeltaLoc, OutLoc);
+#endif // UMC_WITH_CHART
 }
 
-void FMC6DController::Update_Skel_Acceleration(float DeltaTime)
+void FMC6DController::Loc_Update_Skel_Impulse(float DeltaTime)
 {
-	/* Location */
-	const FVector DeltaLoc = TargetSceneComp->GetComponentLocation() - SelfAsSkeletalMeshComp->GetComponentLocation();
-	const FVector OutLoc = PIDLoc.Update(DeltaLoc, DeltaTime);
-	SelfAsSkeletalMeshComp->AddForce(OutLoc, NAME_None, true); // Acceleration based (mass will have no effect)
-
-	/* Rotation */
-	const FQuat FromQuat = SelfAsStaticMeshComp->GetComponentQuat();
-	const FQuat ToQuat = TargetSceneComp->GetComponentQuat();
-	FQuat DeltaQuat = ToQuat * FromQuat.Inverse();
-
-	// Avoid taking the long path around the sphere
-	// // See void FQuat::EnforceShortestArcWith(const FQuat& OtherQuat)
-	//	const float CosTheta = ToQuat | FromQuat;
-	//	if (CosTheta < 0)
-	if (DeltaQuat.W < 0.f)
-	{
-		DeltaQuat *= -1.f;
-	}
-	// The W part of the vector is always ~1.f, not relevant for applying the rotation
-	const FVector DeltaRotAsVector = FVector(DeltaQuat.X, DeltaQuat.Y, DeltaQuat.Z);
-	const FVector OutRot = PIDRot.Update(DeltaRotAsVector, DeltaTime);
-	SelfAsSkeletalMeshComp->AddTorqueInRadians(OutRot, NAME_None, true); // Acceleration based (mass will have no effect)
-}
-
-void FMC6DController::Update_Skel_Force(float DeltaTime)
-{
-	/* Location */
-	const FVector DeltaLoc = TargetSceneComp->GetComponentLocation() - SelfAsSkeletalMeshComp->GetComponentLocation();
-	const FVector OutLoc = PIDLoc.Update(DeltaLoc, DeltaTime);
-	SelfAsSkeletalMeshComp->AddForce(OutLoc);
-
-	/* Rotation */
-	const FQuat FromQuat = SelfAsStaticMeshComp->GetComponentQuat();
-	const FQuat ToQuat = TargetSceneComp->GetComponentQuat();
-	FQuat DeltaQuat = ToQuat * FromQuat.Inverse();
-
-	// Avoid taking the long path around the sphere
-	// // See void FQuat::EnforceShortestArcWith(const FQuat& OtherQuat)
-	//	const float CosTheta = ToQuat | FromQuat;
-	//	if (CosTheta < 0)
-	if (DeltaQuat.W < 0.f)
-	{
-		DeltaQuat *= -1.f;
-	}
-	// The W part of the vector is always ~1.f, not relevant for applying the rotation
-	const FVector DeltaRotAsVector = FVector(DeltaQuat.X, DeltaQuat.Y, DeltaQuat.Z);
-	const FVector OutRot = PIDRot.Update(DeltaRotAsVector, DeltaTime);
-	SelfAsSkeletalMeshComp->AddTorqueInRadians(OutRot);
-}
-
-void FMC6DController::Update_Skel_Impulse(float DeltaTime)
-{
-	/* Location */
 	const FVector DeltaLoc = TargetSceneComp->GetComponentLocation() - SelfAsSkeletalMeshComp->GetComponentLocation();
 	const FVector OutLoc = PIDLoc.Update(DeltaLoc, DeltaTime);
 	SelfAsSkeletalMeshComp->AddImpulse(OutLoc);
-
-	/* Rotation */
-	const FQuat FromQuat = SelfAsStaticMeshComp->GetComponentQuat();
-	const FQuat ToQuat = TargetSceneComp->GetComponentQuat();
-	FQuat DeltaQuat = ToQuat * FromQuat.Inverse();
-
-	// Avoid taking the long path around the sphere
-	// // See void FQuat::EnforceShortestArcWith(const FQuat& OtherQuat)
-	//	const float CosTheta = ToQuat | FromQuat;
-	//	if (CosTheta < 0)
-	if (DeltaQuat.W < 0.f)
+	if (bApplyToAllChildBodies)
 	{
-		DeltaQuat *= -1.f;
+		SelfAsSkeletalMeshComp->AddImpulseToAllBodiesBelow(OutLoc);
 	}
-	// The W part of the vector is always ~1.f, not relevant for applying the rotation
-	const FVector DeltaRotAsVector = FVector(DeltaQuat.X, DeltaQuat.Y, DeltaQuat.Z);
-	const FVector OutRot = PIDRot.Update(DeltaRotAsVector, DeltaTime);
-	SelfAsSkeletalMeshComp->AddAngularImpulseInRadians(OutRot);
+	else
+	{
+		SelfAsSkeletalMeshComp->AddImpulse(OutLoc);
+	}
+
+#if UMC_WITH_CHART
+	SetLocDebugChartData(DeltaLoc, OutLoc);
+#endif // UMC_WITH_CHART
 }
 
-
-
-// Skeletal updates with offset
-void FMC6DController::Update_Skel_Position_Offset(float DeltaTime)
+void FMC6DController::Loc_Update_Skel_Acceleration(float DeltaTime)
 {
-	/* Offset target calculation */
-	FTransform CurrentTargetOffset;
-	FTransform::Multiply(&CurrentTargetOffset, &LocalTargetOffset, &TargetSceneComp->GetComponentTransform());
+	const FVector DeltaLoc = TargetSceneComp->GetComponentLocation() - SelfAsSkeletalMeshComp->GetComponentLocation();
+	const FVector OutLoc = PIDLoc.Update(DeltaLoc, DeltaTime);
+	if (bApplyToAllChildBodies)
+	{
+		SelfAsSkeletalMeshComp->AddForceToAllBodiesBelow(OutLoc, NAME_None, true);
+	}
+	else
+	{
+		SelfAsSkeletalMeshComp->AddForce(OutLoc, NAME_None, true); // Acceleration based (mass will have no effect)
+	}
 
-	/* Location and Rotation */
-	SelfAsSkeletalMeshComp->SetWorldTransform(CurrentTargetOffset,
+#if UMC_WITH_CHART
+	SetLocDebugChartData(DeltaLoc, OutLoc);
+#endif // UMC_WITH_CHART
+}
+
+void FMC6DController::Loc_Update_Skel_Force(float DeltaTime)
+{
+	const FVector DeltaLoc = TargetSceneComp->GetComponentLocation() - SelfAsSkeletalMeshComp->GetComponentLocation();
+	const FVector OutLoc = PIDLoc.Update(DeltaLoc, DeltaTime);
+	if (bApplyToAllChildBodies)
+	{
+		SelfAsSkeletalMeshComp->AddForceToAllBodiesBelow(OutLoc);
+	}
+	else
+	{
+		SelfAsSkeletalMeshComp->AddForce(OutLoc);
+	}
+
+#if UMC_WITH_CHART
+	SetLocDebugChartData(DeltaLoc, OutLoc);
+#endif // UMC_WITH_CHART
+}
+
+// Rot
+void FMC6DController::Rot_Update_Skel_Position(float DeltaTime)
+{
+	SelfAsSkeletalMeshComp->SetWorldRotation(TargetSceneComp->GetComponentQuat(),
 		false, (FHitResult*)nullptr, ETeleportType::TeleportPhysics);
 }
 
-void FMC6DController::Update_Skel_Velocity_Offset(float DeltaTime)
+void FMC6DController::Rot_Update_Skel_Velocity(float DeltaTime)
 {
-	/* Offset target calculation */
-	FTransform CurrentTargetOffset;
-	FTransform::Multiply(&CurrentTargetOffset, &LocalTargetOffset, &TargetSceneComp->GetComponentTransform());
-
-	/* Location */
-	const FVector DeltaLoc = CurrentTargetOffset.GetLocation() - SelfAsSkeletalMeshComp->GetComponentLocation();
-	const FVector OutLoc = PIDLoc.Update(DeltaLoc, DeltaTime);
-	SelfAsSkeletalMeshComp->SetPhysicsLinearVelocity(OutLoc);
-
-	/* Rotation */
-	const FQuat FromQuat = SelfAsSkeletalMeshComp->GetComponentQuat();
-	const FQuat ToQuat = CurrentTargetOffset.GetRotation();
-	FQuat DeltaQuat = ToQuat * FromQuat.Inverse();
-
-	// Avoid taking the long path around the sphere
-	// // See void FQuat::EnforceShortestArcWith(const FQuat& OtherQuat)
-	//	const float CosTheta = ToQuat | FromQuat;
-	//	if (CosTheta < 0)
-	if (DeltaQuat.W < 0.f)
-	{
-		DeltaQuat *= -1.f;
-	}
-	// The W part of the vector is always ~1.f, not relevant for applying the rotation
-	const FVector DeltaRotAsVector = FVector(DeltaQuat.X, DeltaQuat.Y, DeltaQuat.Z);
+	const FVector DeltaRotAsVector = GetRotationDelta(SelfAsStaticMeshComp->GetComponentQuat(), TargetSceneComp->GetComponentQuat());
 	const FVector OutRot = PIDRot.Update(DeltaRotAsVector, DeltaTime);
 	SelfAsSkeletalMeshComp->SetPhysicsAngularVelocityInRadians(OutRot);
+
+#if UMC_WITH_CHART
+	SetRotDebugChartData(DeltaRotAsVector, OutRot);
+#endif // UMC_WITH_CHART
 }
 
-void FMC6DController::Update_Skel_Acceleration_Offset(float DeltaTime)
+void FMC6DController::Rot_Update_Skel_Impulse(float DeltaTime)
 {
-	/* Offset target calculation */
-	FTransform CurrentTargetOffset;
-	FTransform::Multiply(&CurrentTargetOffset, &LocalTargetOffset, &TargetSceneComp->GetComponentTransform());
-
-	/* Location */
-	const FVector DeltaLoc = CurrentTargetOffset.GetLocation() - SelfAsSkeletalMeshComp->GetComponentLocation();
-	const FVector OutLoc = PIDLoc.Update(DeltaLoc, DeltaTime);
-	SelfAsSkeletalMeshComp->AddForce(OutLoc, NAME_None, true); // Acceleration based (mass will have no effect)
-
-	/* Rotation */
-	const FQuat FromQuat = SelfAsSkeletalMeshComp->GetComponentQuat();
-	const FQuat ToQuat = CurrentTargetOffset.GetRotation();
-	FQuat DeltaQuat = ToQuat * FromQuat.Inverse();
-
-	// Avoid taking the long path around the sphere
-	// // See void FQuat::EnforceShortestArcWith(const FQuat& OtherQuat)
-	//	const float CosTheta = ToQuat | FromQuat;
-	//	if (CosTheta < 0)
-	if (DeltaQuat.W < 0.f)
-	{
-		DeltaQuat *= -1.f;
-	}
-	// The W part of the vector is always ~1.f, not relevant for applying the rotation
-	const FVector DeltaRotAsVector = FVector(DeltaQuat.X, DeltaQuat.Y, DeltaQuat.Z);
-	const FVector OutRot = PIDRot.Update(DeltaRotAsVector, DeltaTime);
-	SelfAsSkeletalMeshComp->AddTorqueInRadians(OutRot, NAME_None, true); // Acceleration based (mass will have no effect)
-}
-
-void FMC6DController::Update_Skel_Force_Offset(float DeltaTime)
-{
-	/* Offset target calculation */
-	FTransform CurrentTargetOffset;
-	FTransform::Multiply(&CurrentTargetOffset, &LocalTargetOffset, &TargetSceneComp->GetComponentTransform());
-
-	/* Location */
-	const FVector DeltaLoc = CurrentTargetOffset.GetLocation() - SelfAsSkeletalMeshComp->GetComponentLocation();
-	const FVector OutLoc = PIDLoc.Update(DeltaLoc, DeltaTime);
-	SelfAsSkeletalMeshComp->AddForce(OutLoc);
-
-	/* Rotation */
-	const FQuat FromQuat = SelfAsSkeletalMeshComp->GetComponentQuat();
-	const FQuat ToQuat = CurrentTargetOffset.GetRotation();
-	FQuat DeltaQuat = ToQuat * FromQuat.Inverse();
-
-	// Avoid taking the long path around the sphere
-	// // See void FQuat::EnforceShortestArcWith(const FQuat& OtherQuat)
-	//	const float CosTheta = ToQuat | FromQuat;
-	//	if (CosTheta < 0)
-	if (DeltaQuat.W < 0.f)
-	{
-		DeltaQuat *= -1.f;
-	}
-	// The W part of the vector is always ~1.f, not relevant for applying the rotation
-	const FVector DeltaRotAsVector = FVector(DeltaQuat.X, DeltaQuat.Y, DeltaQuat.Z);
-	const FVector OutRot = PIDRot.Update(DeltaRotAsVector, DeltaTime);
-	SelfAsSkeletalMeshComp->AddTorqueInRadians(OutRot);
-}
-
-void FMC6DController::Update_Skel_Impulse_Offset(float DeltaTime)
-{
-	/* Offset target calculation */
-	FTransform CurrentTargetOffset;
-	FTransform::Multiply(&CurrentTargetOffset, &LocalTargetOffset, &TargetSceneComp->GetComponentTransform());
-
-	/* Location */
-	const FVector DeltaLoc = CurrentTargetOffset.GetLocation() - SelfAsSkeletalMeshComp->GetComponentLocation();
-	const FVector OutLoc = PIDLoc.Update(DeltaLoc, DeltaTime);
-	SelfAsSkeletalMeshComp->AddImpulse(OutLoc);
-
-	/* Rotation */
-	const FQuat FromQuat = SelfAsSkeletalMeshComp->GetComponentQuat();
-	const FQuat ToQuat = CurrentTargetOffset.GetRotation();
-	FQuat DeltaQuat = ToQuat * FromQuat.Inverse();
-
-	// Avoid taking the long path around the sphere
-	// // See void FQuat::EnforceShortestArcWith(const FQuat& OtherQuat)
-	//	const float CosTheta = ToQuat | FromQuat;
-	//	if (CosTheta < 0)
-	if (DeltaQuat.W < 0.f)
-	{
-		DeltaQuat *= -1.f;
-	}
-	// The W part of the vector is always ~1.f, not relevant for applying the rotation
-	const FVector DeltaRotAsVector = FVector(DeltaQuat.X, DeltaQuat.Y, DeltaQuat.Z);
+	const FVector DeltaRotAsVector = GetRotationDelta(SelfAsStaticMeshComp->GetComponentQuat(), TargetSceneComp->GetComponentQuat());
 	const FVector OutRot = PIDRot.Update(DeltaRotAsVector, DeltaTime);
 	SelfAsSkeletalMeshComp->AddAngularImpulseInRadians(OutRot);
+
+#if UMC_WITH_CHART
+	SetRotDebugChartData(DeltaRotAsVector, OutRot);
+#endif // UMC_WITH_CHART
 }
 
-
-// Static mesh updates
-void FMC6DController::Update_Static_Position(float DeltaTime)
+void FMC6DController::Rot_Update_Skel_Acceleration(float DeltaTime)
 {
-	SelfAsStaticMeshComp->SetWorldTransform(TargetSceneComp->GetComponentTransform(),
+	const FVector DeltaRotAsVector = GetRotationDelta(SelfAsStaticMeshComp->GetComponentQuat(), TargetSceneComp->GetComponentQuat());
+	const FVector OutRot = PIDRot.Update(DeltaRotAsVector, DeltaTime);
+	SelfAsSkeletalMeshComp->AddTorqueInRadians(OutRot, NAME_None, true); // Acceleration based (mass will have no effect)
+
+#if UMC_WITH_CHART
+	SetRotDebugChartData(DeltaRotAsVector, OutRot);
+#endif // UMC_WITH_CHART
+}
+
+void FMC6DController::Rot_Update_Skel_Force(float DeltaTime)
+{
+	const FVector DeltaRotAsVector = GetRotationDelta(SelfAsStaticMeshComp->GetComponentQuat(), TargetSceneComp->GetComponentQuat());
+	const FVector OutRot = PIDRot.Update(DeltaRotAsVector, DeltaTime);
+	SelfAsSkeletalMeshComp->AddTorqueInRadians(OutRot);
+
+#if UMC_WITH_CHART
+	SetRotDebugChartData(DeltaRotAsVector, OutRot);
+#endif // UMC_WITH_CHART
+}
+
+/* Skeletal updates with offset */
+// Loc
+void FMC6DController::Loc_Update_Skel_Position_Offset(float DeltaTime)
+{
+	/* Offset target calculation */
+	FTransform CurrentTargetOffset;
+	FTransform::Multiply(&CurrentTargetOffset, &LocalTargetOffset, &TargetSceneComp->GetComponentTransform());
+
+	SelfAsSkeletalMeshComp->SetWorldLocation(CurrentTargetOffset.GetLocation(),
 		false, (FHitResult*)nullptr, ETeleportType::TeleportPhysics);
 }
 
-void FMC6DController::Update_Static_Velocity(float DeltaTime)
+void FMC6DController::Loc_Update_Skel_Velocity_Offset(float DeltaTime)
 {
-	/* Location */
+	/* Offset target calculation */
+	FTransform CurrentTargetOffset;
+	FTransform::Multiply(&CurrentTargetOffset, &LocalTargetOffset, &TargetSceneComp->GetComponentTransform());
+
+	const FVector DeltaLoc = CurrentTargetOffset.GetLocation() - SelfAsSkeletalMeshComp->GetComponentLocation();
+	const FVector OutLoc = PIDLoc.Update(DeltaLoc, DeltaTime);
+	if (bApplyToAllChildBodies)
+	{
+		SelfAsSkeletalMeshComp->SetAllPhysicsLinearVelocity(OutLoc);
+	}
+	else
+	{
+		SelfAsSkeletalMeshComp->SetPhysicsLinearVelocity(OutLoc);
+	}
+
+#if UMC_WITH_CHART
+	SetLocDebugChartData(DeltaLoc, OutLoc);
+#endif // UMC_WITH_CHART
+}
+
+void FMC6DController::Loc_Update_Skel_Impulse_Offset(float DeltaTime)
+{
+	/* Offset target calculation */
+	FTransform CurrentTargetOffset;
+	FTransform::Multiply(&CurrentTargetOffset, &LocalTargetOffset, &TargetSceneComp->GetComponentTransform());
+
+	const FVector DeltaLoc = CurrentTargetOffset.GetLocation() - SelfAsSkeletalMeshComp->GetComponentLocation();
+	const FVector OutLoc = PIDLoc.Update(DeltaLoc, DeltaTime);
+	if (bApplyToAllChildBodies)
+	{
+		SelfAsSkeletalMeshComp->AddImpulseToAllBodiesBelow(OutLoc);
+	}
+	else
+	{
+		SelfAsSkeletalMeshComp->AddImpulse(OutLoc);
+	}
+
+
+#if UMC_WITH_CHART
+	SetLocDebugChartData(DeltaLoc, OutLoc);
+#endif // UMC_WITH_CHART
+}
+
+void FMC6DController::Loc_Update_Skel_Acceleration_Offset(float DeltaTime)
+{
+	/* Offset target calculation */
+	FTransform CurrentTargetOffset;
+	FTransform::Multiply(&CurrentTargetOffset, &LocalTargetOffset, &TargetSceneComp->GetComponentTransform());
+
+	const FVector DeltaLoc = CurrentTargetOffset.GetLocation() - SelfAsSkeletalMeshComp->GetComponentLocation();
+	const FVector OutLoc = PIDLoc.Update(DeltaLoc, DeltaTime);
+	if (bApplyToAllChildBodies)
+	{
+		SelfAsSkeletalMeshComp->AddForceToAllBodiesBelow(OutLoc, NAME_None, true);
+	}
+	else
+	{
+		SelfAsSkeletalMeshComp->AddForce(OutLoc, NAME_None, true); // Acceleration based (mass will have no effect)
+	}
+#if UMC_WITH_CHART
+	SetLocDebugChartData(DeltaLoc, OutLoc);
+#endif // UMC_WITH_CHART
+}
+
+void FMC6DController::Loc_Update_Skel_Force_Offset(float DeltaTime)
+{
+	/* Offset target calculation */
+	FTransform CurrentTargetOffset;
+	FTransform::Multiply(&CurrentTargetOffset, &LocalTargetOffset, &TargetSceneComp->GetComponentTransform());
+
+	const FVector DeltaLoc = CurrentTargetOffset.GetLocation() - SelfAsSkeletalMeshComp->GetComponentLocation();
+	const FVector OutLoc = PIDLoc.Update(DeltaLoc, DeltaTime);
+	if (bApplyToAllChildBodies)
+	{
+		SelfAsSkeletalMeshComp->AddForceToAllBodiesBelow(OutLoc);
+	}
+	else
+	{
+		SelfAsSkeletalMeshComp->AddForce(OutLoc);
+	}
+
+#if UMC_WITH_CHART
+	SetLocDebugChartData(DeltaLoc, OutLoc);
+#endif // UMC_WITH_CHART
+}
+
+// Rot
+void FMC6DController::Rot_Update_Skel_Position_Offset(float DeltaTime)
+{
+	/* Offset target calculation */
+	FTransform CurrentTargetOffset;
+	FTransform::Multiply(&CurrentTargetOffset, &LocalTargetOffset, &TargetSceneComp->GetComponentTransform());
+
+	SelfAsSkeletalMeshComp->SetWorldRotation(CurrentTargetOffset.GetRotation(),
+		false, (FHitResult*)nullptr, ETeleportType::TeleportPhysics);
+}
+
+void FMC6DController::Rot_Update_Skel_Velocity_Offset(float DeltaTime)
+{
+	/* Offset target calculation */
+	FTransform CurrentTargetOffset;
+	FTransform::Multiply(&CurrentTargetOffset, &LocalTargetOffset, &TargetSceneComp->GetComponentTransform());
+
+	const FVector DeltaRotAsVector = GetRotationDelta(SelfAsSkeletalMeshComp->GetComponentQuat(), CurrentTargetOffset.GetRotation());
+	const FVector OutRot = PIDRot.Update(DeltaRotAsVector, DeltaTime);
+	SelfAsSkeletalMeshComp->SetPhysicsAngularVelocityInRadians(OutRot);
+
+#if UMC_WITH_CHART
+	SetRotDebugChartData(DeltaRotAsVector, OutRot);
+#endif // UMC_WITH_CHART
+}
+
+void FMC6DController::Rot_Update_Skel_Impulse_Offset(float DeltaTime)
+{
+	/* Offset target calculation */
+	FTransform CurrentTargetOffset;
+	FTransform::Multiply(&CurrentTargetOffset, &LocalTargetOffset, &TargetSceneComp->GetComponentTransform());
+
+	const FVector DeltaRotAsVector = GetRotationDelta(SelfAsSkeletalMeshComp->GetComponentQuat(), CurrentTargetOffset.GetRotation());
+	const FVector OutRot = PIDRot.Update(DeltaRotAsVector, DeltaTime);
+	SelfAsSkeletalMeshComp->AddAngularImpulseInRadians(OutRot);
+
+#if UMC_WITH_CHART
+	SetRotDebugChartData(DeltaRotAsVector, OutRot);
+#endif // UMC_WITH_CHART
+}
+
+void FMC6DController::Rot_Update_Skel_Acceleration_Offset(float DeltaTime)
+{
+	/* Offset target calculation */
+	FTransform CurrentTargetOffset;
+	FTransform::Multiply(&CurrentTargetOffset, &LocalTargetOffset, &TargetSceneComp->GetComponentTransform());
+
+	const FVector DeltaRotAsVector = GetRotationDelta(SelfAsSkeletalMeshComp->GetComponentQuat(), CurrentTargetOffset.GetRotation());
+	const FVector OutRot = PIDRot.Update(DeltaRotAsVector, DeltaTime);
+	SelfAsSkeletalMeshComp->AddTorqueInRadians(OutRot, NAME_None, true); // Acceleration based (mass will have no effect)
+
+#if UMC_WITH_CHART
+	SetRotDebugChartData(DeltaRotAsVector, OutRot);
+#endif // UMC_WITH_CHART
+}
+
+void FMC6DController::Rot_Update_Skel_Force_Offset(float DeltaTime)
+{
+	/* Offset target calculation */
+	FTransform CurrentTargetOffset;
+	FTransform::Multiply(&CurrentTargetOffset, &LocalTargetOffset, &TargetSceneComp->GetComponentTransform());
+
+	const FVector DeltaRotAsVector = GetRotationDelta(SelfAsSkeletalMeshComp->GetComponentQuat(), CurrentTargetOffset.GetRotation());
+	const FVector OutRot = PIDRot.Update(DeltaRotAsVector, DeltaTime);
+	SelfAsSkeletalMeshComp->AddTorqueInRadians(OutRot);
+
+#if UMC_WITH_CHART
+	SetRotDebugChartData(DeltaRotAsVector, OutRot);
+#endif // UMC_WITH_CHART
+}
+
+
+/* Static mesh updates */
+// Loc
+void FMC6DController::Loc_Update_Static_Position(float DeltaTime)
+{
+	SelfAsStaticMeshComp->SetWorldLocation(TargetSceneComp->GetComponentLocation(),
+		false, (FHitResult*)nullptr, ETeleportType::TeleportPhysics);
+}
+
+void FMC6DController::Loc_Update_Static_Velocity(float DeltaTime)
+{
 	const FVector DeltaLoc = TargetSceneComp->GetComponentLocation() - SelfAsStaticMeshComp->GetComponentLocation();
 	const FVector OutLoc = PIDLoc.Update(DeltaLoc, DeltaTime);
 	SelfAsStaticMeshComp->SetPhysicsLinearVelocity(OutLoc);
-
-	/* Rotation */
-	const FQuat FromQuat = SelfAsStaticMeshComp->GetComponentQuat();
-	const FQuat ToQuat = TargetSceneComp->GetComponentQuat();
-	FQuat DeltaQuat = ToQuat * FromQuat.Inverse();
-
-	// Avoid taking the long path around the sphere
-	// // See void FQuat::EnforceShortestArcWith(const FQuat& OtherQuat)
-	//	const float CosTheta = ToQuat | FromQuat;
-	//	if (CosTheta < 0)
-	if (DeltaQuat.W < 0.f)
-	{
-		DeltaQuat *= -1.f;
-	}
-	// The W part of the vector is always ~1.f, not relevant for applying the rotation
-	const FVector DeltaRotAsVector = FVector(DeltaQuat.X, DeltaQuat.Y, DeltaQuat.Z);
-	const FVector OutRot = PIDRot.Update(DeltaRotAsVector, DeltaTime);
-	SelfAsStaticMeshComp->SetPhysicsAngularVelocityInRadians(OutRot);
+	
+#if UMC_WITH_CHART
+	SetLocDebugChartData(DeltaLoc, OutLoc);
+#endif // UMC_WITH_CHART
 }
 
-void FMC6DController::Update_Static_Acceleration(float DeltaTime)
+void FMC6DController::Loc_Update_Static_Impulse(float DeltaTime)
 {
-	/* Location */
+	const FVector DeltaLoc = TargetSceneComp->GetComponentLocation() - SelfAsStaticMeshComp->GetComponentLocation();
+	const FVector OutLoc = PIDLoc.Update(DeltaLoc, DeltaTime);
+	SelfAsStaticMeshComp->AddImpulse(OutLoc);
+
+#if UMC_WITH_CHART
+	SetLocDebugChartData(DeltaLoc, OutLoc);
+#endif // UMC_WITH_CHART
+}
+
+void FMC6DController::Loc_Update_Static_Acceleration(float DeltaTime)
+{
 	const FVector DeltaLoc = TargetSceneComp->GetComponentLocation() - SelfAsStaticMeshComp->GetComponentLocation();
 	const FVector OutLoc = PIDLoc.Update(DeltaLoc, DeltaTime);
 	SelfAsStaticMeshComp->AddForce(OutLoc, NAME_None, true); // Acceleration based (mass will have no effect)
 
-	/* Rotation */
-	const FQuat FromQuat = SelfAsStaticMeshComp->GetComponentQuat();
-	const FQuat ToQuat = TargetSceneComp->GetComponentQuat();
-	FQuat DeltaQuat = ToQuat * FromQuat.Inverse();
-
-	// Avoid taking the long path around the sphere
-	// // See void FQuat::EnforceShortestArcWith(const FQuat& OtherQuat)
-	//	const float CosTheta = ToQuat | FromQuat;
-	//	if (CosTheta < 0)
-	if (DeltaQuat.W < 0.f)
-	{
-		DeltaQuat *= -1.f;
-	}
-	// The W part of the vector is always ~1.f, not relevant for applying the rotation
-	const FVector DeltaRotAsVector = FVector(DeltaQuat.X, DeltaQuat.Y, DeltaQuat.Z);
-	const FVector OutRot = PIDRot.Update(DeltaRotAsVector, DeltaTime);
-	SelfAsStaticMeshComp->AddTorqueInRadians(OutRot, NAME_None, true); // Acceleration based (mass will have no effect)
+#if UMC_WITH_CHART
+	SetLocDebugChartData(DeltaLoc, OutLoc);
+#endif // UMC_WITH_CHART
 }
 
-void FMC6DController::Update_Static_Force(float DeltaTime)
+void FMC6DController::Loc_Update_Static_Force(float DeltaTime)
 {
-	/* Location */
 	const FVector DeltaLoc = TargetSceneComp->GetComponentLocation() - SelfAsStaticMeshComp->GetComponentLocation();
 	const FVector OutLoc = PIDLoc.Update(DeltaLoc, DeltaTime);
 	SelfAsStaticMeshComp->AddForce(OutLoc);
 
-	/* Rotation */
-	const FQuat FromQuat = SelfAsStaticMeshComp->GetComponentQuat();
-	const FQuat ToQuat = TargetSceneComp->GetComponentQuat();
-	FQuat DeltaQuat = ToQuat * FromQuat.Inverse();
-
-	// Avoid taking the long path around the sphere
-	// // See void FQuat::EnforceShortestArcWith(const FQuat& OtherQuat)
-	//	const float CosTheta = ToQuat | FromQuat;
-	//	if (CosTheta < 0)
-	if (DeltaQuat.W < 0.f)
-	{
-		DeltaQuat *= -1.f;
-	}
-	// The W part of the vector is always ~1.f, not relevant for applying the rotation
-	const FVector DeltaRotAsVector = FVector(DeltaQuat.X, DeltaQuat.Y, DeltaQuat.Z);
-	const FVector OutRot = PIDRot.Update(DeltaRotAsVector, DeltaTime);
-	SelfAsStaticMeshComp->AddTorqueInRadians(OutRot);
+#if UMC_WITH_CHART
+	SetLocDebugChartData(DeltaLoc, OutLoc);
+#endif // UMC_WITH_CHART
 }
 
-void FMC6DController::Update_Static_Impulse(float DeltaTime)
+// Rot
+void FMC6DController::Rot_Update_Static_Position(float DeltaTime)
 {
-	/* Location */
-	const FVector DeltaLoc = TargetSceneComp->GetComponentLocation() - SelfAsStaticMeshComp->GetComponentLocation();
-	const FVector OutLoc = PIDLoc.Update(DeltaLoc, DeltaTime);
-	SelfAsStaticMeshComp->AddImpulse(OutLoc);
+	SelfAsStaticMeshComp->SetWorldRotation(TargetSceneComp->GetComponentQuat(),
+		false, (FHitResult*)nullptr, ETeleportType::TeleportPhysics);
+}
 
-	/* Rotation */
-	const FQuat FromQuat = SelfAsStaticMeshComp->GetComponentQuat();
-	const FQuat ToQuat = TargetSceneComp->GetComponentQuat();
-	FQuat DeltaQuat = ToQuat * FromQuat.Inverse();
+void FMC6DController::Rot_Update_Static_Velocity(float DeltaTime)
+{
+	const FVector DeltaRotAsVector = GetRotationDelta(SelfAsStaticMeshComp->GetComponentQuat(), TargetSceneComp->GetComponentQuat());
+	const FVector OutRot = PIDRot.Update(DeltaRotAsVector, DeltaTime);
+	SelfAsStaticMeshComp->SetPhysicsAngularVelocityInRadians(OutRot);
 
-	// Avoid taking the long path around the sphere
-	// // See void FQuat::EnforceShortestArcWith(const FQuat& OtherQuat)
-	//	const float CosTheta = ToQuat | FromQuat;
-	//	if (CosTheta < 0)
-	if (DeltaQuat.W < 0.f)
-	{
-		DeltaQuat *= -1.f;
-	}
-	// The W part of the vector is always ~1.f, not relevant for applying the rotation
-	const FVector DeltaRotAsVector = FVector(DeltaQuat.X, DeltaQuat.Y, DeltaQuat.Z);
+#if UMC_WITH_CHART
+	SetRotDebugChartData(DeltaRotAsVector, OutRot);
+#endif // UMC_WITH_CHART
+}
+
+void FMC6DController::Rot_Update_Static_Impulse(float DeltaTime)
+{
+	const FVector DeltaRotAsVector = GetRotationDelta(SelfAsStaticMeshComp->GetComponentQuat(), TargetSceneComp->GetComponentQuat());
 	const FVector OutRot = PIDRot.Update(DeltaRotAsVector, DeltaTime);
 	SelfAsStaticMeshComp->AddAngularImpulseInRadians(OutRot);
+
+#if UMC_WITH_CHART
+	SetRotDebugChartData(DeltaRotAsVector, OutRot);
+#endif // UMC_WITH_CHART
+}
+
+void FMC6DController::Rot_Update_Static_Acceleration(float DeltaTime)
+{
+	const FVector DeltaRotAsVector = GetRotationDelta(SelfAsStaticMeshComp->GetComponentQuat(), TargetSceneComp->GetComponentQuat());
+	const FVector OutRot = PIDRot.Update(DeltaRotAsVector, DeltaTime);
+	SelfAsStaticMeshComp->AddTorqueInRadians(OutRot, NAME_None, true); // Acceleration based (mass will have no effect)
+
+#if UMC_WITH_CHART
+	SetRotDebugChartData(DeltaRotAsVector, OutRot);
+#endif // UMC_WITH_CHART
+}
+
+void FMC6DController::Rot_Update_Static_Force(float DeltaTime)
+{
+	const FVector DeltaRotAsVector = GetRotationDelta(SelfAsStaticMeshComp->GetComponentQuat(), TargetSceneComp->GetComponentQuat());
+	const FVector OutRot = PIDRot.Update(DeltaRotAsVector, DeltaTime);
+	SelfAsStaticMeshComp->AddTorqueInRadians(OutRot);
+
+#if UMC_WITH_CHART
+	SetRotDebugChartData(DeltaRotAsVector, OutRot);
+#endif // UMC_WITH_CHART
 }
 
 
-// Static mesh updates with offset
-void FMC6DController::Update_Static_Position_Offset(float DeltaTime)
+/* Static mesh updates with offset */
+// Loc
+void FMC6DController::Loc_Update_Static_Position_Offset(float DeltaTime)
 {
 	/* Offset target calculation */
 	FTransform CurrentTargetOffset;
 	FTransform::Multiply(&CurrentTargetOffset, &LocalTargetOffset, &TargetSceneComp->GetComponentTransform());
 
 	/* Location and Rotation */
-	SelfAsStaticMeshComp->SetWorldTransform(CurrentTargetOffset,
+	SelfAsStaticMeshComp->SetWorldLocation(CurrentTargetOffset.GetLocation(),
 		false, (FHitResult*)nullptr, ETeleportType::TeleportPhysics);
 }
 
-void FMC6DController::Update_Static_Velocity_Offset(float DeltaTime)
+void FMC6DController::Loc_Update_Static_Velocity_Offset(float DeltaTime)
 {
 	/* Offset target calculation */
 	FTransform CurrentTargetOffset;
 	FTransform::Multiply(&CurrentTargetOffset, &LocalTargetOffset, &TargetSceneComp->GetComponentTransform());
 
-	/* Location */
 	const FVector DeltaLoc = CurrentTargetOffset.GetLocation() - SelfAsStaticMeshComp->GetComponentLocation();
 	const FVector OutLoc = PIDLoc.Update(DeltaLoc, DeltaTime);
 	SelfAsStaticMeshComp->SetPhysicsLinearVelocity(OutLoc);
 
-	/* Rotation */
-	const FQuat FromQuat = SelfAsStaticMeshComp->GetComponentQuat();
-	const FQuat ToQuat = CurrentTargetOffset.GetRotation();
-	FQuat DeltaQuat = ToQuat * FromQuat.Inverse();
-
-	// Avoid taking the long path around the sphere
-	// // See void FQuat::EnforceShortestArcWith(const FQuat& OtherQuat)
-	//	const float CosTheta = ToQuat | FromQuat;
-	//	if (CosTheta < 0)
-	if (DeltaQuat.W < 0.f)
-	{
-		DeltaQuat *= -1.f;
-	}
-	// The W part of the vector is always ~1.f, not relevant for applying the rotation
-	const FVector DeltaRotAsVector = FVector(DeltaQuat.X, DeltaQuat.Y, DeltaQuat.Z);
-	const FVector OutRot = PIDRot.Update(DeltaRotAsVector, DeltaTime);
-	SelfAsStaticMeshComp->SetPhysicsAngularVelocityInRadians(OutRot);
+#if UMC_WITH_CHART
+	SetLocDebugChartData(DeltaLoc, OutLoc);
+#endif // UMC_WITH_CHART
 }
 
-void FMC6DController::Update_Static_Acceleration_Offset(float DeltaTime)
+void FMC6DController::Loc_Update_Static_Impulse_Offset(float DeltaTime)
 {
 	/* Offset target calculation */
 	FTransform CurrentTargetOffset;
 	FTransform::Multiply(&CurrentTargetOffset, &LocalTargetOffset, &TargetSceneComp->GetComponentTransform());
 
-	/* Location */
-	const FVector DeltaLoc = CurrentTargetOffset.GetLocation() - SelfAsStaticMeshComp->GetComponentLocation();
-	const FVector OutLoc = PIDLoc.Update(DeltaLoc, DeltaTime);
-	SelfAsStaticMeshComp->AddForce(OutLoc, NAME_None, true); // Acceleration based (mass will have no effect)
-
-	/* Rotation */
-	const FQuat FromQuat = SelfAsStaticMeshComp->GetComponentQuat();
-	const FQuat ToQuat = CurrentTargetOffset.GetRotation();
-	FQuat DeltaQuat = ToQuat * FromQuat.Inverse();
-
-	// Avoid taking the long path around the sphere
-	// // See void FQuat::EnforceShortestArcWith(const FQuat& OtherQuat)
-	//	const float CosTheta = ToQuat | FromQuat;
-	//	if (CosTheta < 0)
-	if (DeltaQuat.W < 0.f)
-	{
-		DeltaQuat *= -1.f;
-	}
-	// The W part of the vector is always ~1.f, not relevant for applying the rotation
-	const FVector DeltaRotAsVector = FVector(DeltaQuat.X, DeltaQuat.Y, DeltaQuat.Z);
-	const FVector OutRot = PIDRot.Update(DeltaRotAsVector, DeltaTime);
-	SelfAsStaticMeshComp->AddTorqueInRadians(OutRot, NAME_None, true); // Acceleration based (mass will have no effect)
-}
-
-void FMC6DController::Update_Static_Force_Offset(float DeltaTime)
-{
-	/* Offset target calculation */
-	FTransform CurrentTargetOffset;
-	FTransform::Multiply(&CurrentTargetOffset, &LocalTargetOffset, &TargetSceneComp->GetComponentTransform());
-
-	/* Location */
-	const FVector DeltaLoc = CurrentTargetOffset.GetLocation() - SelfAsStaticMeshComp->GetComponentLocation();
-	const FVector OutLoc = PIDLoc.Update(DeltaLoc, DeltaTime);
-	SelfAsStaticMeshComp->AddForce(OutLoc); 
-
-	/* Rotation */
-	const FQuat FromQuat = SelfAsStaticMeshComp->GetComponentQuat();
-	const FQuat ToQuat = CurrentTargetOffset.GetRotation();
-	FQuat DeltaQuat = ToQuat * FromQuat.Inverse();
-
-	// Avoid taking the long path around the sphere
-	// // See void FQuat::EnforceShortestArcWith(const FQuat& OtherQuat)
-	//	const float CosTheta = ToQuat | FromQuat;
-	//	if (CosTheta < 0)
-	if (DeltaQuat.W < 0.f)
-	{
-		DeltaQuat *= -1.f;
-	}
-	// The W part of the vector is always ~1.f, not relevant for applying the rotation
-	const FVector DeltaRotAsVector = FVector(DeltaQuat.X, DeltaQuat.Y, DeltaQuat.Z);
-	const FVector OutRot = PIDRot.Update(DeltaRotAsVector, DeltaTime);
-	SelfAsStaticMeshComp->AddTorqueInRadians(OutRot); 
-}
-
-void FMC6DController::Update_Static_Impulse_Offset(float DeltaTime)
-{
-	/* Offset target calculation */
-	FTransform CurrentTargetOffset;
-	FTransform::Multiply(&CurrentTargetOffset, &LocalTargetOffset, &TargetSceneComp->GetComponentTransform());
-
-	/* Location */
 	const FVector DeltaLoc = CurrentTargetOffset.GetLocation() - SelfAsStaticMeshComp->GetComponentLocation();
 	const FVector OutLoc = PIDLoc.Update(DeltaLoc, DeltaTime);
 	SelfAsStaticMeshComp->AddImpulse(OutLoc);
 
-	/* Rotation */
-	const FQuat FromQuat = SelfAsStaticMeshComp->GetComponentQuat();
-	const FQuat ToQuat = CurrentTargetOffset.GetRotation();
-	FQuat DeltaQuat = ToQuat * FromQuat.Inverse();
+#if UMC_WITH_CHART
+	SetLocDebugChartData(DeltaLoc, OutLoc);
+#endif // UMC_WITH_CHART
+}
 
-	// Avoid taking the long path around the sphere
-	// // See void FQuat::EnforceShortestArcWith(const FQuat& OtherQuat)
-	//	const float CosTheta = ToQuat | FromQuat;
-	//	if (CosTheta < 0)
-	if (DeltaQuat.W < 0.f)
-	{
-		DeltaQuat *= -1.f;
-	}
-	// The W part of the vector is always ~1.f, not relevant for applying the rotation
-	const FVector DeltaRotAsVector = FVector(DeltaQuat.X, DeltaQuat.Y, DeltaQuat.Z);
+void FMC6DController::Loc_Update_Static_Acceleration_Offset(float DeltaTime)
+{
+	/* Offset target calculation */
+	FTransform CurrentTargetOffset;
+	FTransform::Multiply(&CurrentTargetOffset, &LocalTargetOffset, &TargetSceneComp->GetComponentTransform());
+
+	const FVector DeltaLoc = CurrentTargetOffset.GetLocation() - SelfAsStaticMeshComp->GetComponentLocation();
+	const FVector OutLoc = PIDLoc.Update(DeltaLoc, DeltaTime);
+	SelfAsStaticMeshComp->AddForce(OutLoc, NAME_None, true); // Acceleration based (mass will have no effect)
+
+#if UMC_WITH_CHART
+	SetLocDebugChartData(DeltaLoc, OutLoc);
+#endif // UMC_WITH_CHART
+}
+
+void FMC6DController::Loc_Update_Static_Force_Offset(float DeltaTime)
+{
+	/* Offset target calculation */
+	FTransform CurrentTargetOffset;
+	FTransform::Multiply(&CurrentTargetOffset, &LocalTargetOffset, &TargetSceneComp->GetComponentTransform());
+
+	const FVector DeltaLoc = CurrentTargetOffset.GetLocation() - SelfAsStaticMeshComp->GetComponentLocation();
+	const FVector OutLoc = PIDLoc.Update(DeltaLoc, DeltaTime);
+	SelfAsStaticMeshComp->AddForce(OutLoc); 
+
+#if UMC_WITH_CHART
+	SetLocDebugChartData(DeltaLoc, OutLoc);
+#endif // UMC_WITH_CHART
+}
+
+// Rot
+void FMC6DController::Rot_Update_Static_Position_Offset(float DeltaTime)
+{
+	/* Offset target calculation */
+	FTransform CurrentTargetOffset;
+	FTransform::Multiply(&CurrentTargetOffset, &LocalTargetOffset, &TargetSceneComp->GetComponentTransform());
+
+	/* Location and Rotation */
+	SelfAsStaticMeshComp->SetWorldRotation(CurrentTargetOffset.GetRotation(),
+		false, (FHitResult*)nullptr, ETeleportType::TeleportPhysics);
+}
+
+void FMC6DController::Rot_Update_Static_Velocity_Offset(float DeltaTime)
+{
+	/* Offset target calculation */
+	FTransform CurrentTargetOffset;
+	FTransform::Multiply(&CurrentTargetOffset, &LocalTargetOffset, &TargetSceneComp->GetComponentTransform());
+
+	const FVector DeltaRotAsVector = GetRotationDelta(SelfAsStaticMeshComp->GetComponentQuat(), CurrentTargetOffset.GetRotation());
+	const FVector OutRot = PIDRot.Update(DeltaRotAsVector, DeltaTime);
+	SelfAsStaticMeshComp->SetPhysicsAngularVelocityInRadians(OutRot);
+
+#if UMC_WITH_CHART
+	SetRotDebugChartData(DeltaRotAsVector, OutRot);
+#endif // UMC_WITH_CHART
+}
+
+void FMC6DController::Rot_Update_Static_Impulse_Offset(float DeltaTime)
+{
+	/* Offset target calculation */
+	FTransform CurrentTargetOffset;
+	FTransform::Multiply(&CurrentTargetOffset, &LocalTargetOffset, &TargetSceneComp->GetComponentTransform());
+
+	const FVector DeltaRotAsVector = GetRotationDelta(SelfAsStaticMeshComp->GetComponentQuat(), CurrentTargetOffset.GetRotation());
 	const FVector OutRot = PIDRot.Update(DeltaRotAsVector, DeltaTime);
 	SelfAsStaticMeshComp->AddAngularImpulseInRadians(OutRot);
+
+#if UMC_WITH_CHART
+	SetRotDebugChartData(DeltaRotAsVector, OutRot);
+#endif // UMC_WITH_CHART
+}
+
+void FMC6DController::Rot_Update_Static_Acceleration_Offset(float DeltaTime)
+{
+	/* Offset target calculation */
+	FTransform CurrentTargetOffset;
+	FTransform::Multiply(&CurrentTargetOffset, &LocalTargetOffset, &TargetSceneComp->GetComponentTransform());
+
+	const FVector DeltaRotAsVector = GetRotationDelta(SelfAsStaticMeshComp->GetComponentQuat(), CurrentTargetOffset.GetRotation());
+	const FVector OutRot = PIDRot.Update(DeltaRotAsVector, DeltaTime);
+	SelfAsStaticMeshComp->AddTorqueInRadians(OutRot, NAME_None, true); // Acceleration based (mass will have no effect)
+
+#if UMC_WITH_CHART
+	SetRotDebugChartData(DeltaRotAsVector, OutRot);
+#endif // UMC_WITH_CHART
+}
+
+void FMC6DController::Rot_Update_Static_Force_Offset(float DeltaTime)
+{
+	/* Offset target calculation */
+	FTransform CurrentTargetOffset;
+	FTransform::Multiply(&CurrentTargetOffset, &LocalTargetOffset, &TargetSceneComp->GetComponentTransform());
+
+	const FVector DeltaRotAsVector = GetRotationDelta(SelfAsStaticMeshComp->GetComponentQuat(), CurrentTargetOffset.GetRotation());
+	const FVector OutRot = PIDRot.Update(DeltaRotAsVector, DeltaTime);
+	SelfAsStaticMeshComp->AddTorqueInRadians(OutRot);
+
+#if UMC_WITH_CHART
+	SetRotDebugChartData(DeltaRotAsVector, OutRot);
+#endif // UMC_WITH_CHART
 }

@@ -10,7 +10,7 @@
 #define __func__ __FUNCTION__
 #endif
 
-class FUMC6DControllerModule : public IModuleInterface
+class FUMC6DControllerGUIModule : public IModuleInterface
 {
 public:
 
