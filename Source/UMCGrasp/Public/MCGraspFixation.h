@@ -123,4 +123,7 @@ private:
 
 	// Potential objects that can be grasped, currently overlapping the sphere
 	TArray<AStaticMeshActor*> ObjectsInSphereArea;
+
+	/* Constants */
+	constexpr static float VelocityBoostAtRelease = 1.5f;
 };
