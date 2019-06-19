@@ -425,7 +425,7 @@ void FMCGraspEdUtils::WriteToAsset(const FString& InAssetName)
 	if (AnimFrames.Num() < 2)
 	{
 		ShowMessageBox(FText::FromString("Error"), FText::FromString("You need at least 2 saved frames in order to save the grasp animation.."));
-		false;
+		return false;
 	}
 
 	// Check if the data asset already exists, or create a new one
