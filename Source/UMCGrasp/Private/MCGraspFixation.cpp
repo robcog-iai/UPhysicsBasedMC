@@ -8,8 +8,6 @@
 #include "Components/InputComponent.h"
 #include "Components/StaticMeshComponent.h"
 
-#define MC_RELEASE_VEL_BOOST 1.5f
-
 // Default constructor
 UMCGraspFixation::UMCGraspFixation()
 {	
@@ -26,7 +24,7 @@ UMCGraspFixation::UMCGraspFixation()
 	// Default values
 	HandType = EMCGraspFixationHandType::Left;
 	InputActionName = "LeftFixate";
-	bWeldBodies = true;
+	bWeldBodies = false;
 	WeightLimit = 15.0f;
 	VolumeLimit = 30000.0f; // 1000cm^3 = 1 Liter
 }
@@ -123,7 +121,7 @@ void UMCGraspFixation::Release()
 
 			// Enable physics with and apply current hand velocity, clear pointer to object
 			SMC->SetSimulatePhysics(true);
-			SMC->SetPhysicsLinearVelocity(CachedVelocity * MC_RELEASE_VEL_BOOST);
+			SMC->SetPhysicsLinearVelocity(CachedVelocity * VelocityBoostAtRelease);
 
 			// Enable and update overlaps
 			SetGenerateOverlapEvents(true);
@@ -172,13 +170,13 @@ bool UMCGraspFixation::Fixate(AStaticMeshActor* InObject)
 {
 	if (UStaticMeshComponent* SMC = InObject->GetStaticMeshComponent())
 	{
+		// Physics has to be disabled to attach without welding
+		SMC->SetSimulatePhysics(false);
+
 		// Check if  the object can be attach to the parent
 		if (SMC->AttachToComponent(GetOwner()->GetRootComponent(), 
 			FAttachmentTransformRules(EAttachmentRule::KeepWorld, bWeldBodies)))
 		{
-			// Disable physics
-			SMC->SetSimulatePhysics(false);
-
 			// Set the pointer to the grasped object
 			GraspedObject = InObject;
 
