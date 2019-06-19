@@ -240,7 +240,7 @@ void UMC6DTarget::TickComponent(float DeltaTime, ELevelTick TickType, FActorComp
 
 #if UMC_WITH_CHART
 	Controller.GetDebugChartData(ChartData.LocErr, ChartData.LocPID, ChartData.RotErr, ChartData.RotPID);
-#endif UMC_WITH_CHART
+#endif // UMC_WITH_CHART
 }
 
 // Reset the location PID
