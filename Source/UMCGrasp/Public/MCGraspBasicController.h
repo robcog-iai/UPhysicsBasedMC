@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
+#include "UMCGrasp.h"
 #include "Components/ActorComponent.h"
 #include "PhysicsEngine/ConstraintDrives.h"
 #include "MCGraspBasicController.generated.h"

@@ -8,6 +8,7 @@ public class UMC6DControllerGUI : ModuleRules
 	public UMC6DControllerGUI(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
+		//PrivatePCHHeaderFile = "Public/UMC6DControllerGUI.h";
 
 		PublicIncludePaths.AddRange(
 			new string[] {

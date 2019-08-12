@@ -9,7 +9,8 @@ public class UMCParallelGripper : ModuleRules
 	public UMCParallelGripper(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
-		
+		//PrivatePCHHeaderFile = "Public/UMCParallelGripper.h";
+
 		//// https://answers.unrealengine.com/questions/258689/how-to-include-private-header-files-of-other-modul.html		
 		//string EnginePath = Path.GetFullPath(Target.RelativeEnginePath);
 
@@ -49,7 +50,7 @@ public class UMCParallelGripper : ModuleRules
 			}
 			);
 
-        DynamicallyLoadedModuleNames.AddRange(
+		DynamicallyLoadedModuleNames.AddRange(
 			new string[]
 			{
 				// ... add any modules that your module loads dynamically here ...

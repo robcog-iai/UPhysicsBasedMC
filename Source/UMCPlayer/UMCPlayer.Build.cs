@@ -9,7 +9,8 @@ public class UMCPlayer : ModuleRules
 	public UMCPlayer(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
-		
+		//PrivatePCHHeaderFile = "Public/UMCPlayer.h";
+
 		//// https://answers.unrealengine.com/questions/258689/how-to-include-private-header-files-of-other-modul.html		
 		//string EnginePath = Path.GetFullPath(Target.RelativeEnginePath);
 
@@ -48,7 +49,7 @@ public class UMCPlayer : ModuleRules
 			}
 			);
 
-        DynamicallyLoadedModuleNames.AddRange(
+		DynamicallyLoadedModuleNames.AddRange(
 			new string[]
 			{
 				// ... add any modules that your module loads dynamically here ...

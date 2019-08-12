@@ -7,9 +7,11 @@ public class UMCGraspEd : ModuleRules
 	public UMCGraspEd(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
-        bEnableUndefinedIdentifierWarnings = false;
+		//PrivatePCHHeaderFile = "Public/UMCGraspEd.h";
 
-        PublicIncludePaths.AddRange(
+		bEnableUndefinedIdentifierWarnings = false;
+
+		PublicIncludePaths.AddRange(
 			new string[] {
 				// ... add public include paths required here ...
 			}
@@ -28,14 +30,14 @@ public class UMCGraspEd : ModuleRules
 			new string[]
 			{
 				"Core",
-                "UMCGrasp",
-                "CoreUObject",
-                "SkeletalMeshEditor",
-                "SkeletonEditor",
-                "StaticMeshEditor",
-                "MainFrame",
-                "Engine",
-                "InputCore"
+				"UMCGrasp",
+				"CoreUObject",
+				"SkeletalMeshEditor",
+				"SkeletonEditor",
+				"StaticMeshEditor",
+				"MainFrame",
+				"Engine",
+				"InputCore"
 				// ... add other public dependencies that you statically link with here ...
 			}
 			);
@@ -44,20 +46,20 @@ public class UMCGraspEd : ModuleRules
 		PrivateDependencyModuleNames.AddRange(
 			new string[]
 			{
-            "Projects",
-            "UMCGrasp",
-            "InputCore",
-            "UnrealEd",
-            "LevelEditor",
-            "CoreUObject",
-            "MainFrame",
-            "AnimGraphRuntime",
-            "Slate",
-            "SlateCore",
-            "Persona",
-            "HeadMountedDisplay",
-            "Core",
-            "AnimGraph",
+			"Projects",
+			"UMCGrasp",
+			"InputCore",
+			"UnrealEd",
+			"LevelEditor",
+			"CoreUObject",
+			"MainFrame",
+			"AnimGraphRuntime",
+			"Slate",
+			"SlateCore",
+			"Persona",
+			"HeadMountedDisplay",
+			"Core",
+			"AnimGraph",
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);
