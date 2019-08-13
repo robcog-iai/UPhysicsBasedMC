@@ -18,6 +18,9 @@ enum class EMCGraspAnimHandType : uint8
 	Right					UMETA(DisplayName = "Right"),
 };
 
+/** Notify the active grasp type */
+DECLARE_MULTICAST_DELEGATE_OneParam(FMCGraspTypeSignature, const FString& /*GraspType*/);
+
 /**
 * The controller chooses the right animations and sends them to the executor
 */
@@ -81,6 +84,10 @@ private:
 	// Switch to the previous animation
 	void GotoPreviousAnimationCallback();
 
+public:
+	// Publishes the current active grasp type
+	FMCGraspTypeSignature OnGraspType;
+	
 private:
 #if WITH_EDITOR
 	// Hand type, to listen to the right inputs

@@ -86,6 +86,8 @@ void UMCGraspAnimController::Init()
 	ActiveAnimation = Animations[0];
 	ActiveAnimStepSize = 1.f / static_cast<float>(ActiveAnimation.Num() - 1);
 
+	OnGraspType.Broadcast(AnimationNames[ActiveAnimIdx]);
+
 	//if (HandType == EMCGraspAnimHandType::Left)
 	//{
 	//	GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("L:%s"),
@@ -301,6 +303,8 @@ void UMCGraspAnimController::GotoNextAnimationCallback()
 		//	GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("R:%s"),
 		//		*AnimationNames[ActiveAnimIdx]), true, FVector2D(1.5f, 1.5f));
 		//}
+
+		OnGraspType.Broadcast(AnimationNames[ActiveAnimIdx]);
 	}
 }
 
@@ -327,5 +331,7 @@ void UMCGraspAnimController::GotoPreviousAnimationCallback()
 		//	GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("R:%s"),
 		//		*AnimationNames[ActiveAnimIdx]), true, FVector2D(1.5f, 1.5f));
 		//}
+		
+		OnGraspType.Broadcast(AnimationNames[ActiveAnimIdx]);
 	}
 }
