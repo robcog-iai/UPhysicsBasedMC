@@ -25,6 +25,7 @@ UENUM()
 enum class EMCGraspBasicSkeletalType : uint8
 {
 	Default					UMETA(DisplayName = "Default"),
+	IAI						UMETA(DisplayName = "IAI"),
 	Genesis					UMETA(DisplayName = "Genesis"),
 };
 
@@ -55,6 +56,9 @@ private:
 
 	// Update the grasp
 	void Update(float Value);
+
+	// Update the grasp for the genesis hands
+	void Update_IAI(float Value);
 
 	// Update the grasp for the genesis hands
 	void Update_Genesis(float Value);

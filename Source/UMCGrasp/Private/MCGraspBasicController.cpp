@@ -91,6 +91,10 @@ void UMCGraspBasicController::Init()
 					{
 						IC->BindAxis(InputAxisName, this, &UMCGraspBasicController::Update);
 					}
+					else if (SkeletalType == EMCGraspBasicSkeletalType::IAI)
+					{
+						IC->BindAxis(InputAxisName, this, &UMCGraspBasicController::Update_IAI);
+					}
 					else if (SkeletalType == EMCGraspBasicSkeletalType::Genesis)
 					{
 						IC->BindAxis(InputAxisName, this, &UMCGraspBasicController::Update_Genesis);
@@ -128,6 +132,28 @@ void UMCGraspBasicController::Update(float Value)
 		for (auto& ConstraintInstance : SkeletalMesh->Constraints)
 		{
 			ConstraintInstance->SetAngularOrientationTarget(FRotator(0.f, 0.f, Value * MaxAngleMultiplier).Quaternion());
+		}
+	}
+}
+
+// Update the grasp as a IAI Hand
+void UMCGraspBasicController::Update_IAI(float Value)
+{
+	// Skip iterating constraints for small changes
+	if (FMath::Abs(Value - PrevInputVal) > 0.025)
+	{
+		PrevInputVal = Value;
+		// Apply target to fingers
+		for (auto& ConstraintInstance : SkeletalMesh->Constraints)
+		{
+			if (ConstraintInstance->ConstraintBone1.ToString().Contains("thumb"))
+			{
+				//ConstraintInstance->SetAngularOrientationTarget(FRotator(0.f, Value * MaxAngleMultiplier, Value * MaxAngleMultiplier).Quaternion());
+			}
+			else
+			{
+				ConstraintInstance->SetAngularOrientationTarget(FRotator(0.f, 0.f, Value * MaxAngleMultiplier).Quaternion());
+			}
 		}
 	}
 }
