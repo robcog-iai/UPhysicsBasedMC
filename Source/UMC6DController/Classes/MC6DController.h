@@ -56,6 +56,9 @@ public:
 		float PRot, float IRot, float DRot, float MaxRot,
 		FTransform InOffset);
 
+	// Overwrite the update function to use bone location as target
+	void OverwriteToUseBoneForTargetLocation(USkeletalMeshComponent* TargetSkeletalMeshComponent, FName TargetBoneName);
+
 	// Reset the location pid controller
 	void ResetLoc(float P, float I, float D, float Max, bool bClearErrors = true);
 
@@ -93,6 +96,18 @@ private:
 
 	// Target (goal) component (to which transform to move to)
 	USceneComponent* TargetSceneComp;
+
+	// To overwrite location as a skeletal bone
+	USkeletalMeshComponent* OverwriteTargetSkMC;
+	
+	// Use this bone as target location
+	FName OverwriteTargetBoneName;
+
+	// Used for direct transform access
+	int32 OverwriteTargetBoneIndex;
+
+	// True if the target location, can and should be overwritten by a bone location
+	bool bOverwriteTargetLocation;
 
 	// Relative offset to target (goal)
 	FTransform LocalTargetOffset;
