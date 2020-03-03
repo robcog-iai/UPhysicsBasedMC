@@ -167,6 +167,18 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Movement Control", meta = (editcondition = "bUseStaticMesh"))
 	AStaticMeshActor* StaticMeshActor;
 
+	// Use another target (bone of a skeletal)
+	UPROPERTY(EditAnywhere, Category = "Movement Control")
+	bool bOverwriteTargetLocation;
+
+	// Skeletal mesh actor to use as target
+	UPROPERTY(EditAnywhere, Category = "Movement Control", meta = (editcondition = "bOverwriteTargetLocation"))
+	ASkeletalMeshActor* OverwriteSkeletalMeshActor;
+
+	// Skeletal mesh actor to use as target
+	UPROPERTY(EditAnywhere, Category = "Movement Control", meta = (editcondition = "bOverwriteTargetLocation"))
+	FName OverwriteBoneName;
+
 	// Update fallback function binding
 	FMC6DController Controller;
 
