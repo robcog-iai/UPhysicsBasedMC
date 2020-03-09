@@ -57,6 +57,18 @@ void UMC6DTarget::BeginPlay()
 	// this does not happen with USLVisLegacyManager.cpp
 	SetComponentTickEnabled(false);
 
+	// Check if the target location should and can be overwritten
+	if (bOverwriteTargetLocation && OverwriteSkeletalMeshActor)
+	{
+		// Check if the bone exist
+		if (OverwriteSkeletalMeshActor->GetSkeletalMeshComponent()->GetBoneIndex(OverwriteBoneName) == INDEX_NONE)
+		{
+			UE_LOG(LogTemp, Error, TEXT("%s::%d %s has no bone named %s, location overwriting will not work.."),
+				TEXT(__FUNCTION__), __LINE__);
+			bOverwriteTargetLocation = false;
+		}
+	}
+
 	// Check if owner has a valid static/skeletal mesh
 	if (bUseSkeletalMesh && SkeletalMeshActor)
 	{		
@@ -79,6 +91,14 @@ void UMC6DTarget::BeginPlay()
 				Controller.Init(this, SkelMeshComp, bApplyToAllSkeletalBodies, LocControlType,
 					PLoc, ILoc, DLoc, MaxLoc, RotControlType, PRot, IRot, DRot, MaxRot);
 			}
+
+			// Let the controler know that the location should be overwritten
+			if (bOverwriteTargetLocation)
+			{
+				Controller.OverwriteToUseBoneForTargetLocation(
+					OverwriteSkeletalMeshActor->GetSkeletalMeshComponent(), OverwriteBoneName);
+			}
+
 			// Enable Tick
 			SetComponentTickEnabled(true);
 
@@ -119,6 +139,14 @@ void UMC6DTarget::BeginPlay()
 				Controller.Init(this, StaticMeshComp, LocControlType,
 					PLoc, ILoc, DLoc, MaxLoc, RotControlType, PRot, IRot, DRot, MaxRot);
 			}
+
+			// Let the controler know that the location should be overwritten
+			if (bOverwriteTargetLocation)
+			{
+				Controller.OverwriteToUseBoneForTargetLocation(
+					OverwriteSkeletalMeshActor->GetSkeletalMeshComponent(), OverwriteBoneName);
+			}
+
 			// Enable Tick
 			SetComponentTickEnabled(true);
 
@@ -139,6 +167,7 @@ void UMC6DTarget::BeginPlay()
 		}
 	}
 	// Could not set the update controller, tick remains disabled
+
 }
 
 #if WITH_EDITOR

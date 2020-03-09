@@ -6,6 +6,7 @@
 // Default constructor
 FMC6DController::FMC6DController()
 {
+	bOverwriteTargetLocation = false;
 	bApplyToAllChildBodies = false;
 	LocUpdateFunctionPointer = &FMC6DController::Loc_Update_NONE;
 	RotUpdateFunctionPointer = &FMC6DController::Rot_Update_NONE;
@@ -272,6 +273,21 @@ void FMC6DController::Init(USceneComponent* InTarget,
 	}
 }
 
+// Overwrite the update function to use bone location as target
+void FMC6DController::OverwriteToUseBoneForTargetLocation(USkeletalMeshComponent* TargetSkeletalMeshComponent, FName TargetBoneName)
+{
+	//if (LocUpdateFunctionPointer != NULL)
+	//{		
+		if (TargetSkeletalMeshComponent && TargetSkeletalMeshComponent->GetBoneIndex(TargetBoneName) != INDEX_NONE)
+		{
+			OverwriteTargetSkMC = TargetSkeletalMeshComponent;
+			OverwriteTargetBoneName = TargetBoneName;
+			OverwriteTargetBoneIndex = TargetSkeletalMeshComponent->GetBoneIndex(TargetBoneName);
+			bOverwriteTargetLocation = true;
+		}
+	//}
+}
+
 // Reset the location pid controller
 void FMC6DController::ResetLoc(float P, float I, float D, float Max, bool bClearErrors /* = true*/)
 {
@@ -351,13 +367,18 @@ void FMC6DController::Rot_Update_NONE(float DeltaTime)
 // Loc
 void FMC6DController::Loc_Update_Skel_Position(float DeltaTime)
 {
-	SelfAsSkeletalMeshComp->SetWorldLocation(TargetSceneComp->GetComponentLocation(),
-		false, (FHitResult*)nullptr, ETeleportType::TeleportPhysics);
+	const FVector TargetLoc = bOverwriteTargetLocation 
+		? OverwriteTargetSkMC->GetBoneLocation(OverwriteTargetBoneName) 
+		: TargetSceneComp->GetComponentLocation();
+	SelfAsSkeletalMeshComp->SetWorldLocation(TargetLoc, false, (FHitResult*)nullptr, ETeleportType::TeleportPhysics);
 }
 
 void FMC6DController::Loc_Update_Skel_Velocity(float DeltaTime)
 {
-	const FVector DeltaLoc = TargetSceneComp->GetComponentLocation() - SelfAsSkeletalMeshComp->GetComponentLocation();
+	const FVector TargetLoc = bOverwriteTargetLocation
+		? OverwriteTargetSkMC->GetBoneLocation(OverwriteTargetBoneName)
+		: TargetSceneComp->GetComponentLocation();
+	const FVector DeltaLoc = TargetLoc - SelfAsSkeletalMeshComp->GetComponentLocation();
 	const FVector OutLoc = PIDLoc.Update(DeltaLoc, DeltaTime);
 	if (bApplyToAllChildBodies)
 	{
@@ -375,7 +396,10 @@ void FMC6DController::Loc_Update_Skel_Velocity(float DeltaTime)
 
 void FMC6DController::Loc_Update_Skel_Impulse(float DeltaTime)
 {
-	const FVector DeltaLoc = TargetSceneComp->GetComponentLocation() - SelfAsSkeletalMeshComp->GetComponentLocation();
+	const FVector TargetLoc = bOverwriteTargetLocation
+		? OverwriteTargetSkMC->GetBoneLocation(OverwriteTargetBoneName)
+		: TargetSceneComp->GetComponentLocation();
+	const FVector DeltaLoc = TargetLoc - SelfAsSkeletalMeshComp->GetComponentLocation();
 	const FVector OutLoc = PIDLoc.Update(DeltaLoc, DeltaTime);
 	SelfAsSkeletalMeshComp->AddImpulse(OutLoc);
 	if (bApplyToAllChildBodies)
@@ -394,7 +418,10 @@ void FMC6DController::Loc_Update_Skel_Impulse(float DeltaTime)
 
 void FMC6DController::Loc_Update_Skel_Acceleration(float DeltaTime)
 {
-	const FVector DeltaLoc = TargetSceneComp->GetComponentLocation() - SelfAsSkeletalMeshComp->GetComponentLocation();
+	const FVector TargetLoc = bOverwriteTargetLocation
+		? OverwriteTargetSkMC->GetBoneLocation(OverwriteTargetBoneName)
+		: TargetSceneComp->GetComponentLocation();
+	const FVector DeltaLoc = TargetLoc - SelfAsSkeletalMeshComp->GetComponentLocation();
 	const FVector OutLoc = PIDLoc.Update(DeltaLoc, DeltaTime);
 	if (bApplyToAllChildBodies)
 	{
@@ -412,7 +439,10 @@ void FMC6DController::Loc_Update_Skel_Acceleration(float DeltaTime)
 
 void FMC6DController::Loc_Update_Skel_Force(float DeltaTime)
 {
-	const FVector DeltaLoc = TargetSceneComp->GetComponentLocation() - SelfAsSkeletalMeshComp->GetComponentLocation();
+	const FVector TargetLoc = bOverwriteTargetLocation
+		? OverwriteTargetSkMC->GetBoneLocation(OverwriteTargetBoneName)
+		: TargetSceneComp->GetComponentLocation();
+	const FVector DeltaLoc = TargetLoc - SelfAsSkeletalMeshComp->GetComponentLocation();
 	const FVector OutLoc = PIDLoc.Update(DeltaLoc, DeltaTime);
 	if (bApplyToAllChildBodies)
 	{
@@ -485,7 +515,16 @@ void FMC6DController::Loc_Update_Skel_Position_Offset(float DeltaTime)
 {
 	/* Offset target calculation */
 	FTransform CurrentTargetOffset;
-	FTransform::Multiply(&CurrentTargetOffset, &LocalTargetOffset, &TargetSceneComp->GetComponentTransform());
+
+	if (bOverwriteTargetLocation)
+	{
+		FTransform BoneTransform(FQuat::Identity, OverwriteTargetSkMC->GetBoneLocation(OverwriteTargetBoneName));
+		FTransform::Multiply(&CurrentTargetOffset, &LocalTargetOffset, &BoneTransform);
+	}
+	else
+	{
+		FTransform::Multiply(&CurrentTargetOffset, &LocalTargetOffset, &TargetSceneComp->GetComponentTransform());
+	}
 
 	SelfAsSkeletalMeshComp->SetWorldLocation(CurrentTargetOffset.GetLocation(),
 		false, (FHitResult*)nullptr, ETeleportType::TeleportPhysics);
@@ -495,7 +534,15 @@ void FMC6DController::Loc_Update_Skel_Velocity_Offset(float DeltaTime)
 {
 	/* Offset target calculation */
 	FTransform CurrentTargetOffset;
-	FTransform::Multiply(&CurrentTargetOffset, &LocalTargetOffset, &TargetSceneComp->GetComponentTransform());
+	if (bOverwriteTargetLocation)
+	{
+		FTransform BoneTransform(FQuat::Identity, OverwriteTargetSkMC->GetBoneLocation(OverwriteTargetBoneName));
+		FTransform::Multiply(&CurrentTargetOffset, &LocalTargetOffset, &BoneTransform);
+	}
+	else
+	{
+		FTransform::Multiply(&CurrentTargetOffset, &LocalTargetOffset, &TargetSceneComp->GetComponentTransform());
+	}
 
 	const FVector DeltaLoc = CurrentTargetOffset.GetLocation() - SelfAsSkeletalMeshComp->GetComponentLocation();
 	const FVector OutLoc = PIDLoc.Update(DeltaLoc, DeltaTime);
@@ -517,7 +564,15 @@ void FMC6DController::Loc_Update_Skel_Impulse_Offset(float DeltaTime)
 {
 	/* Offset target calculation */
 	FTransform CurrentTargetOffset;
-	FTransform::Multiply(&CurrentTargetOffset, &LocalTargetOffset, &TargetSceneComp->GetComponentTransform());
+	if (bOverwriteTargetLocation)
+	{
+		FTransform BoneTransform(FQuat::Identity, OverwriteTargetSkMC->GetBoneLocation(OverwriteTargetBoneName));
+		FTransform::Multiply(&CurrentTargetOffset, &LocalTargetOffset, &BoneTransform);
+	}
+	else
+	{
+		FTransform::Multiply(&CurrentTargetOffset, &LocalTargetOffset, &TargetSceneComp->GetComponentTransform());
+	}
 
 	const FVector DeltaLoc = CurrentTargetOffset.GetLocation() - SelfAsSkeletalMeshComp->GetComponentLocation();
 	const FVector OutLoc = PIDLoc.Update(DeltaLoc, DeltaTime);
@@ -540,7 +595,15 @@ void FMC6DController::Loc_Update_Skel_Acceleration_Offset(float DeltaTime)
 {
 	/* Offset target calculation */
 	FTransform CurrentTargetOffset;
-	FTransform::Multiply(&CurrentTargetOffset, &LocalTargetOffset, &TargetSceneComp->GetComponentTransform());
+	if (bOverwriteTargetLocation)
+	{
+		FTransform BoneTransform(FQuat::Identity, OverwriteTargetSkMC->GetBoneLocation(OverwriteTargetBoneName));
+		FTransform::Multiply(&CurrentTargetOffset, &LocalTargetOffset, &BoneTransform);
+	}
+	else
+	{
+		FTransform::Multiply(&CurrentTargetOffset, &LocalTargetOffset, &TargetSceneComp->GetComponentTransform());
+	}
 
 	const FVector DeltaLoc = CurrentTargetOffset.GetLocation() - SelfAsSkeletalMeshComp->GetComponentLocation();
 	const FVector OutLoc = PIDLoc.Update(DeltaLoc, DeltaTime);
@@ -561,7 +624,15 @@ void FMC6DController::Loc_Update_Skel_Force_Offset(float DeltaTime)
 {
 	/* Offset target calculation */
 	FTransform CurrentTargetOffset;
-	FTransform::Multiply(&CurrentTargetOffset, &LocalTargetOffset, &TargetSceneComp->GetComponentTransform());
+	if (bOverwriteTargetLocation)
+	{
+		FTransform BoneTransform(FQuat::Identity, OverwriteTargetSkMC->GetBoneLocation(OverwriteTargetBoneName));
+		FTransform::Multiply(&CurrentTargetOffset, &LocalTargetOffset, &BoneTransform);
+	}
+	else
+	{
+		FTransform::Multiply(&CurrentTargetOffset, &LocalTargetOffset, &TargetSceneComp->GetComponentTransform());
+	}
 
 	const FVector DeltaLoc = CurrentTargetOffset.GetLocation() - SelfAsSkeletalMeshComp->GetComponentLocation();
 	const FVector OutLoc = PIDLoc.Update(DeltaLoc, DeltaTime);
@@ -655,13 +726,18 @@ void FMC6DController::Rot_Update_Skel_Force_Offset(float DeltaTime)
 // Loc
 void FMC6DController::Loc_Update_Static_Position(float DeltaTime)
 {
-	SelfAsStaticMeshComp->SetWorldLocation(TargetSceneComp->GetComponentLocation(),
-		false, (FHitResult*)nullptr, ETeleportType::TeleportPhysics);
+	const FVector TargetLoc = bOverwriteTargetLocation
+		? OverwriteTargetSkMC->GetBoneLocation(OverwriteTargetBoneName)
+		: TargetSceneComp->GetComponentLocation();
+	SelfAsStaticMeshComp->SetWorldLocation(TargetLoc, false, (FHitResult*)nullptr, ETeleportType::TeleportPhysics);
 }
 
 void FMC6DController::Loc_Update_Static_Velocity(float DeltaTime)
 {
-	const FVector DeltaLoc = TargetSceneComp->GetComponentLocation() - SelfAsStaticMeshComp->GetComponentLocation();
+	const FVector TargetLoc = bOverwriteTargetLocation
+		? OverwriteTargetSkMC->GetBoneLocation(OverwriteTargetBoneName)
+		: TargetSceneComp->GetComponentLocation();
+	const FVector DeltaLoc = TargetLoc - SelfAsStaticMeshComp->GetComponentLocation();
 	const FVector OutLoc = PIDLoc.Update(DeltaLoc, DeltaTime);
 	SelfAsStaticMeshComp->SetPhysicsLinearVelocity(OutLoc);
 	
@@ -672,7 +748,10 @@ void FMC6DController::Loc_Update_Static_Velocity(float DeltaTime)
 
 void FMC6DController::Loc_Update_Static_Impulse(float DeltaTime)
 {
-	const FVector DeltaLoc = TargetSceneComp->GetComponentLocation() - SelfAsStaticMeshComp->GetComponentLocation();
+	const FVector TargetLoc = bOverwriteTargetLocation
+		? OverwriteTargetSkMC->GetBoneLocation(OverwriteTargetBoneName)
+		: TargetSceneComp->GetComponentLocation();
+	const FVector DeltaLoc = TargetLoc - SelfAsStaticMeshComp->GetComponentLocation();
 	const FVector OutLoc = PIDLoc.Update(DeltaLoc, DeltaTime);
 	SelfAsStaticMeshComp->AddImpulse(OutLoc);
 
@@ -683,7 +762,10 @@ void FMC6DController::Loc_Update_Static_Impulse(float DeltaTime)
 
 void FMC6DController::Loc_Update_Static_Acceleration(float DeltaTime)
 {
-	const FVector DeltaLoc = TargetSceneComp->GetComponentLocation() - SelfAsStaticMeshComp->GetComponentLocation();
+	const FVector TargetLoc = bOverwriteTargetLocation
+		? OverwriteTargetSkMC->GetBoneLocation(OverwriteTargetBoneName)
+		: TargetSceneComp->GetComponentLocation();
+	const FVector DeltaLoc = TargetLoc - SelfAsStaticMeshComp->GetComponentLocation();
 	const FVector OutLoc = PIDLoc.Update(DeltaLoc, DeltaTime);
 	SelfAsStaticMeshComp->AddForce(OutLoc, NAME_None, true); // Acceleration based (mass will have no effect)
 
@@ -694,7 +776,10 @@ void FMC6DController::Loc_Update_Static_Acceleration(float DeltaTime)
 
 void FMC6DController::Loc_Update_Static_Force(float DeltaTime)
 {
-	const FVector DeltaLoc = TargetSceneComp->GetComponentLocation() - SelfAsStaticMeshComp->GetComponentLocation();
+	const FVector TargetLoc = bOverwriteTargetLocation
+		? OverwriteTargetSkMC->GetBoneLocation(OverwriteTargetBoneName)
+		: TargetSceneComp->GetComponentLocation();
+	const FVector DeltaLoc = TargetLoc - SelfAsStaticMeshComp->GetComponentLocation();
 	const FVector OutLoc = PIDLoc.Update(DeltaLoc, DeltaTime);
 	SelfAsStaticMeshComp->AddForce(OutLoc);
 
@@ -761,7 +846,16 @@ void FMC6DController::Loc_Update_Static_Position_Offset(float DeltaTime)
 {
 	/* Offset target calculation */
 	FTransform CurrentTargetOffset;
-	FTransform::Multiply(&CurrentTargetOffset, &LocalTargetOffset, &TargetSceneComp->GetComponentTransform());
+	
+	if (bOverwriteTargetLocation)
+	{		
+		FTransform BoneTransform(FQuat::Identity, OverwriteTargetSkMC->GetBoneLocation(OverwriteTargetBoneName));
+		FTransform::Multiply(&CurrentTargetOffset, &LocalTargetOffset, &BoneTransform);
+	}
+	else
+	{
+		FTransform::Multiply(&CurrentTargetOffset, &LocalTargetOffset, &TargetSceneComp->GetComponentTransform());
+	}
 
 	/* Location and Rotation */
 	SelfAsStaticMeshComp->SetWorldLocation(CurrentTargetOffset.GetLocation(),
@@ -772,7 +866,15 @@ void FMC6DController::Loc_Update_Static_Velocity_Offset(float DeltaTime)
 {
 	/* Offset target calculation */
 	FTransform CurrentTargetOffset;
-	FTransform::Multiply(&CurrentTargetOffset, &LocalTargetOffset, &TargetSceneComp->GetComponentTransform());
+	if (bOverwriteTargetLocation)
+	{
+		FTransform BoneTransform(FQuat::Identity, OverwriteTargetSkMC->GetBoneLocation(OverwriteTargetBoneName));
+		FTransform::Multiply(&CurrentTargetOffset, &LocalTargetOffset, &BoneTransform);
+	}
+	else
+	{
+		FTransform::Multiply(&CurrentTargetOffset, &LocalTargetOffset, &TargetSceneComp->GetComponentTransform());
+	}
 
 	const FVector DeltaLoc = CurrentTargetOffset.GetLocation() - SelfAsStaticMeshComp->GetComponentLocation();
 	const FVector OutLoc = PIDLoc.Update(DeltaLoc, DeltaTime);
@@ -787,7 +889,15 @@ void FMC6DController::Loc_Update_Static_Impulse_Offset(float DeltaTime)
 {
 	/* Offset target calculation */
 	FTransform CurrentTargetOffset;
-	FTransform::Multiply(&CurrentTargetOffset, &LocalTargetOffset, &TargetSceneComp->GetComponentTransform());
+	if (bOverwriteTargetLocation)
+	{
+		FTransform BoneTransform(FQuat::Identity, OverwriteTargetSkMC->GetBoneLocation(OverwriteTargetBoneName));
+		FTransform::Multiply(&CurrentTargetOffset, &LocalTargetOffset, &BoneTransform);
+	}
+	else
+	{
+		FTransform::Multiply(&CurrentTargetOffset, &LocalTargetOffset, &TargetSceneComp->GetComponentTransform());
+	}
 
 	const FVector DeltaLoc = CurrentTargetOffset.GetLocation() - SelfAsStaticMeshComp->GetComponentLocation();
 	const FVector OutLoc = PIDLoc.Update(DeltaLoc, DeltaTime);
@@ -802,7 +912,15 @@ void FMC6DController::Loc_Update_Static_Acceleration_Offset(float DeltaTime)
 {
 	/* Offset target calculation */
 	FTransform CurrentTargetOffset;
-	FTransform::Multiply(&CurrentTargetOffset, &LocalTargetOffset, &TargetSceneComp->GetComponentTransform());
+	if (bOverwriteTargetLocation)
+	{
+		FTransform BoneTransform(FQuat::Identity, OverwriteTargetSkMC->GetBoneLocation(OverwriteTargetBoneName));
+		FTransform::Multiply(&CurrentTargetOffset, &LocalTargetOffset, &BoneTransform);
+	}
+	else
+	{
+		FTransform::Multiply(&CurrentTargetOffset, &LocalTargetOffset, &TargetSceneComp->GetComponentTransform());
+	}
 
 	const FVector DeltaLoc = CurrentTargetOffset.GetLocation() - SelfAsStaticMeshComp->GetComponentLocation();
 	const FVector OutLoc = PIDLoc.Update(DeltaLoc, DeltaTime);
@@ -817,7 +935,15 @@ void FMC6DController::Loc_Update_Static_Force_Offset(float DeltaTime)
 {
 	/* Offset target calculation */
 	FTransform CurrentTargetOffset;
-	FTransform::Multiply(&CurrentTargetOffset, &LocalTargetOffset, &TargetSceneComp->GetComponentTransform());
+	if (bOverwriteTargetLocation)
+	{
+		FTransform BoneTransform(FQuat::Identity, OverwriteTargetSkMC->GetBoneLocation(OverwriteTargetBoneName));
+		FTransform::Multiply(&CurrentTargetOffset, &LocalTargetOffset, &BoneTransform);
+	}
+	else
+	{
+		FTransform::Multiply(&CurrentTargetOffset, &LocalTargetOffset, &TargetSceneComp->GetComponentTransform());
+	}
 
 	const FVector DeltaLoc = CurrentTargetOffset.GetLocation() - SelfAsStaticMeshComp->GetComponentLocation();
 	const FVector OutLoc = PIDLoc.Update(DeltaLoc, DeltaTime);
