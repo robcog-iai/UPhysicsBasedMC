@@ -64,6 +64,10 @@ private:
 	void Update_Genesis(float Value);
 
 private:
+	// Skip initialization if true
+	UPROPERTY(EditAnywhere, Category = "Grasp Controller")
+	bool bIgnore;
+
 	// Hand type, to listen to the right inputs
 	UPROPERTY(EditAnywhere, Category = "Grasp Controller")
 	EMCGraspBasicHandType HandType;

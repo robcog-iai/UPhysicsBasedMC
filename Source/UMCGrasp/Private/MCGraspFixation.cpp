@@ -15,6 +15,8 @@ UMCGraspFixation::UMCGraspFixation()
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = false;
 
+	bIgnore = false;
+
 	// Default sphere radius
 	InitSphereRadius(3.0f);
 
@@ -33,6 +35,11 @@ UMCGraspFixation::UMCGraspFixation()
 void UMCGraspFixation::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if (bIgnore)
+	{
+		return;
+	}
 
 	// Bind user input
 	SetupInputBindings();

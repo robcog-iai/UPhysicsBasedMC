@@ -167,7 +167,7 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Movement Control", meta = (editcondition = "bUseStaticMesh"))
 	AStaticMeshActor* StaticMeshActor;
 
-	// Use another target (bone of a skeletal)
+	// Use another target (e.g. instead of the controller the hand bone of the fully tracked body)
 	UPROPERTY(EditAnywhere, Category = "Movement Control")
 	bool bOverwriteTargetLocation;
 

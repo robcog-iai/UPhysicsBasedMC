@@ -2,6 +2,7 @@
 // Author: Andrei Haidu (http://haidu.eu)
 
 #include "MCGraspBasicController.h"
+#include "Animation/SkeletalMeshActor.h"
 #include "Components/SkeletalMeshComponent.h"
 
 // Sets default values for this component's properties
@@ -10,6 +11,8 @@ UMCGraspBasicController::UMCGraspBasicController()
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = false;
+
+	bIgnore = false;
 
 	// Default parameters
 	HandType = EMCGraspBasicHandType::Left;
@@ -64,6 +67,11 @@ void UMCGraspBasicController::PostEditChangeProperty(struct FPropertyChangedEven
 // Init the controller
 void UMCGraspBasicController::Init()
 {
+	if (bIgnore)
+	{
+		return;
+	}
+
 	// Check that owner is a skeletal mesh actor and has a valid skeletal mesh component
 	if (ASkeletalMeshActor* OwnerAsSkelMA = Cast<ASkeletalMeshActor>(GetOwner()))
 	{

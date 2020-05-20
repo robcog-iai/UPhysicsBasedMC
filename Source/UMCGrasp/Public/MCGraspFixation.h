@@ -88,6 +88,10 @@ public:
 	FMCGraspEnd OnGraspEnd;
 
 private:
+	// Skip initialization if true
+	UPROPERTY(EditAnywhere, Category = "Fixation Grasp")
+	bool bIgnore;
+
 #if WITH_EDITOR
 	// Hand type, to listen to the right inputs
 	UPROPERTY(EditAnywhere, Category = "Fixation Grasp")

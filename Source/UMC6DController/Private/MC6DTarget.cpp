@@ -95,8 +95,17 @@ void UMC6DTarget::BeginPlay()
 			// Let the controler know that the location should be overwritten
 			if (bOverwriteTargetLocation)
 			{
-				Controller.OverwriteToUseBoneForTargetLocation(
-					OverwriteSkeletalMeshActor->GetSkeletalMeshComponent(), OverwriteBoneName);
+				if (OverwriteSkeletalMeshActor)
+				{
+					Controller.OverwriteToUseBoneForTargetLocation(
+						OverwriteSkeletalMeshActor->GetSkeletalMeshComponent(), OverwriteBoneName);
+				}
+				else
+				{
+					UE_LOG(LogTemp, Error, TEXT("%s::%d No overwrite skeletal mesh actor selected, aborting.."),
+						*FString(__FUNCTION__), __LINE__);
+					return;
+				}
 			}
 
 			// Enable Tick

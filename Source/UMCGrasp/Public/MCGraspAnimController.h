@@ -89,6 +89,10 @@ public:
 	FMCGraspTypeSignature OnGraspType;
 	
 private:
+	// Skip initialization if true
+	UPROPERTY(EditAnywhere, Category = "Grasp Controller")
+	bool bIgnore;
+
 #if WITH_EDITOR
 	// Hand type, to listen to the right inputs
 	UPROPERTY(EditAnywhere, Category = "Grasp Controller")
