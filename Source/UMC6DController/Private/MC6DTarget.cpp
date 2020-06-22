@@ -64,7 +64,7 @@ void UMC6DTarget::BeginPlay()
 		if (OverwriteSkeletalMeshActor->GetSkeletalMeshComponent()->GetBoneIndex(OverwriteBoneName) == INDEX_NONE)
 		{
 			UE_LOG(LogTemp, Error, TEXT("%s::%d %s has no bone named %s, location overwriting will not work.."),
-				TEXT(__FUNCTION__), __LINE__);
+				*FString(__func__), __LINE__);
 			bOverwriteTargetLocation = false;
 		}
 	}
