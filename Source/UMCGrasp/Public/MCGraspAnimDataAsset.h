@@ -20,8 +20,8 @@ struct FMCGraspAnimBoneOrientation
 	UPROPERTY(EditAnywhere, Category = "Grasp Controller")
 	FRotator BoneSpaceRotation;
 
-	// Default ctor
-	FMCGraspAnimBoneOrientation() {}
+	//// Default ctor
+	//FMCGraspAnimBoneOrientation() {}
 };
 
 // Contains all the bones data within a frame
@@ -34,8 +34,8 @@ struct FMCGraspAnimFrameData
 	UPROPERTY(EditAnywhere, Category = "Grasp Controller")
 	TMap<FString, FMCGraspAnimBoneOrientation> BonesData;
 
-	// Default ctor
-	FMCGraspAnimFrameData() {}
+	//// Default ctor
+	//FMCGraspAnimFrameData() {}
 };
 
 /**
