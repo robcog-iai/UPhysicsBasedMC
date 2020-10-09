@@ -5,21 +5,13 @@
 
 #include "CoreMinimal.h"
 #include "Components/SphereComponent.h"
+#include "MCStructs.h"
 #include "MCGraspFixation.generated.h"
 
 // Forward declaration
 class AStaticMeshActor;
 class ASkeletalMeshActor;
 
-/**
-* Hand type
-*/
-UENUM()
-enum class EMCGraspFixationHandType : uint8
-{
-	Left					UMETA(DisplayName = "Left"),
-	Right					UMETA(DisplayName = "Right"),
-};
 
 /** Notify when an object is grasped */
 DECLARE_MULTICAST_DELEGATE_ThreeParams(FMCGraspBegin, AActor* /*SelfActor*/, AActor* /*OtherActor*/, float /*Time*/);
@@ -95,7 +87,7 @@ private:
 #if WITH_EDITORONLY_DATA
 	// Hand type, to listen to the right inputs
 	UPROPERTY(EditAnywhere, Category = "Fixation Grasp")
-	EMCGraspFixationHandType HandType;
+	EMCHandType HandType;
 #endif // WITH_EDITORONLY_DATA
 
 	// Input action name

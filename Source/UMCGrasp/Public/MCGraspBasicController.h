@@ -5,29 +5,9 @@
 
 #include "UMCGrasp.h"
 #include "Components/ActorComponent.h"
+#include "MCStructs.h"
 #include "PhysicsEngine/ConstraintDrives.h"
 #include "MCGraspBasicController.generated.h"
-
-/**
-* Hand type
-*/
-UENUM()
-enum class EMCGraspBasicHandType : uint8
-{
-	Left					UMETA(DisplayName = "Left"),
-	Right					UMETA(DisplayName = "Right"),
-};
-
-/**
-* Skeletal type
-*/
-UENUM()
-enum class EMCGraspBasicSkeletalType : uint8
-{
-	Default					UMETA(DisplayName = "Default"),
-	IAI						UMETA(DisplayName = "IAI"),
-	Genesis					UMETA(DisplayName = "Genesis"),
-};
 
 /**
  * Skeletal grasp controller
@@ -70,11 +50,11 @@ private:
 
 	// Hand type, to listen to the right inputs
 	UPROPERTY(EditAnywhere, Category = "Grasp Controller")
-	EMCGraspBasicHandType HandType;
+	EMCHandType HandType;
 
 	// Skeletal type, to apply the correct angles and bones
 	UPROPERTY(EditAnywhere, Category = "Grasp Controller")
-	EMCGraspBasicSkeletalType SkeletalType;
+	EMCSkeletalType SkeletalType;
 
 	// Input axis name
 	UPROPERTY(EditAnywhere, Category = "Grasp Controller")

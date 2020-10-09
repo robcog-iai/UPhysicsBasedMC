@@ -4,9 +4,9 @@
 #include "MCGraspFixation.h"
 #include "Animation/SkeletalMeshActor.h"
 #include "Engine/StaticMeshActor.h"
+#include "Components/StaticMeshComponent.h"
 #include "GameFramework/PlayerController.h"
 #include "Components/InputComponent.h"
-#include "Components/StaticMeshComponent.h"
 
 // Default constructor
 UMCGraspFixation::UMCGraspFixation()
@@ -25,7 +25,7 @@ UMCGraspFixation::UMCGraspFixation()
 
 	// Default values
 #if WITH_EDITORONLY_DATA
-	HandType = EMCGraspFixationHandType::Left;
+	HandType = EMCHandType::Left;
 #endif // WITH_EDITORONLY_DATA
 
 	InputActionName = "LeftFixate";
@@ -65,11 +65,11 @@ void UMCGraspFixation::PostEditChangeProperty(struct FPropertyChangedEvent& Prop
 	// Set the left / right constraint actors
 	if (PropertyName == GET_MEMBER_NAME_CHECKED(UMCGraspFixation, HandType))
 	{
-		if (HandType == EMCGraspFixationHandType::Left)
+		if (HandType == EMCHandType::Left)
 		{
 			InputActionName = "LeftFixate";
 		}
-		else if (HandType == EMCGraspFixationHandType::Right)
+		else if (HandType == EMCHandType::Right)
 		{
 			InputActionName = "RightFixate";
 		}

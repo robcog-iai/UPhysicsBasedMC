@@ -4,6 +4,8 @@
 #include "MCGraspBasicController.h"
 #include "Animation/SkeletalMeshActor.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "Components/InputComponent.h"
+#include "GameFramework/PlayerController.h"
 
 // Sets default values for this component's properties
 UMCGraspBasicController::UMCGraspBasicController()
@@ -15,9 +17,9 @@ UMCGraspBasicController::UMCGraspBasicController()
 	bIgnore = false;
 
 	// Default parameters
-	HandType = EMCGraspBasicHandType::Left;
+	HandType = EMCHandType::Left;
 	InputAxisName = "LeftGrasp";
-	SkeletalType = EMCGraspBasicSkeletalType::Default;
+	SkeletalType = EMCSkeletalType::Default;
 
 	// Driver parameters
 	AngularDriveMode = EAngularDriveMode::SLERP;
@@ -52,11 +54,11 @@ void UMCGraspBasicController::PostEditChangeProperty(struct FPropertyChangedEven
 	// Set the left / right constraint actors
 	if (PropertyName == GET_MEMBER_NAME_CHECKED(UMCGraspBasicController, HandType))
 	{
-		if (HandType == EMCGraspBasicHandType::Left)
+		if (HandType == EMCHandType::Left)
 		{
 			InputAxisName = "LeftGrasp";
 		}
-		else if (HandType == EMCGraspBasicHandType::Right)
+		else if (HandType == EMCHandType::Right)
 		{
 			InputAxisName = "RightGrasp";
 		}
@@ -95,15 +97,15 @@ void UMCGraspBasicController::Init()
 			{
 				if (UInputComponent* IC = PC->InputComponent)
 				{
-					if (SkeletalType == EMCGraspBasicSkeletalType::Default)
+					if (SkeletalType == EMCSkeletalType::Default)
 					{
 						IC->BindAxis(InputAxisName, this, &UMCGraspBasicController::Update);
 					}
-					else if (SkeletalType == EMCGraspBasicSkeletalType::IAI)
+					else if (SkeletalType == EMCSkeletalType::IAI)
 					{
 						IC->BindAxis(InputAxisName, this, &UMCGraspBasicController::Update_IAI);
 					}
-					else if (SkeletalType == EMCGraspBasicSkeletalType::Genesis)
+					else if (SkeletalType == EMCSkeletalType::Genesis)
 					{
 						IC->BindAxis(InputAxisName, this, &UMCGraspBasicController::Update_Genesis);
 					}
@@ -174,7 +176,7 @@ void UMCGraspBasicController::Update_Genesis(float Value)
 	{
 		PrevInputVal = Value;
 
-		if (HandType == EMCGraspBasicHandType::Right)
+		if (HandType == EMCHandType::Right)
 		{
 			Value *= -1.f;
 			//UE_LOG(LogTemp, Warning, TEXT("%s::%d"), *FString(__func__), __LINE__);
