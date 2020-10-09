@@ -92,11 +92,11 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Fixation Grasp")
 	bool bIgnore;
 
-#if WITH_EDITOR
+#if WITH_EDITORONLY_DATA
 	// Hand type, to listen to the right inputs
 	UPROPERTY(EditAnywhere, Category = "Fixation Grasp")
 	EMCGraspFixationHandType HandType;
-#endif // WITH_EDITOR
+#endif // WITH_EDITORONLY_DATA
 
 	// Input action name
 	UPROPERTY(EditAnywhere, Category = "Fixation Grasp")

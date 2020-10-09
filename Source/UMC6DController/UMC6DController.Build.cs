@@ -32,7 +32,6 @@ public class UMC6DController : ModuleRules
 			new string[]
 			{
 				"Core",
-				"UPIDController",
 				// ... add other public dependencies that you statically link with here ...
 			}
 			);
@@ -43,7 +42,8 @@ public class UMC6DController : ModuleRules
 			{
 				"CoreUObject",
 				"Engine",
-				"HeadMountedDisplay", // UMotionControllerComponent
+				"UMCPIDController",
+				"HeadMountedDisplay", // UMotionControllerComponent				
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);
@@ -55,6 +55,6 @@ public class UMC6DController : ModuleRules
 			}
 			);
 
-		PublicDefinitions.Add("UMC_WITH_CHART=1");
+		PublicDefinitions.Add("UMC_WITH_CHART=0");
 	}
 }

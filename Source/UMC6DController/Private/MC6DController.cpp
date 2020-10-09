@@ -2,6 +2,8 @@
 // Author: Andrei Haidu (http://haidu.eu)
 
 #include "MC6DController.h"
+#include "Components/SkeletalMeshComponent.h"
+#include "Components/StaticMeshComponent.h"
 
 // Default constructor
 FMC6DController::FMC6DController()
@@ -301,7 +303,7 @@ void FMC6DController::ResetRot(float P, float I, float D, float Max, bool bClear
 }
 
 // Call the update function pointer
-void FMC6DController::Update(float DeltaTime)
+void FMC6DController::UpdateController(float DeltaTime)
 {
 	(this->*LocUpdateFunctionPointer)(DeltaTime);
 	(this->*RotUpdateFunctionPointer)(DeltaTime);

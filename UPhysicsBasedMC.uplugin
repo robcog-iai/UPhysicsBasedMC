@@ -37,12 +37,13 @@
 			"Name": "UMCParallelGripper",
 			"Type": "Runtime",
 			"LoadingPhase": "Default"
+		},
+		{
+			"Name": "UMCPIDController",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
 		}
 	],
   "Plugins": [
-	{
-	  "Name": "UPIDController",
-	  "Enabled": true
-	}
   ]
 }

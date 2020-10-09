@@ -3,6 +3,8 @@
 
 #include "MC6DTarget.h"
 #include "MC6DOffset.h"
+#include "MC6DController.h"
+#include "MC6DControlType.h"
 #if WITH_EDITOR
 #include "XRMotionControllerBase.h"
 #endif // WITH_EDITOR
@@ -18,14 +20,14 @@ UMC6DTarget::UMC6DTarget()
 	// Set ticking group 
 	//PrimaryComponentTick.TickGroup = ETickingGroup::TG_PrePhysics;
 
-#if WITH_EDITOR
+#if WITH_EDITORONLY_DATA
 	bDisplayDeviceModel = true;
 	DisplayModelSource = FName("SteamVR");
 	bHiddenInGame = true;
 	MotionSource = FXRMotionControllerBase::LeftHandSourceId;
 
 	HandType = EMC6DHandType::Left;
-#endif // WITH_EDITOR
+#endif // WITH_EDITORONLY_DATA
 
 	// Default values
 	bUseSkeletalMesh = true;
@@ -274,7 +276,7 @@ void UMC6DTarget::TickComponent(float DeltaTime, ELevelTick TickType, FActorComp
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 	// Apply target location to the referenced mesh
-	Controller.Update(DeltaTime);
+	Controller.UpdateController(DeltaTime);
 
 #if UMC_WITH_CHART
 	Controller.GetDebugChartData(ChartData.LocErr, ChartData.LocPID, ChartData.RotErr, ChartData.RotPID);

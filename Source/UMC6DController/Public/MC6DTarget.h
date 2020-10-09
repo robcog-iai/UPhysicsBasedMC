@@ -3,12 +3,9 @@
 
 #pragma once
 
-#include "UMC6DController.h"
 #include "MotionControllerComponent.h"
 #include "Engine/StaticMeshActor.h"
 #include "Animation/SkeletalMeshActor.h"
-#include "MC6DControlType.h"
-#include "MC6DController.h"
 #include "MC6DTarget.generated.h"
 
 /**
@@ -21,7 +18,7 @@ enum class EMC6DHandType : uint8
 	Right					UMETA(DisplayName = "Right"),
 };
 
-#if WITH_EDITOR
+//#if WITH_EDITOR
 UENUM()
 enum class EMC6DTermSelection : uint8
 {
@@ -38,7 +35,7 @@ enum class EMC6DMovementTypeSelection : uint8
 	Rot						UMETA(DisplayName = "Rot"),
 	Loc						UMETA(DisplayName = "Loc"),
 };
-#endif // WITH_EDITOR
+//#endif // WITH_EDITOR
 
 // #if UMC_WITH_CHART // USTRUCT must not be inside preprocessor blocks, except for WITH_EDITORONLY_DATA
 //#if WITH_EDITORONLY_DATA // Blueprint exposed struct members cannot be editor only
@@ -104,12 +101,12 @@ public:
 	FMCChartData ChartData;
 //#endif // WITH_EDITORONLY_DATA
 
-#if WITH_EDITOR
+#if WITH_EDITORONLY_DATA
 public:
 	// Hand type, to point to the right XRMotionControllers
 	UPROPERTY(EditAnywhere, Category = "Movement Control")
 	EMC6DHandType HandType;
-#endif // WITH_EDITOR
+#endif // WITH_EDITORONLY_DATA
 
 public:
 	// Control type location 

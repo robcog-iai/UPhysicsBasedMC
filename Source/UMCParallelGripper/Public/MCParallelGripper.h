@@ -55,11 +55,11 @@ private:
 	void SetupPhysics(UStaticMeshComponent* StaticMeshComponent);
 
 private:
-#if WITH_EDITOR
+#if WITH_EDITORONLY_DATA
 	// Hand type, setup default params
 	UPROPERTY(EditAnywhere, Category = "Parallel Gripper")
 	EMCPGHandType HandType;
-#endif // WITH_EDITOR
+#endif // WITH_EDITORONLY_DATA
 
 	// Input axis name
 	UPROPERTY(EditAnywhere, Category = "Parallel Gripper")

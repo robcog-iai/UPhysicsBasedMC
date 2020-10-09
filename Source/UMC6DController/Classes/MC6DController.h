@@ -3,16 +3,23 @@
 
 #pragma once
 
-#include "PIDController3D.h"
+#include "EngineMinimal.h"
+#include "MCPIDController3D.h"
 #include "MC6DControlType.h"
-#include "Components/SkeletalMeshComponent.h"
-#include "Components/StaticMeshComponent.h"
+#include "MC6DController.generated.h"
+
+// Forward declarations
+class USkeletalMeshComponent;
+class UStaticMeshComponent;
 
 /**
  * 6D controller update callbacks
  */
+USTRUCT(/*BlueprintType*/)
 struct FMC6DController
 {
+	GENERATED_BODY()
+
 public:
 	// Default constructor
 	FMC6DController();
@@ -66,7 +73,7 @@ public:
 	void ResetRot(float P, float I, float D, float Max, bool bClearErrors = true);
 
 	// Call the update function pointer
-	void Update(float DeltaTime);
+	void UpdateController(float DeltaTime);
 
 #if UMC_WITH_CHART
 	// Get the chart data
@@ -122,10 +129,10 @@ private:
 	UStaticMeshComponent* SelfAsStaticMeshComp;
 
 	// Location pid controller
-	FPIDController3D PIDLoc;
+	FMCPIDController3D PIDLoc;
 
 	// Rotation pid controller
-	FPIDController3D PIDRot;
+	FMCPIDController3D PIDRot;
 
 	/* Update function bindings */
 	// Function pointer type for calling the correct update function

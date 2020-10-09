@@ -24,7 +24,10 @@ UMCGraspFixation::UMCGraspFixation()
 	SetGenerateOverlapEvents(true);
 
 	// Default values
+#if WITH_EDITORONLY_DATA
 	HandType = EMCGraspFixationHandType::Left;
+#endif // WITH_EDITORONLY_DATA
+
 	InputActionName = "LeftFixate";
 	bWeldBodies = false;
 	WeightLimit = 15.0f;

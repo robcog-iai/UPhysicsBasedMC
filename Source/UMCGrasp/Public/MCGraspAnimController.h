@@ -93,7 +93,7 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Grasp Controller")
 	bool bIgnore;
 
-#if WITH_EDITOR
+#if WITH_EDITORONLY_DATA
 	// Hand type, to listen to the right inputs
 	UPROPERTY(EditAnywhere, Category = "Grasp Controller")
 	EMCGraspAnimHandType HandType;
