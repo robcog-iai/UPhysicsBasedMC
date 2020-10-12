@@ -12,7 +12,8 @@ UMCGraspHelperController::UMCGraspHelperController()
 {
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
-	PrimaryComponentTick.bCanEverTick = false;
+	PrimaryComponentTick.bCanEverTick = true;
+	PrimaryComponentTick.bStartWithTickEnabled = false;
 
 	bIgnore = false;
 
@@ -23,6 +24,8 @@ UMCGraspHelperController::UMCGraspHelperController()
 #if WITH_EDITORONLY_DATA
 	HandType = EMCHandType::Left;
 #endif // WITH_EDITORONLY_DATA
+
+	ObjectToHelp = nullptr;
 
 	InputActionName = "LeftGraspHelper";
 
@@ -46,14 +49,17 @@ void UMCGraspHelperController::BeginPlay()
 	{
 		return;
 	}
-
-	// Bind user input
-	SetupInputBindings();
-
-	// Bind overlap functions
-	OnComponentBeginOverlap.AddDynamic(this, &UMCGraspHelperController::OnOverlapBegin);
-	OnComponentEndOverlap.AddDynamic(this, &UMCGraspHelperController::OnOverlapEnd);
+	Init();
 }
+
+// Called every frame, used for timeline visualizations, activated and deactivated on request
+void UMCGraspHelperController::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+{
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+	UpdateHelp(DeltaTime);
+}
+
 
 #if WITH_EDITOR
 // Called when a property is changed in the editor
@@ -80,6 +86,17 @@ void UMCGraspHelperController::PostEditChangeProperty(struct FPropertyChangedEve
 }
 #endif // WITH_EDITOR
 
+// Init 
+void UMCGraspHelperController::Init()
+{
+	// Bind user input
+	SetupInputBindings();
+
+	// Bind overlap functions
+	OnComponentBeginOverlap.AddDynamic(this, &UMCGraspHelperController::OnOverlapBegin);
+	OnComponentEndOverlap.AddDynamic(this, &UMCGraspHelperController::OnOverlapEnd);
+}
+
 // Bind user inputs
 void UMCGraspHelperController::SetupInputBindings()
 {
@@ -87,8 +104,9 @@ void UMCGraspHelperController::SetupInputBindings()
 	{
 		if (UInputComponent* IC = PC->InputComponent)
 		{
-			IC->BindAction(InputActionName, IE_Pressed, this, &UMCGraspHelperController::StartHelp);
-			IC->BindAction(InputActionName, IE_Released, this, &UMCGraspHelperController::StopHelp);
+			IC->BindAction(InputActionName, IE_Pressed, this, &UMCGraspHelperController::ToggleHelp);
+			//IC->BindAction(InputActionName, IE_Pressed, this, &UMCGraspHelperController::StartHelp);
+			//IC->BindAction(InputActionName, IE_Released, this, &UMCGraspHelperController::StopHelp);
 		}
 	}
 }
@@ -96,19 +114,93 @@ void UMCGraspHelperController::SetupInputBindings()
 // Start helping with grasp
 void UMCGraspHelperController::StartHelp()
 {
+	if (ObjectToHelp && ObjectToHelp->IsValidLowLevel() && !ObjectToHelp->IsPendingKillOrUnreachable())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("%s::%d No object selected to help.."), *FString(__FUNCTION__), __LINE__);
+		return;
+	}
 
+	if (IsComponentTickEnabled())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("%s::%d Controller already helping: %s, this should not happen.."), *FString(__FUNCTION__), __LINE__, *ObjectToHelp->GetName());
+	}
+
+	// Set the properties for the object to thelp
+	if (SetupHelpObjectProperties())
+	{
+		SetComponentTickEnabled(true);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("%s::%d Could not setup help object, this should not happen.."), *FString(__FUNCTION__), __LINE__);
+	}
 }
 
 // Stop helping with grasp
 void UMCGraspHelperController::StopHelp()
 {
+	ClearHelpObjectProperties();
+	SetComponentTickEnabled(false);
+}
 
+// Toggle help
+void UMCGraspHelperController::ToggleHelp()
+{
+	if (IsComponentTickEnabled())
+	{
+		StopHelp();
+	}
+	else
+	{
+		StartHelp();
+	}
 }
 
 // Update the grasp
-void UMCGraspHelperController::Update(float Value)
+void UMCGraspHelperController::UpdateHelp(float DeltaTime)
 {
+	UE_LOG(LogTemp, Warning, TEXT("%s::%d Helping:%s;"), *FString(__FUNCTION__), __LINE__, *ObjectToHelp->GetName());
+	FVector Out = GetComponentLocation() - ObjectToHelp->GetActorLocation();
+	ObjectSMC->AddForce(Out, NAME_None, true);
+}
 
+// Setup object help properties
+bool UMCGraspHelperController::SetupHelpObjectProperties()
+{
+	if (ObjectToHelp && ObjectToHelp->IsValidLowLevel() && !ObjectToHelp->IsPendingKillOrUnreachable())
+	{
+		if (UStaticMeshComponent* SMC = ObjectToHelp->GetStaticMeshComponent())
+		{
+			ObjectSMC = SMC;
+			ObjectSMC->SetEnableGravity(false);
+			return true;
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("%s::%d Object to help is not valid, this should not happen.."), *FString(__FUNCTION__), __LINE__);
+	}
+	return false;
+}
+
+// Clear object help properties
+bool UMCGraspHelperController::ClearHelpObjectProperties()
+{
+	if (ObjectToHelp && ObjectToHelp->IsValidLowLevel() && !ObjectToHelp->IsPendingKillOrUnreachable())
+	{
+		if (ObjectSMC)
+		{
+			// Set original properties
+			ObjectSMC->SetEnableGravity(true);
+			ObjectSMC = nullptr;
+			return true;
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("%s::%d Object to help is not valid, this should not happen.."), *FString(__FUNCTION__), __LINE__);
+	}
+	return false;
 }
 
 // Check if the object can should be helped with grasping
@@ -130,8 +222,8 @@ bool UMCGraspHelperController::ShouldObjectBeHelped(AStaticMeshActor* InObject)
 		}
 
 		// Check that object is not too heavy/large
-		if (SMC->GetMass() < WeightLimit &&
-			InObject->GetComponentsBoundingBox().GetVolume() < VolumeLimit)
+		if (SMC->GetMass() < WeightLimit 
+			&& InObject->GetComponentsBoundingBox().GetVolume() < VolumeLimit)
 		{
 			return true;
 		}
@@ -148,9 +240,20 @@ void UMCGraspHelperController::OnOverlapBegin(UPrimitiveComponent* OverlappedCom
 	bool bFromSweep,
 	const FHitResult& SweepResult)
 {
+	if (ObjectToHelp)
+	{
+		return;
+	}
+
 	if (AStaticMeshActor* OtherAsSMA = Cast<AStaticMeshActor>(OtherActor))
 	{
-		
+		if (ShouldObjectBeHelped(OtherAsSMA))
+		{
+			ObjectToHelp = OtherAsSMA;
+			UE_LOG(LogTemp, Warning, TEXT("%s::%d ObjectToHelp=%s;"), *FString(__FUNCTION__), __LINE__, *ObjectToHelp->GetName());
+
+			ObjectToHelp->GetStaticMeshComponent()->SetEnableGravity(false);
+		}
 	}
 }
 
@@ -160,5 +263,10 @@ void UMCGraspHelperController::OnOverlapEnd(UPrimitiveComponent* OverlappedComp,
 	UPrimitiveComponent* OtherComp,
 	int32 OtherBodyIndex)
 {
-
+	if (ObjectToHelp && OtherActor == ObjectToHelp)
+	{
+		//StopHelp();
+		UE_LOG(LogTemp, Error, TEXT("%s::%d Removed ObjectToHelp=%s;"), *FString(__FUNCTION__), __LINE__, *ObjectToHelp->GetName());
+		ObjectToHelp = nullptr;
+	}
 }

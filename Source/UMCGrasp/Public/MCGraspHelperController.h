@@ -10,6 +10,7 @@
 
 // Forward declaration
 class AStaticMeshActor;
+class UStaticMeshComponent;
 
 /**
  * Grasp helper controller - applies various test forces to keep the graped objects in hand
@@ -27,10 +28,16 @@ protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 
+	// Called every frame, used for timeline visualizations, activated and deactivated on request
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+
 #if WITH_EDITOR
 	// Called when a property is changed in the editor
 	virtual void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override;
 #endif // WITH_EDITOR
+
+	// Init 
+	void Init();
 
 private:
 	// Bind user inputs
@@ -42,8 +49,17 @@ private:
 	// Stop helping with grasp
 	void StopHelp();
 
+	// Toggle help
+	void ToggleHelp();
+
 	// Update the grasp
-	void Update(float Value);
+	void UpdateHelp(float DeltaTime);
+
+	// Setup  object help properties
+	bool SetupHelpObjectProperties();
+
+	// Clear object help properties
+	bool ClearHelpObjectProperties();
 
 	// Check if the object can should be helped with grasping
 	bool ShouldObjectBeHelped(AStaticMeshActor* InObject);
@@ -99,14 +115,18 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Grasp Helper")
 	float DecreaseMassTo;
 
-	// Weight (kg) limit that can be grasped
+	// Weight (kg) limit for objects which should be helped for grasping
 	UPROPERTY(EditAnywhere, Category = "Grasp Helper")
 	float WeightLimit;
 
-	// Volume (cm^3) limit that can be grasped (1000cm^3 = 1 Liter)
+	// Volume (cm^3) limit for objects which should be helped for grasping (1000cm^3 = 1 Liter)
 	UPROPERTY(EditAnywhere, Category = "Grasp Helper")
 	float VolumeLimit;
 
-	// Pointer to the grasped component (nullptr if nothing is grasped)
-	AStaticMeshActor* GraspedObject;
+	// Pointer to the object which should be helped (nullptr if no object is in the area)
+	AStaticMeshActor* ObjectToHelp;
+
+	// The static mesh component of the object
+	UStaticMeshComponent* ObjectSMC;
+
 };

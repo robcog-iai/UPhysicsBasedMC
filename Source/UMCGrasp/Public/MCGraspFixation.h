@@ -40,6 +40,9 @@ protected:
 	virtual void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override;
 #endif // WITH_EDITOR
 
+	// Init
+	void Init();
+
 private:
 	// Bind user inputs
 	void SetupInputBindings();

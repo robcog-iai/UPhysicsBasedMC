@@ -43,13 +43,7 @@ void UMCGraspFixation::BeginPlay()
 	{
 		return;
 	}
-
-	// Bind user input
-	SetupInputBindings();
-
-	// Bind overlap functions
-	OnComponentBeginOverlap.AddDynamic(this, &UMCGraspFixation::OnOverlapBegin);
-	OnComponentEndOverlap.AddDynamic(this, &UMCGraspFixation::OnOverlapEnd);
+	Init();
 }
 
 #if WITH_EDITOR
@@ -76,6 +70,17 @@ void UMCGraspFixation::PostEditChangeProperty(struct FPropertyChangedEvent& Prop
 	}
 }
 #endif // WITH_EDITOR
+
+// Init
+void UMCGraspFixation::Init()
+{
+	// Bind user input
+	SetupInputBindings();
+
+	// Bind overlap functions
+	OnComponentBeginOverlap.AddDynamic(this, &UMCGraspFixation::OnOverlapBegin);
+	OnComponentEndOverlap.AddDynamic(this, &UMCGraspFixation::OnOverlapEnd);
+}
 
 // Bind user inputs
 void UMCGraspFixation::SetupInputBindings()
