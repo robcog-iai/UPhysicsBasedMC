@@ -25,7 +25,7 @@ UMCGraspHelperController::UMCGraspHelperController()
 	HandType = EMCHandType::Left;
 #endif // WITH_EDITORONLY_DATA
 
-	ObjectToHelp = nullptr;
+	GraspedObject = nullptr;
 
 	InputActionName = "LeftGraspHelper";
 
@@ -56,7 +56,7 @@ void UMCGraspHelperController::BeginPlay()
 void UMCGraspHelperController::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
+	UE_LOG(LogTemp, Warning, TEXT(">> %s::%d"), TEXT(__FUNCTION__), __LINE__);
 	UpdateHelp(DeltaTime);
 }
 
@@ -114,19 +114,14 @@ void UMCGraspHelperController::SetupInputBindings()
 // Start helping with grasp
 void UMCGraspHelperController::StartHelp()
 {
-	if (ObjectToHelp && ObjectToHelp->IsValidLowLevel() && !ObjectToHelp->IsPendingKillOrUnreachable())
-	{
-		UE_LOG(LogTemp, Warning, TEXT("%s::%d No object selected to help.."), *FString(__FUNCTION__), __LINE__);
-		return;
-	}
 
 	if (IsComponentTickEnabled())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("%s::%d Controller already helping: %s, this should not happen.."), *FString(__FUNCTION__), __LINE__, *ObjectToHelp->GetName());
+		UE_LOG(LogTemp, Warning, TEXT("%s::%d Controller already helping: %s, this should not happen.."), *FString(__FUNCTION__), __LINE__, *GraspedObject->GetName());
 	}
 
 	// Set the properties for the object to thelp
-	if (SetupHelpObjectProperties())
+	if (SetGraspedObject())
 	{
 		SetComponentTickEnabled(true);
 	}
@@ -139,13 +134,13 @@ void UMCGraspHelperController::StartHelp()
 // Stop helping with grasp
 void UMCGraspHelperController::StopHelp()
 {
-	ClearHelpObjectProperties();
+	ClearHelpObject();
 	SetComponentTickEnabled(false);
 }
 
 // Toggle help
 void UMCGraspHelperController::ToggleHelp()
-{
+{	
 	if (IsComponentTickEnabled())
 	{
 		StopHelp();
@@ -159,42 +154,61 @@ void UMCGraspHelperController::ToggleHelp()
 // Update the grasp
 void UMCGraspHelperController::UpdateHelp(float DeltaTime)
 {
-	UE_LOG(LogTemp, Warning, TEXT("%s::%d Helping:%s;"), *FString(__FUNCTION__), __LINE__, *ObjectToHelp->GetName());
-	FVector Out = GetComponentLocation() - ObjectToHelp->GetActorLocation();
-	ObjectSMC->AddForce(Out, NAME_None, true);
+	UE_LOG(LogTemp, Warning, TEXT("%s::%d Helping:%s;"), *FString(__FUNCTION__), __LINE__, *GraspedObject->GetName());
+	FVector Out = GetComponentLocation() - GraspedObject->GetActorLocation();
+	Out *= 5.f;
+	GraspedObjectSMC->AddForce(Out, NAME_None, true);
 }
 
 // Setup object help properties
-bool UMCGraspHelperController::SetupHelpObjectProperties()
+bool UMCGraspHelperController::SetGraspedObject()
 {
-	if (ObjectToHelp && ObjectToHelp->IsValidLowLevel() && !ObjectToHelp->IsPendingKillOrUnreachable())
+	if (GraspedObject)
 	{
-		if (UStaticMeshComponent* SMC = ObjectToHelp->GetStaticMeshComponent())
+		UE_LOG(LogTemp, Error, TEXT("%s::%d Grasped object is already set, this should not happen.."), *FString(__FUNCTION__), __LINE__);
+	}
+
+	// Get the best candidate from the overlap pool
+	GraspedObject = GetBestCandidate();
+	if (GraspedObject && GraspedObject->IsValidLowLevel() && !GraspedObject->IsPendingKillOrUnreachable())
+	{
+		if (UStaticMeshComponent* SMC = GraspedObject->GetStaticMeshComponent())
 		{
-			ObjectSMC = SMC;
-			ObjectSMC->SetEnableGravity(false);
+			GraspedObjectSMC = SMC;			
+			GraspedObjectSMC->SetEnableGravity(false);
+
+			// Pause candidate searches until object is released
+			SetGenerateOverlapEvents(false);
+			OverlappingCandidates.Empty();
+
 			return true;
 		}
 	}
 	else
 	{
-		UE_LOG(LogTemp, Error, TEXT("%s::%d Object to help is not valid, this should not happen.."), *FString(__FUNCTION__), __LINE__);
+		UE_LOG(LogTemp, Error, TEXT("%s::%d Could not find a grasp (best)candidate, this should not happen.."), *FString(__FUNCTION__), __LINE__);
 	}
 	return false;
 }
 
 // Clear object help properties
-bool UMCGraspHelperController::ClearHelpObjectProperties()
+bool UMCGraspHelperController::ClearHelpObject()
 {
-	if (ObjectToHelp && ObjectToHelp->IsValidLowLevel() && !ObjectToHelp->IsPendingKillOrUnreachable())
+	if (GraspedObject && GraspedObject->IsValidLowLevel() && !GraspedObject->IsPendingKillOrUnreachable())
 	{
-		if (ObjectSMC)
+		if (GraspedObjectSMC)
 		{
-			// Set original properties
-			ObjectSMC->SetEnableGravity(true);
-			ObjectSMC = nullptr;
-			return true;
+			GraspedObjectSMC->SetEnableGravity(true);
+			GraspedObjectSMC = nullptr;			
 		}
+
+		GraspedObject = nullptr;
+
+		// Start searching for candidates againg
+		SetGenerateOverlapEvents(true);
+		UpdateOverlaps();
+
+		return true;
 	}
 	else
 	{
@@ -204,32 +218,59 @@ bool UMCGraspHelperController::ClearHelpObjectProperties()
 }
 
 // Check if the object can should be helped with grasping
-bool UMCGraspHelperController::ShouldObjectBeHelped(AStaticMeshActor* InObject)
+bool UMCGraspHelperController::IsAGoodCandidate(AStaticMeshActor* InObject)
 {
-	// Check if the object is movable
-	if (!InObject->IsRootComponentMovable())
+	// Check if object has a contact area
+	for (const auto& C : InObject->GetComponentsByClass(UShapeComponent::StaticClass()))
 	{
-		return false;
-	}
-
-	// Check if actor has a valid static mesh component
-	if (UStaticMeshComponent* SMC = InObject->GetStaticMeshComponent())
-	{
-		// Check if component has physics on
-		if (!SMC->IsSimulatingPhysics())
-		{
-			return false;
-		}
-
-		// Check that object is not too heavy/large
-		if (SMC->GetMass() < WeightLimit 
-			&& InObject->GetComponentsBoundingBox().GetVolume() < VolumeLimit)
+		if (C->GetName().StartsWith("SLContactMonitor"))
 		{
 			return true;
 		}
 	}
 
+	//// Check if the object is movable
+	//if (!InObject->IsRootComponentMovable())
+	//{
+	//	return false;
+	//}
+
+	//// Check if actor has a valid static mesh component
+	//if (UStaticMeshComponent* SMC = InObject->GetStaticMeshComponent())
+	//{
+	//	// Check if component has physics on
+	//	if (!SMC->IsSimulatingPhysics())
+	//	{
+	//		return false;
+	//	}
+
+	//	// Check that object is not too heavy/large
+	//	if (SMC->GetMass() < WeightLimit 
+	//		&& InObject->GetComponentsBoundingBox().GetVolume() < VolumeLimit)
+	//	{
+	//		return true;
+	//	}
+	//}
+
 	return false;
+}
+
+// Get the best candidate from the overlapp pool
+AStaticMeshActor* UMCGraspHelperController::GetBestCandidate()
+{
+	// Return candidate closest to the controller center
+	AStaticMeshActor* BestCandidate = nullptr;
+	float DistSQ = BIG_NUMBER;
+	for (const auto& Candidate : OverlappingCandidates)
+	{
+		float CurrDistSQ = FVector::DistSquared(Candidate->GetActorLocation(), GetComponentLocation());
+		if (CurrDistSQ < DistSQ)
+		{
+			BestCandidate = Candidate;
+			DistSQ = CurrDistSQ;
+		}
+	}
+	return BestCandidate;
 }
 
 // Called on overlap begin events
@@ -240,21 +281,24 @@ void UMCGraspHelperController::OnOverlapBegin(UPrimitiveComponent* OverlappedCom
 	bool bFromSweep,
 	const FHitResult& SweepResult)
 {
-	if (ObjectToHelp)
+	if (OtherComp->GetName().StartsWith("SLContactMonitor"))
 	{
-		return;
-	}
-
-	if (AStaticMeshActor* OtherAsSMA = Cast<AStaticMeshActor>(OtherActor))
-	{
-		if (ShouldObjectBeHelped(OtherAsSMA))
+		if (AStaticMeshActor* OtherAsSMA = Cast<AStaticMeshActor>(OtherActor))
 		{
-			ObjectToHelp = OtherAsSMA;
-			UE_LOG(LogTemp, Warning, TEXT("%s::%d ObjectToHelp=%s;"), *FString(__FUNCTION__), __LINE__, *ObjectToHelp->GetName());
-
-			ObjectToHelp->GetStaticMeshComponent()->SetEnableGravity(false);
+			OverlappingCandidates.Emplace(OtherAsSMA);
+			UE_LOG(LogTemp, Warning, TEXT("%s::%d *_* Added %s to OverlappingObjects (Num=%d).."),
+				*FString(__FUNCTION__), __LINE__, *OtherAsSMA->GetName(), OverlappingCandidates.Num());
 		}
 	}
+	//if (AStaticMeshActor* OtherAsSMA = Cast<AStaticMeshActor>(OtherActor))
+	//{
+	//	if (IsAGoodCandidate(OtherAsSMA))
+	//	{
+	//		OverlappingCandidates.Emplace(OtherAsSMA);
+	//		UE_LOG(LogTemp, Warning, TEXT("%s::%d *_* Added %s to OverlappingCandidates (Num=%d).."),
+	//			*FString(__FUNCTION__), __LINE__, *OtherAsSMA->GetName());
+	//	}
+	//}
 }
 
 // Called on overlap end events
@@ -263,10 +307,16 @@ void UMCGraspHelperController::OnOverlapEnd(UPrimitiveComponent* OverlappedComp,
 	UPrimitiveComponent* OtherComp,
 	int32 OtherBodyIndex)
 {
-	if (ObjectToHelp && OtherActor == ObjectToHelp)
-	{
-		//StopHelp();
-		UE_LOG(LogTemp, Error, TEXT("%s::%d Removed ObjectToHelp=%s;"), *FString(__FUNCTION__), __LINE__, *ObjectToHelp->GetName());
-		ObjectToHelp = nullptr;
+	if (OtherComp->GetName().StartsWith("SLContactMonitor"))
+	{	
+		if (AStaticMeshActor* OtherAsSMA = Cast<AStaticMeshActor>(OtherActor))
+		{
+			int32 NumEl = OverlappingCandidates.Remove(OtherAsSMA);
+			if (NumEl > 0)
+			{
+				UE_LOG(LogTemp, Error, TEXT("%s::%d *_* Removed %s from OverlappingObjects (Num=%d).."),
+					*FString(__FUNCTION__), __LINE__, *OtherAsSMA->GetName(), OverlappingCandidates.Num());
+			}
+		}
 	}
 }

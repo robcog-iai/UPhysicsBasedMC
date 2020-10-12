@@ -56,13 +56,16 @@ private:
 	void UpdateHelp(float DeltaTime);
 
 	// Setup  object help properties
-	bool SetupHelpObjectProperties();
+	bool SetGraspedObject();
 
 	// Clear object help properties
-	bool ClearHelpObjectProperties();
+	bool ClearHelpObject();
 
 	// Check if the object can should be helped with grasping
-	bool ShouldObjectBeHelped(AStaticMeshActor* InObject);
+	bool IsAGoodCandidate(AStaticMeshActor* InObject);
+
+	// Get the best candidate from the overlapp pool
+	AStaticMeshActor* GetBestCandidate();
 
 	// Event called when something starts to overlaps this component
 	UFUNCTION()
@@ -124,9 +127,12 @@ private:
 	float VolumeLimit;
 
 	// Pointer to the object which should be helped (nullptr if no object is in the area)
-	AStaticMeshActor* ObjectToHelp;
+	AStaticMeshActor* GraspedObject;
 
 	// The static mesh component of the object
-	UStaticMeshComponent* ObjectSMC;
+	UStaticMeshComponent* GraspedObjectSMC;
+
+	// Set of potential objects to be grasped (objects currently overlapping the area)
+	TSet<AStaticMeshActor*> OverlappingCandidates;
 
 };
