@@ -11,6 +11,8 @@
 // Forward declaration
 class AStaticMeshActor;
 class UStaticMeshComponent;
+class UPhysicsConstraintComponent;
+class USkeletalMeshComponent;
 
 /**
  * Grasp helper controller - applies various test forces to keep the graped objects in hand
@@ -56,10 +58,10 @@ private:
 	void UpdateHelp(float DeltaTime);
 
 	// Setup  object help properties
-	bool SetGraspedObject();
+	bool SetGraspedObjectProperties();
 
 	// Clear object help properties
-	bool ClearHelpObject();
+	bool ResetGraspedObjectProperties();
 
 	// Check if the object can should be helped with grasping
 	bool IsAGoodCandidate(AStaticMeshActor* InObject);
@@ -98,9 +100,41 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Grasp Helper")
 	FName InputActionName;
 
-	// Weld bodies (meshes) on grasp
+	// Attach bodies (meshes) on grasp
 	UPROPERTY(EditAnywhere, Category = "Grasp Helper")
-	bool bWeldBodies;
+	bool bUseAttractionForce;
+
+	// Force multiplicator
+	UPROPERTY(EditAnywhere, Category = "Grasp Helper", meta = (editcondition = "bUseAttractionForce"))
+	float ForceMultiplicator;
+
+	// Attach bodies (meshes) on grasp
+	UPROPERTY(EditAnywhere, Category = "Grasp Helper")
+	bool bUseAttachment;
+
+	// Weld bodies (meshes) on grasp
+	UPROPERTY(EditAnywhere, Category = "Grasp Helper", meta = (editcondition = "bUseAttachment"))
+	bool bUseConstraintComponent;
+
+	// Constraint properties
+	UPROPERTY(EditAnywhere, Category = "Grasp Helper", meta = (editcondition = "bUseConstraintComponent"))
+	float ConstraintStiffness;
+
+	// Constraint properties
+	UPROPERTY(EditAnywhere, Category = "Grasp Helper", meta = (editcondition = "bUseConstraintComponent"))
+	float ConstraintDamping;
+
+	// Constraint properties
+	UPROPERTY(EditAnywhere, Category = "Grasp Helper", meta = (editcondition = "bUseConstraintComponent"))
+	float ConstraintContactDistance;
+
+	// Constraint properties
+	UPROPERTY(EditAnywhere, Category = "Grasp Helper", meta = (editcondition = "bUseConstraintComponent"))
+	bool bConstraintParentDominates;
+
+	// Weld bodies (meshes) on grasp
+	UPROPERTY(EditAnywhere, Category = "Grasp Helper", meta = (editcondition = "bUseAttachment"))
+	FName BoneName;
 
 	// Disable gravity on grasp
 	UPROPERTY(EditAnywhere, Category = "Grasp Helper")
@@ -111,20 +145,19 @@ private:
 	bool bDecreaseMass;
 
 	// Decrease mass of object
-	UPROPERTY(EditAnywhere, Category = "Grasp Helper")
-	float DecreaseMassPercentage;
+	UPROPERTY(EditAnywhere, Category = "Grasp Helper", meta = (editcondition = "bDecreaseMass"))
+	float MassScaleValue;
 
-	// Decrease mass of object to
-	UPROPERTY(EditAnywhere, Category = "Grasp Helper")
-	float DecreaseMassTo;
+	//// Weight (kg) limit for objects which should be helped for grasping
+	//UPROPERTY(EditAnywhere, Category = "Grasp Helper")
+	//float ObjectWeightLimit;
 
-	// Weight (kg) limit for objects which should be helped for grasping
-	UPROPERTY(EditAnywhere, Category = "Grasp Helper")
-	float WeightLimit;
+	//// Volume (cm^3) limit for objects which should be helped for grasping (1000cm^3 = 1 Liter)
+	//UPROPERTY(EditAnywhere, Category = "Grasp Helper")
+	//float ObjectVolumeLimit;
 
-	// Volume (cm^3) limit for objects which should be helped for grasping (1000cm^3 = 1 Liter)
-	UPROPERTY(EditAnywhere, Category = "Grasp Helper")
-	float VolumeLimit;
+	// Keep track if the help is active or not
+	bool bHelpIsActive;
 
 	// Pointer to the object which should be helped (nullptr if no object is in the area)
 	AStaticMeshActor* GraspedObject;
@@ -134,5 +167,12 @@ private:
 
 	// Set of potential objects to be grasped (objects currently overlapping the area)
 	TSet<AStaticMeshActor*> OverlappingCandidates;
+
+	// Owner skeletal mesh component
+	USkeletalMeshComponent* OwnerSkelMC;
+
+	// Constraint component
+	UPROPERTY(VisibleAnywhere, Category = "Grasp Helper")
+	UPhysicsConstraintComponent* ConstraintHelperComponent;
 
 };

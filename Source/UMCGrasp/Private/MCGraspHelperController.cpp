@@ -4,8 +4,12 @@
 #include "MCGraspHelperController.h"
 #include "GameFramework/PlayerController.h"
 #include "Engine/StaticMeshActor.h"
+#include "Engine/StaticMesh.h"
 #include "Components/StaticMeshComponent.h"
+#include "PhysicsEngine/PhysicsConstraintComponent.h"
 #include "Components/InputComponent.h"
+#include "Animation/SkeletalMeshActor.h"
+#include "Components/SkeletalMeshComponent.h"
 
 // Sets default values for this component's properties
 UMCGraspHelperController::UMCGraspHelperController()
@@ -25,19 +29,29 @@ UMCGraspHelperController::UMCGraspHelperController()
 	HandType = EMCHandType::Left;
 #endif // WITH_EDITORONLY_DATA
 
+	bHelpIsActive = false;
 	GraspedObject = nullptr;
 
 	InputActionName = "LeftGraspHelper";
 
-	bWeldBodies = false;
-	bDisableGravity = false;
-	bDecreaseMass = false;
+	bUseAttractionForce = false;
+	ForceMultiplicator = 1000.f;
 
-	DecreaseMassPercentage = 0.5f;
-	DecreaseMassTo = -1.f;
+	bUseAttachment = false;
+	bUseConstraintComponent = false;
+	ConstraintStiffness = 500.f;
+	ConstraintDamping = 5.f;
+	ConstraintContactDistance = 1.f;
+	bConstraintParentDominates = false;
+	BoneName = "lHand";
 
-	WeightLimit = 15.0f;
-	VolumeLimit = 30000.0f; // 1000cm^3 = 1 Liter
+	bDisableGravity = true;
+
+	bDecreaseMass = true;
+	MassScaleValue = 0.1f;
+
+	//ObjectWeightLimit = 15.0f;
+	//ObjectVolumeLimit = 30000.0f; // 1000cm^3 = 1 Liter
 }
 
 // Called when the game starts
@@ -56,7 +70,6 @@ void UMCGraspHelperController::BeginPlay()
 void UMCGraspHelperController::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-	UE_LOG(LogTemp, Warning, TEXT(">> %s::%d"), TEXT(__FUNCTION__), __LINE__);
 	UpdateHelp(DeltaTime);
 }
 
@@ -77,10 +90,12 @@ void UMCGraspHelperController::PostEditChangeProperty(struct FPropertyChangedEve
 		if (HandType == EMCHandType::Left)
 		{
 			InputActionName = "LeftGraspHelper";
+			BoneName = "lHand";
 		}
 		else if (HandType == EMCHandType::Right)
 		{
 			InputActionName = "RightGraspHelper";
+			BoneName = "rHand";
 		}
 	}
 }
@@ -91,6 +106,55 @@ void UMCGraspHelperController::Init()
 {
 	// Bind user input
 	SetupInputBindings();
+
+
+
+	if (ASkeletalMeshActor* AsSkelMA = Cast<ASkeletalMeshActor>(GetOwner()))
+	{
+		OwnerSkelMC = AsSkelMA->GetSkeletalMeshComponent();
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("%s::%d Owner is not a skeletal component.. aborting.."),
+			*FString(__FUNCTION__), __LINE__);
+		return;
+	}
+
+	if (bUseConstraintComponent)
+	{
+		ConstraintHelperComponent = NewObject<UPhysicsConstraintComponent>(this, FName("ConstraintHelperComponent"));
+		ConstraintHelperComponent->RegisterComponent();
+		ConstraintHelperComponent->AttachToComponent(OwnerSkelMC, FAttachmentTransformRules::SnapToTargetIncludingScale, BoneName);
+
+
+		ConstraintHelperComponent->ConstraintInstance.SetAngularSwing1Limit(EAngularConstraintMotion::ACM_Limited, 0.1f);
+		ConstraintHelperComponent->ConstraintInstance.SetAngularSwing2Limit(EAngularConstraintMotion::ACM_Limited, 0.1f);
+		ConstraintHelperComponent->ConstraintInstance.SetAngularTwistLimit(EAngularConstraintMotion::ACM_Limited, 0.1f);
+
+		ConstraintHelperComponent->ConstraintInstance.SetLinearXLimit(ELinearConstraintMotion::LCM_Limited, 0.1f);
+		ConstraintHelperComponent->ConstraintInstance.SetLinearYLimit(ELinearConstraintMotion::LCM_Limited, 0.1f);
+		ConstraintHelperComponent->ConstraintInstance.SetLinearZLimit(ELinearConstraintMotion::LCM_Limited, 0.1f);
+
+		ConstraintHelperComponent->ConstraintInstance.ProfileInstance.LinearLimit.bSoftConstraint = true;
+		ConstraintHelperComponent->ConstraintInstance.ProfileInstance.LinearLimit.Stiffness = ConstraintStiffness;
+		ConstraintHelperComponent->ConstraintInstance.ProfileInstance.LinearLimit.Damping = ConstraintDamping;
+		ConstraintHelperComponent->ConstraintInstance.ProfileInstance.LinearLimit.ContactDistance = ConstraintContactDistance;
+
+		ConstraintHelperComponent->ConstraintInstance.ProfileInstance.ConeLimit.bSoftConstraint = true;
+		ConstraintHelperComponent->ConstraintInstance.ProfileInstance.ConeLimit.Stiffness = ConstraintStiffness;
+		ConstraintHelperComponent->ConstraintInstance.ProfileInstance.ConeLimit.Damping = ConstraintDamping;
+		ConstraintHelperComponent->ConstraintInstance.ProfileInstance.ConeLimit.ContactDistance = ConstraintContactDistance;
+
+		ConstraintHelperComponent->ConstraintInstance.ProfileInstance.TwistLimit.bSoftConstraint = true;
+		ConstraintHelperComponent->ConstraintInstance.ProfileInstance.TwistLimit.Stiffness = ConstraintStiffness;
+		ConstraintHelperComponent->ConstraintInstance.ProfileInstance.TwistLimit.Damping = ConstraintDamping;
+		ConstraintHelperComponent->ConstraintInstance.ProfileInstance.TwistLimit.ContactDistance = ConstraintContactDistance;
+
+		if (bConstraintParentDominates)
+		{
+			ConstraintHelperComponent->ConstraintInstance.EnableParentDominates();
+		}
+	}
 
 	// Bind overlap functions
 	OnComponentBeginOverlap.AddDynamic(this, &UMCGraspHelperController::OnOverlapBegin);
@@ -114,16 +178,26 @@ void UMCGraspHelperController::SetupInputBindings()
 // Start helping with grasp
 void UMCGraspHelperController::StartHelp()
 {
-
-	if (IsComponentTickEnabled())
-	{
-		UE_LOG(LogTemp, Warning, TEXT("%s::%d Controller already helping: %s, this should not happen.."), *FString(__FUNCTION__), __LINE__, *GraspedObject->GetName());
-	}
-
 	// Set the properties for the object to thelp
-	if (SetGraspedObject())
+	if (SetGraspedObjectProperties())
 	{
-		SetComponentTickEnabled(true);
+		if (bUseAttachment)
+		{
+			if (bUseConstraintComponent)
+			{
+				ConstraintHelperComponent->SetConstrainedComponents(OwnerSkelMC, BoneName, GraspedObjectSMC, NAME_None);
+			}
+			else
+			{
+				GraspedObjectSMC->SetSimulatePhysics(false);
+				GraspedObject->AttachToComponent(OwnerSkelMC, FAttachmentTransformRules::KeepWorldTransform, BoneName);
+			}
+		}
+		else if (bUseAttractionForce)
+		{
+			SetComponentTickEnabled(true);
+		}
+		bHelpIsActive = true;
 	}
 	else
 	{
@@ -133,35 +207,53 @@ void UMCGraspHelperController::StartHelp()
 
 // Stop helping with grasp
 void UMCGraspHelperController::StopHelp()
-{
-	ClearHelpObject();
-	SetComponentTickEnabled(false);
+{	
+	if (bUseAttachment)
+	{
+		if (bUseConstraintComponent)
+		{
+			ConstraintHelperComponent->BreakConstraint();
+		}
+		else
+		{
+			GraspedObject->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+			GraspedObjectSMC->SetSimulatePhysics(true);
+		}
+	}
+	else if(bUseAttractionForce)
+	{
+		SetComponentTickEnabled(false);
+	}
+	ResetGraspedObjectProperties();
+	bHelpIsActive = false;	
 }
 
 // Toggle help
 void UMCGraspHelperController::ToggleHelp()
 {	
-	if (IsComponentTickEnabled())
+	if (!bHelpIsActive)
 	{
-		StopHelp();
+		StartHelp();
 	}
 	else
 	{
-		StartHelp();
+		StopHelp();
 	}
 }
 
 // Update the grasp
 void UMCGraspHelperController::UpdateHelp(float DeltaTime)
 {
-	UE_LOG(LogTemp, Warning, TEXT("%s::%d Helping:%s;"), *FString(__FUNCTION__), __LINE__, *GraspedObject->GetName());
-	FVector Out = GetComponentLocation() - GraspedObject->GetActorLocation();
-	Out *= 5.f;
-	GraspedObjectSMC->AddForce(Out, NAME_None, true);
+	if (GraspedObjectSMC)
+	{
+		FVector Out = GetComponentLocation() - GraspedObject->GetActorLocation();
+		Out *= DeltaTime * ForceMultiplicator;
+		GraspedObjectSMC->AddForce(Out, NAME_None, true);
+	}
 }
 
 // Setup object help properties
-bool UMCGraspHelperController::SetGraspedObject()
+bool UMCGraspHelperController::SetGraspedObjectProperties()
 {
 	if (GraspedObject)
 	{
@@ -174,8 +266,17 @@ bool UMCGraspHelperController::SetGraspedObject()
 	{
 		if (UStaticMeshComponent* SMC = GraspedObject->GetStaticMeshComponent())
 		{
-			GraspedObjectSMC = SMC;			
-			GraspedObjectSMC->SetEnableGravity(false);
+			GraspedObjectSMC = SMC;		
+
+			if (bDisableGravity)
+			{
+				GraspedObjectSMC->SetEnableGravity(false);
+			}
+
+			if (bDecreaseMass)
+			{
+				GraspedObjectSMC->SetMassScale(NAME_None, MassScaleValue);
+			}
 
 			// Pause candidate searches until object is released
 			SetGenerateOverlapEvents(false);
@@ -192,13 +293,22 @@ bool UMCGraspHelperController::SetGraspedObject()
 }
 
 // Clear object help properties
-bool UMCGraspHelperController::ClearHelpObject()
+bool UMCGraspHelperController::ResetGraspedObjectProperties()
 {
 	if (GraspedObject && GraspedObject->IsValidLowLevel() && !GraspedObject->IsPendingKillOrUnreachable())
 	{
 		if (GraspedObjectSMC)
 		{
-			GraspedObjectSMC->SetEnableGravity(true);
+			if (bDisableGravity)
+			{
+				GraspedObjectSMC->SetEnableGravity(true);
+			}
+
+			if (bDecreaseMass)
+			{
+				GraspedObjectSMC->SetMassScale(NAME_None, 1.f);
+			}
+
 			GraspedObjectSMC = nullptr;			
 		}
 
@@ -245,8 +355,8 @@ bool UMCGraspHelperController::IsAGoodCandidate(AStaticMeshActor* InObject)
 	//	}
 
 	//	// Check that object is not too heavy/large
-	//	if (SMC->GetMass() < WeightLimit 
-	//		&& InObject->GetComponentsBoundingBox().GetVolume() < VolumeLimit)
+	//	if (SMC->GetMass() < ObjectWeightLimit 
+	//		&& InObject->GetComponentsBoundingBox().GetVolume() < ObjectVolumeLimit)
 	//	{
 	//		return true;
 	//	}
@@ -286,8 +396,8 @@ void UMCGraspHelperController::OnOverlapBegin(UPrimitiveComponent* OverlappedCom
 		if (AStaticMeshActor* OtherAsSMA = Cast<AStaticMeshActor>(OtherActor))
 		{
 			OverlappingCandidates.Emplace(OtherAsSMA);
-			UE_LOG(LogTemp, Warning, TEXT("%s::%d *_* Added %s to OverlappingObjects (Num=%d).."),
-				*FString(__FUNCTION__), __LINE__, *OtherAsSMA->GetName(), OverlappingCandidates.Num());
+			//UE_LOG(LogTemp, Warning, TEXT("%s::%d *_* Added %s to OverlappingObjects (Num=%d).."),
+			//	*FString(__FUNCTION__), __LINE__, *OtherAsSMA->GetName(), OverlappingCandidates.Num());
 		}
 	}
 	//if (AStaticMeshActor* OtherAsSMA = Cast<AStaticMeshActor>(OtherActor))
@@ -312,11 +422,11 @@ void UMCGraspHelperController::OnOverlapEnd(UPrimitiveComponent* OverlappedComp,
 		if (AStaticMeshActor* OtherAsSMA = Cast<AStaticMeshActor>(OtherActor))
 		{
 			int32 NumEl = OverlappingCandidates.Remove(OtherAsSMA);
-			if (NumEl > 0)
-			{
-				UE_LOG(LogTemp, Error, TEXT("%s::%d *_* Removed %s from OverlappingObjects (Num=%d).."),
-					*FString(__FUNCTION__), __LINE__, *OtherAsSMA->GetName(), OverlappingCandidates.Num());
-			}
+			//if (NumEl > 0)
+			//{
+			//	UE_LOG(LogTemp, Error, TEXT("%s::%d *_* Removed %s from OverlappingObjects (Num=%d).."),
+			//		*FString(__FUNCTION__), __LINE__, *OtherAsSMA->GetName(), OverlappingCandidates.Num());
+			//}
 		}
 	}
 }
