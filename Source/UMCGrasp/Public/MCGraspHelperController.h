@@ -38,6 +38,7 @@ protected:
 	virtual void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override;
 #endif // WITH_EDITOR
 
+public:
 	// Init 
 	void Init();
 
@@ -96,7 +97,7 @@ private:
 	EMCHandType HandType;
 #endif // WITH_EDITORONLY_DATA
 
-	// Input axis name
+	// Input action name
 	UPROPERTY(EditAnywhere, Category = "Grasp Helper")
 	FName InputActionName;
 

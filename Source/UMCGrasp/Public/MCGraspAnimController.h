@@ -91,7 +91,11 @@ public:
 private:
 	// Skip initialization if true
 	UPROPERTY(EditAnywhere, Category = "Grasp Controller")
-	bool bIgnore;
+	uint8 bIgnore : 1;
+
+	// Skip initialization if true
+	UPROPERTY(EditAnywhere, Category = "Semantic Logger")
+	uint8 bLogDebug : 1;
 
 #if WITH_EDITORONLY_DATA
 	// Hand type, to listen to the right inputs

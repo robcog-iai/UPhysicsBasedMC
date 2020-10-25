@@ -2,6 +2,7 @@
 
 #include "MCGraspAnimController.h"
 #include "Animation/SkeletalMeshActor.h"
+#include "GameFramework/PlayerController.h"
 
 // Sets default values for this component's properties
 UMCGraspAnimController::UMCGraspAnimController()
@@ -11,6 +12,7 @@ UMCGraspAnimController::UMCGraspAnimController()
 	PrimaryComponentTick.bCanEverTick = false;
 	
 	bIgnore = false;
+	bLogDebug = false;
 
 #if WITH_EDITOR
 	HandType = EMCGraspAnimHandType::Left;
@@ -298,8 +300,11 @@ void UMCGraspAnimController::GotoNextAnimationCallback()
 		ActiveAnimStepSize = 1.f / static_cast<float>(ActiveAnimation.Num() - 1);
 
 		DriveToFirstFrame();
-		UE_LOG(LogTemp, Warning, TEXT("%s::%d Active animation Idx/Name=[%d|%s]"),
-			*FString(__func__), __LINE__, ActiveAnimIdx, *AnimationNames[ActiveAnimIdx]);
+		if (bLogDebug)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("%s::%d Active animation Idx/Name=[%d|%s]"),
+				*FString(__func__), __LINE__, ActiveAnimIdx, *AnimationNames[ActiveAnimIdx]);
+		}
 		//if (HandType == EMCGraspAnimHandType::Left)
 		//{
 		//	GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("L:%s"),
@@ -326,8 +331,11 @@ void UMCGraspAnimController::GotoPreviousAnimationCallback()
 		ActiveAnimStepSize = 1.f / static_cast<float>(ActiveAnimation.Num() - 1);
 
 		DriveToFirstFrame();
-		UE_LOG(LogTemp, Warning, TEXT("%s::%d Active animation Idx/Name=[%d|%s]"),
-			*FString(__func__), __LINE__, ActiveAnimIdx, *AnimationNames[ActiveAnimIdx]);
+		if (bLogDebug)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("%s::%d Active animation Idx/Name=[%d|%s]"),
+				*FString(__func__), __LINE__, ActiveAnimIdx, *AnimationNames[ActiveAnimIdx]);
+		}
 		//if (HandType == EMCGraspAnimHandType::Left)
 		//{
 		//	GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("L:%s"),

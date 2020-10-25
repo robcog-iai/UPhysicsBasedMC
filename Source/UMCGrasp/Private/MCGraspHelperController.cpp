@@ -3,11 +3,11 @@
 
 #include "MCGraspHelperController.h"
 #include "GameFramework/PlayerController.h"
+#include "Components/InputComponent.h"
 #include "Engine/StaticMeshActor.h"
 #include "Engine/StaticMesh.h"
 #include "Components/StaticMeshComponent.h"
 #include "PhysicsEngine/PhysicsConstraintComponent.h"
-#include "Components/InputComponent.h"
 #include "Animation/SkeletalMeshActor.h"
 #include "Components/SkeletalMeshComponent.h"
 
@@ -106,8 +106,6 @@ void UMCGraspHelperController::Init()
 {
 	// Bind user input
 	SetupInputBindings();
-
-
 
 	if (ASkeletalMeshActor* AsSkelMA = Cast<ASkeletalMeshActor>(GetOwner()))
 	{
