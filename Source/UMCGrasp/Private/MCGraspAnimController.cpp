@@ -24,7 +24,8 @@ UMCGraspAnimController::UMCGraspAnimController()
 	InputPrevAnimAction = "LeftPrevGraspAnim";
 	
 	SpringIdle = 1000000000.f;
-	SpringInputScale = 5.f;
+	TriggerStrength = 5.f;
+	bDecreaseStrength = false;
 	Damping = 100000000.f;
 	ForceLimit = 0.f;
 	ActiveAnimIdx = INDEX_NONE;
@@ -190,7 +191,9 @@ void UMCGraspAnimController::DriveToFirstFrame()
 // Set the motors target value to the final frame
 void UMCGraspAnimController::DriveToLastFrame()
 {
-	SpringActive = SpringIdle + (SpringIdle * SpringInputScale);
+	//SpringActive = SpringIdle + (SpringIdle * TriggerStrength);
+	const float Strength = bDecreaseStrength ? 1.f / (1.f + TriggerStrength) : 1.f + TriggerStrength;
+	SpringActive = SpringIdle * Strength;
 	DriveTarget = ActiveAnimation[ActiveAnimation.Num()-1];
 	DriveToTarget();
 }
@@ -263,7 +266,9 @@ void UMCGraspAnimController::GraspUpdateCallback(float Value)
 		bIsMax = false;
 
 		// Increase the spring value proportional with the input
-		SpringActive = SpringIdle + (SpringIdle * SpringInputScale * Value);
+		//SpringActive = SpringIdle + (SpringIdle * TriggerStrength * Value);
+		const float Strength = bDecreaseStrength ? 1.f / (1.f + (TriggerStrength * Value)) : 1.f + (TriggerStrength * Value);
+		SpringActive = SpringIdle * Strength;
 		
 		// Checks in which position we are between the frist frame (0.f) .. () ..  () .. and last frame ((Num()-1).f) 
 		float ValueOnTheFrameAxis = Value / ActiveAnimStepSize;

@@ -176,6 +176,10 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Movement Control", meta = (editcondition = "bOverwriteTargetLocation"))
 	FName OverwriteBoneName;
 
+	// Move hand to the bone location button hack
+	UPROPERTY(EditAnywhere, Category = "Movement Control", meta = (editcondition = "bOverwriteTargetLocation"))
+	bool bUpdateLocationButtonHack;
+
 	// Update fallback function binding
 	FMC6DController Controller;
 

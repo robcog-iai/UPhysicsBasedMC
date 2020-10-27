@@ -22,6 +22,7 @@ public:
 private:
 #if WITH_EDITORONLY_DATA
 	// Static mesh component of the controller target position offset
+	UPROPERTY(EditAnywhere, Category="Semantic Logger")
 	class UStaticMeshComponent* ControllerVisual;
 #endif // WITH_EDITORONLY_DATA
 };

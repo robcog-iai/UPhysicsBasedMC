@@ -119,9 +119,13 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Grasp Controller")
 	float SpringIdle;
 
-	// You can use this to increase the grasp strength proportionally with the input
+	// The value multiplied with the trigger input
 	UPROPERTY(EditAnywhere, Category = "Grasp Controller")
-	float SpringInputScale;
+	float TriggerStrength;
+
+	// Increase or decrease strength the more we press the trigger (TriggerStrength or 1/TriggerStrength)
+	UPROPERTY(EditAnywhere, Category = "Grasp Controller")
+	bool bDecreaseStrength;
 
 	// Damping value
 	UPROPERTY(EditAnywhere, Category = "Grasp Controller")

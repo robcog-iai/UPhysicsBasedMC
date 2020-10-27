@@ -4,6 +4,8 @@
 #include "MC6DOffset.h"
 #if WITH_EDITORONLY_DATA
 #include "Components/StaticMeshComponent.h"
+#include "Engine/StaticMesh.h"
+#include "UObject/ConstructorHelpers.h"
 #endif // WITH_EDITORONLY_DATA
 
 // Sets default values for this component's properties
@@ -15,7 +17,7 @@ UMC6DOffset::UMC6DOffset()
 
 #if WITH_EDITORONLY_DATA
 	// Create and position a mesh component so we can see where our sphere is
-	ControllerVisual = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ControllerVisual"));
+	ControllerVisual = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("SLControllerVisual"));
 	if (ControllerVisual)
 	{
 		ControllerVisual->SetupAttachment(this);
