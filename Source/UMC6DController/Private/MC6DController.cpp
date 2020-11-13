@@ -275,6 +275,12 @@ void FMC6DController::Init(USceneComponent* InTarget,
 	}
 }
 
+// Clear the update function
+void FMC6DController::Clear()
+{
+	LocUpdateFunctionPointer = &FMC6DController::Loc_Update_NONE;
+}
+
 // Overwrite the update function to use bone location as target
 void FMC6DController::OverwriteToUseBoneForTargetLocation(USkeletalMeshComponent* TargetSkeletalMeshComponent, FName TargetBoneName)
 {

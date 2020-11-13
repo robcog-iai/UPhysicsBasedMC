@@ -6,6 +6,8 @@
 #include "MotionControllerComponent.h"
 #include "Engine/StaticMeshActor.h"
 #include "Animation/SkeletalMeshActor.h"
+#include "MC6DController.h"
+#include "MC6DControlType.h"
 #include "MC6DTarget.generated.h"
 
 /**
@@ -77,15 +79,18 @@ protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 
+	// Called when actor removed from game or game ended
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
 #if WITH_EDITOR
 	// Called when a property is changed in the editor
 	virtual void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override;
 #endif // WITH_EDITOR
 
-public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
+public:
 	// Reset the location PID
 	UFUNCTION(BlueprintCallable)
 	void ResetLocationPID(bool bClearErrors = true);
@@ -107,6 +112,28 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Movement Control")
 	EMC6DHandType HandType;
 #endif // WITH_EDITORONLY_DATA
+
+	// Check references
+	void Init();
+
+	// Start controller
+	void Start();
+
+	// Stop the controller
+	void Finish(bool bForced = false);
+
+	// Get init state
+	bool IsInit() const { return bIsInit; };
+
+	// Get started state
+	bool IsStarted() const { return bIsStarted; };
+
+	// Get finished state
+	bool IsFinished() const { return bIsFinished; };
+
+private:
+	// Start controller after delay
+	void StartDelayCallback();
 
 public:
 	// Control type location 
@@ -144,24 +171,36 @@ public:
 	float MaxRot;
 
 private:
+	// True when all references are set and it is connected to the server
+	uint8 bIgnore : 1;
+
+	// True when all references are set and it is connected to the server
+	uint8 bIsInit : 1;
+
+	// True when active
+	uint8 bIsStarted : 1;
+
+	// True when done 
+	uint8 bIsFinished : 1;
+
+	// Start controllers after a delay
+	UPROPERTY(EditAnywhere, Category = "Movement Control")
+	float StartDelay = 0.25f;
+
 	// Control a skeletal mesh
 	UPROPERTY(EditAnywhere, Category = "Movement Control")
-	bool bUseSkeletalMesh;
+	uint8 bUseSkeletalMesh : 1;
 	
 	// Apply movement control to all bones of the skeletal mesh
 	UPROPERTY(EditAnywhere, Category = "Movement Control", meta = (editcondition = "bUseSkeletalMesh"))
-	bool bApplyToAllSkeletalBodies;
+	uint8 bApplyToAllSkeletalBodies : 1;
 
 	// Skeletal mesh actor to control
 	UPROPERTY(EditAnywhere, Category = "Movement Control", meta = (editcondition = "bUseSkeletalMesh"))
 	ASkeletalMeshActor* SkeletalMeshActor;
 
-	// Control a static mesh
-	UPROPERTY(EditAnywhere, Category = "Movement Control")
-	bool bUseStaticMesh;
-
 	// Static mesh actor to control
-	UPROPERTY(EditAnywhere, Category = "Movement Control", meta = (editcondition = "bUseStaticMesh"))
+	UPROPERTY(EditAnywhere, Category = "Movement Control", meta = (editcondition = "!bUseSkeletalMesh"))
 	AStaticMeshActor* StaticMeshActor;
 
 	// Use another target (e.g. instead of the controller the hand bone of the fully tracked body)
@@ -182,6 +221,9 @@ private:
 
 	// Update fallback function binding
 	FMC6DController Controller;
+
+	// Delay start timer handle
+	FTimerHandle DelayStartTimerHandle;
 
 	/* Constants */
 	// Loc

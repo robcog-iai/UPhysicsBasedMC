@@ -20,6 +20,11 @@ UMC6DTarget::UMC6DTarget()
 	// Set ticking group 
 	//PrimaryComponentTick.TickGroup = ETickingGroup::TG_PrePhysics;
 
+	bIgnore = false;
+	bIsInit = false;
+	bIsStarted = false;
+	bIsFinished = false;
+
 #if WITH_EDITORONLY_DATA
 	bDisplayDeviceModel = true;
 	DisplayModelSource = FName("SteamVR");
@@ -32,7 +37,6 @@ UMC6DTarget::UMC6DTarget()
 	// Default values
 	bUseSkeletalMesh = true;
 	bApplyToAllSkeletalBodies = false;
-	bUseStaticMesh = false;
 
 	// PID values (acc)
 	LocControlType = EMC6DControlType::Acceleration;
@@ -54,131 +58,30 @@ void UMC6DTarget::BeginPlay()
 	Super::BeginPlay();
 
 	// Disable tick by default
-	// TODO / ISSUE why does this have to be manually disabled
-	// even if PrimaryComponentTick.bStartWithTickEnabled = false;
-	// this does not happen with USLVisLegacyManager.cpp
 	SetComponentTickEnabled(false);
 
-	// Check if the target location should and can be overwritten
-	if (bOverwriteTargetLocation && OverwriteSkeletalMeshActor)
+
+	if (bIgnore)
 	{
-		// Check if the bone exist
-		if (OverwriteSkeletalMeshActor->GetSkeletalMeshComponent()->GetBoneIndex(OverwriteBoneName) == INDEX_NONE)
-		{
-			UE_LOG(LogTemp, Error, TEXT("%s::%d %s has no bone named %s, location overwriting will not work.."),
-				*FString(__func__), __LINE__);
-			bOverwriteTargetLocation = false;
-		}
+		UE_LOG(LogTemp, Warning, TEXT("%s::%d %s's ignore flag is true, skipping.."),
+			*FString(__FUNCTION__), __LINE__, *GetName());
+		return;
 	}
 
-	// Check if owner has a valid static/skeletal mesh
-	if (bUseSkeletalMesh && SkeletalMeshActor)
-	{		
-		if (USkeletalMeshComponent* SkelMeshComp = SkeletalMeshActor->GetSkeletalMeshComponent())
-		{
-			// Set mobility and physics parameters
-			SkelMeshComp->SetMobility(EComponentMobility::Movable);
-			SkelMeshComp->SetSimulatePhysics(true);
-			SkelMeshComp->SetEnableGravity(false);
+	Init();
 
-			// Initialize update callbacks with/without offset
-			if (UMC6DOffset* OffsetComp = Cast<UMC6DOffset>(SkeletalMeshActor->GetComponentByClass(UMC6DOffset::StaticClass())))
-			{
-				Controller.Init(this, SkelMeshComp, bApplyToAllSkeletalBodies, LocControlType,
-					PLoc, ILoc, DLoc, MaxLoc, RotControlType, PRot, IRot, DRot, MaxRot,
-					OffsetComp->GetComponentTransform());
-			}
-			else
-			{
-				Controller.Init(this, SkelMeshComp, bApplyToAllSkeletalBodies, LocControlType,
-					PLoc, ILoc, DLoc, MaxLoc, RotControlType, PRot, IRot, DRot, MaxRot);
-			}
 
-			// Let the controler know that the location should be overwritten
-			if (bOverwriteTargetLocation)
-			{
-				if (OverwriteSkeletalMeshActor)
-				{
-					Controller.OverwriteToUseBoneForTargetLocation(
-						OverwriteSkeletalMeshActor->GetSkeletalMeshComponent(), OverwriteBoneName);
-				}
-				else
-				{
-					UE_LOG(LogTemp, Error, TEXT("%s::%d No overwrite skeletal mesh actor selected, aborting.."),
-						*FString(__FUNCTION__), __LINE__);
-					return;
-				}
-			}
 
-			// Enable Tick
-			SetComponentTickEnabled(true);
+}
 
-			// Bind lambda function on the next tick to teleport the mesh to the target location
-			// (cannot be done on begin play since the tracking is not active yet)
-			// Timer delegate to be able to bind against non UObject functions
-			FTimerDelegate TimerDelegateNextTick;
-			TimerDelegateNextTick.BindLambda([&, SkelMeshComp]
-			{
-				// Reset velocity to 0 and teleport to the motion controller location
-				// (the controller applies the PID output on the mesh before the lambda is called)
-				SkelMeshComp->SetPhysicsLinearVelocity(FVector(0.f));
-				SkelMeshComp->SetPhysicsAngularVelocityInRadians(FVector(0.f));
-				SkelMeshComp->SetWorldTransform(GetComponentTransform(),
-					false, (FHitResult*)nullptr, ETeleportType::TeleportPhysics);
-			});
-			GetWorld()->GetTimerManager().SetTimerForNextTick(TimerDelegateNextTick);
-		}
-	}
-	else if (bUseStaticMesh && StaticMeshActor)
+// Called when actor removed from game or game ended
+void UMC6DTarget::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	Super::EndPlay(EndPlayReason);
+	if (!bIsFinished && (bIsStarted || bIsInit))
 	{
-		if (UStaticMeshComponent* StaticMeshComp = StaticMeshActor->GetStaticMeshComponent())
-		{
-			// Set mobility and physics parameters
-			StaticMeshComp->SetMobility(EComponentMobility::Movable);
-			StaticMeshComp->SetSimulatePhysics(true);
-			StaticMeshComp->SetEnableGravity(false);
-
-			// Initialize update callbacks with/without offset
-			if (UMC6DOffset* OffsetComp = Cast<UMC6DOffset>(StaticMeshActor->GetComponentByClass(UMC6DOffset::StaticClass())))
-			{
-				Controller.Init(this, StaticMeshComp, LocControlType,
-					PLoc, ILoc, DLoc, MaxLoc, RotControlType, PRot, IRot, DRot, MaxRot,
-					OffsetComp->GetComponentTransform());
-			}
-			else
-			{
-				Controller.Init(this, StaticMeshComp, LocControlType,
-					PLoc, ILoc, DLoc, MaxLoc, RotControlType, PRot, IRot, DRot, MaxRot);
-			}
-
-			// Let the controler know that the location should be overwritten
-			if (bOverwriteTargetLocation)
-			{
-				Controller.OverwriteToUseBoneForTargetLocation(
-					OverwriteSkeletalMeshActor->GetSkeletalMeshComponent(), OverwriteBoneName);
-			}
-
-			// Enable Tick
-			SetComponentTickEnabled(true);
-
-			// Bind lambda function on the next tick to teleport the mesh to the target location
-			// (cannot be done on begin play since the tracking is not active yet)
-			// Timer delegate to be able to bind against non UObject functions
-			FTimerDelegate TimerDelegateNextTick;
-			TimerDelegateNextTick.BindLambda([&, StaticMeshComp]
-			{
-				// Reset velocity to 0 and teleport to the motion controller location
-				// (the controller applies the PID output on the mesh before the lambda is called)
-				StaticMeshComp->SetPhysicsLinearVelocity(FVector(0.f));
-				StaticMeshComp->SetPhysicsAngularVelocityInRadians(FVector(0.f));
-				StaticMeshComp->SetWorldTransform(GetComponentTransform(),
-				 false, (FHitResult*)nullptr, ETeleportType::TeleportPhysics);
-			});
-			GetWorld()->GetTimerManager().SetTimerForNextTick(TimerDelegateNextTick);
-		}
+		Finish();
 	}
-	// Could not set the update controller, tick remains disabled
-
 }
 
 #if WITH_EDITOR
@@ -191,38 +94,7 @@ void UMC6DTarget::PostEditChangeProperty(struct FPropertyChangedEvent& PropertyC
 	FName PropertyName = (PropertyChangedEvent.Property != NULL) ?
 		PropertyChangedEvent.Property->GetFName() : NAME_None;
 
-	// Radio button style between bUseSkeletalMesh, bUseStaticMesh
-	if (PropertyName == GET_MEMBER_NAME_CHECKED(UMC6DTarget, bUseSkeletalMesh))
-	{
-		if (bUseSkeletalMesh)
-		{
-			bUseStaticMesh = false;
-			if (StaticMeshActor)
-			{
-				StaticMeshActor = nullptr;
-			}
-		}
-		else 
-		{
-			bUseStaticMesh = true;
-		}
-	}
-	else if (PropertyName == GET_MEMBER_NAME_CHECKED(UMC6DTarget, bUseStaticMesh))
-	{
-		if (bUseStaticMesh)
-		{
-			bUseSkeletalMesh = false;
-			if (SkeletalMeshActor)
-			{
-				SkeletalMeshActor = nullptr;
-			}
-		}
-		else
-		{
-			bUseSkeletalMesh = true;
-		}
-	}
-	else if (PropertyName == GET_MEMBER_NAME_CHECKED(UMC6DTarget, HandType))
+	if (PropertyName == GET_MEMBER_NAME_CHECKED(UMC6DTarget, HandType))
 	{
 		if (HandType == EMC6DHandType::Left)
 		{
@@ -320,4 +192,258 @@ void  UMC6DTarget::ResetLocationPID(bool bClearErrors /* = true*/)
 void  UMC6DTarget::ResetRotationPID(bool bClearErrors /* = true*/)
 {
 	Controller.ResetRot(PRot, IRot, DRot, MaxRot, bClearErrors);
+}
+
+// Check references
+void UMC6DTarget::Init()
+{
+	if (bIsInit)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("%s::%d %s is already initialized.."),
+			*FString(__FUNCTION__), __LINE__, *GetName());
+		return;
+	}
+
+	// Check if the target location should and can be overwritten
+	if (bOverwriteTargetLocation && OverwriteSkeletalMeshActor)
+	{
+		// Check if the bone exist
+		if (OverwriteSkeletalMeshActor->GetSkeletalMeshComponent()->GetBoneIndex(OverwriteBoneName) == INDEX_NONE)
+		{
+			UE_LOG(LogTemp, Error, TEXT("%s::%d %s' %s has no bone named %s, location overwriting will not work.."),
+				*FString(__FUNCTION__), __LINE__, *GetName(),
+				*OverwriteSkeletalMeshActor->GetName(), *OverwriteBoneName.ToString());
+			bOverwriteTargetLocation = false;
+		}
+	}
+
+	// Check if owner has a valid static/skeletal mesh
+	if (bUseSkeletalMesh && SkeletalMeshActor)
+	{
+		if (USkeletalMeshComponent* SkelMeshComp = SkeletalMeshActor->GetSkeletalMeshComponent())
+		{
+			// Set mobility and physics parameters
+			//SkelMeshComp->SetMobility(EComponentMobility::Movable);
+			//SkelMeshComp->SetSimulatePhysics(true);
+			//SkelMeshComp->SetEnableGravity(false);
+
+			// Initialize update callbacks with/without offset
+			if (UMC6DOffset* OffsetComp = Cast<UMC6DOffset>(SkeletalMeshActor->GetComponentByClass(UMC6DOffset::StaticClass())))
+			{
+				Controller.Init(this, SkelMeshComp, bApplyToAllSkeletalBodies, LocControlType,
+					PLoc, ILoc, DLoc, MaxLoc, RotControlType, PRot, IRot, DRot, MaxRot,
+					OffsetComp->GetComponentTransform());
+			}
+			else
+			{
+				Controller.Init(this, SkelMeshComp, bApplyToAllSkeletalBodies, LocControlType,
+					PLoc, ILoc, DLoc, MaxLoc, RotControlType, PRot, IRot, DRot, MaxRot);
+			}
+
+			// Let the controler know that the location should be overwritten
+			if (bOverwriteTargetLocation)
+			{
+				if (OverwriteSkeletalMeshActor)
+				{
+					Controller.OverwriteToUseBoneForTargetLocation(
+						OverwriteSkeletalMeshActor->GetSkeletalMeshComponent(), OverwriteBoneName);
+				}
+				else
+				{
+					UE_LOG(LogTemp, Error, TEXT("%s::%d  no overwrite skeletal mesh actor selected, aborting.."),
+						*FString(__FUNCTION__), __LINE__);
+					return;
+				}
+			}
+
+			bIsInit = true;
+			UE_LOG(LogTemp, Warning, TEXT("%s::%d %s succesfully initialized.."),
+				*FString(__FUNCTION__), __LINE__, *GetName());
+
+			// Call start with a delay
+			GetWorld()->GetTimerManager().SetTimer(DelayStartTimerHandle,
+				this, &UMC6DTarget::StartDelayCallback, StartDelay, false);
+		}
+	}
+	else if (StaticMeshActor)
+	{
+		if (UStaticMeshComponent* StaticMeshComp = StaticMeshActor->GetStaticMeshComponent())
+		{
+			// Set mobility and physics parameters
+			//StaticMeshComp->SetMobility(EComponentMobility::Movable);
+			//StaticMeshComp->SetSimulatePhysics(true);
+			//StaticMeshComp->SetEnableGravity(false);
+
+			// Initialize update callbacks with/without offset
+			if (UMC6DOffset* OffsetComp = Cast<UMC6DOffset>(StaticMeshActor->GetComponentByClass(UMC6DOffset::StaticClass())))
+			{
+				Controller.Init(this, StaticMeshComp, LocControlType,
+					PLoc, ILoc, DLoc, MaxLoc, RotControlType, PRot, IRot, DRot, MaxRot,
+					OffsetComp->GetComponentTransform());
+			}
+			else
+			{
+				Controller.Init(this, StaticMeshComp, LocControlType,
+					PLoc, ILoc, DLoc, MaxLoc, RotControlType, PRot, IRot, DRot, MaxRot);
+			}
+
+			// Let the controler know that the location should be overwritten
+			if (bOverwriteTargetLocation)
+			{
+				Controller.OverwriteToUseBoneForTargetLocation(
+					OverwriteSkeletalMeshActor->GetSkeletalMeshComponent(), OverwriteBoneName);
+			}
+
+			// Call start with a delay
+			GetWorld()->GetTimerManager().SetTimer(DelayStartTimerHandle,
+				this, &UMC6DTarget::StartDelayCallback, StartDelay, false);
+		}
+	}
+}
+
+// Start controller
+void UMC6DTarget::Start()
+{
+	if (bIsStarted)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("%s::%d %s is already started.."),
+			*FString(__FUNCTION__), __LINE__, *GetName());
+		return;
+	}
+
+	if (!bIsInit)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("%s::%d %s is not initialized, cannot start.."),
+			*FString(__FUNCTION__), __LINE__, *GetName());
+		return;
+	}
+
+	if (bUseSkeletalMesh && SkeletalMeshActor)
+	{
+		if (USkeletalMeshComponent* SkelMeshComp = SkeletalMeshActor->GetSkeletalMeshComponent())
+		{
+			// Check if any external manager disabled physics on the world
+			if (SkelMeshComp->IsSimulatingPhysics())
+			{
+				SkelMeshComp->SetPhysicsLinearVelocity(FVector(0.f));
+				SkelMeshComp->SetPhysicsAngularVelocityInRadians(FVector(0.f));
+				SkelMeshComp->SetWorldTransform(GetComponentTransform(),
+					false, (FHitResult*)nullptr, ETeleportType::TeleportPhysics);
+
+				SetComponentTickEnabled(true);
+
+				bIsStarted = true;
+				UE_LOG(LogTemp, Warning, TEXT("%s::%d %s succesfully started.."),
+					*FString(__FUNCTION__), __LINE__, *GetName());
+			}
+
+			//// Bind lambda function on the next tick to teleport the mesh to the target location
+			//// (cannot be done on begin play since the tracking is not active yet)
+			//// Timer delegate to be able to bind against non UObject functions
+			//FTimerDelegate TimerDelegateNextTick;
+			//TimerDelegateNextTick.BindLambda([&, SkelMeshComp]
+			//	{
+			//		// Check if any external manager disabled physics on the world
+			//		if (!SkelMeshComp->IsSimulatingPhysics())
+			//		{
+			//			UE_LOG(LogTemp, Error, TEXT("%s::%d "), *FString(__FUNCTION__), __LINE__);
+			//			Controller.Clear();
+			//			// If the skeletal mesh component physics was disabled, disable the controller
+			//			SetComponentTickEnabled(false);
+			//		}
+			//		else
+			//		{
+			//			UE_LOG(LogTemp, Warning, TEXT("%s::%d "), *FString(__FUNCTION__), __LINE__);
+			//			// Reset velocity to 0 and teleport to the motion controller location
+			//			// (the controller applies the PID output on the mesh before the lambda is called)
+			//			SkelMeshComp->SetPhysicsLinearVelocity(FVector(0.f));
+			//			SkelMeshComp->SetPhysicsAngularVelocityInRadians(FVector(0.f));
+			//			SkelMeshComp->SetWorldTransform(GetComponentTransform(),
+			//				false, (FHitResult*)nullptr, ETeleportType::TeleportPhysics);
+			//		}
+			//	});
+			//GetWorld()->GetTimerManager().SetTimerForNextTick(TimerDelegateNextTick);
+		}
+	}
+	else if (StaticMeshActor)
+	{
+		if (UStaticMeshComponent* StaticMeshComp = StaticMeshActor->GetStaticMeshComponent())
+		{
+			// Check if any external manager disabled physics on the world
+			if (StaticMeshComp->IsSimulatingPhysics())
+			{
+				StaticMeshComp->SetPhysicsLinearVelocity(FVector(0.f));
+				StaticMeshComp->SetPhysicsAngularVelocityInRadians(FVector(0.f));
+				StaticMeshComp->SetWorldTransform(GetComponentTransform(),
+					false, (FHitResult*)nullptr, ETeleportType::TeleportPhysics);
+
+				SetComponentTickEnabled(true);
+
+				bIsStarted = true;
+				UE_LOG(LogTemp, Warning, TEXT("%s::%d %s succesfully started.."),
+					*FString(__FUNCTION__), __LINE__, *GetName());
+			}
+
+			//// Bind lambda function on the next tick to teleport the mesh to the target location
+			//// (cannot be done on begin play since the tracking is not active yet)
+			//// Timer delegate to be able to bind against non UObject functions
+			//FTimerDelegate TimerDelegateNextTick;
+			//TimerDelegateNextTick.BindLambda([&, StaticMeshComp]
+			//	{
+			//		// Check if any external manager disabled physics on the world
+			//		if (!StaticMeshComp->IsSimulatingPhysics())
+			//		{
+			//			Controller.Clear();
+			//			// If the skeletal mesh component physics was disabled, disable the controller
+			//			SetComponentTickEnabled(false);
+			//		}
+			//		else
+			//		{
+			//			// Reset velocity to 0 and teleport to the motion controller location
+			//			// (the controller applies the PID output on the mesh before the lambda is called)
+			//			StaticMeshComp->SetPhysicsLinearVelocity(FVector(0.f));
+			//			StaticMeshComp->SetPhysicsAngularVelocityInRadians(FVector(0.f));
+			//			StaticMeshComp->SetWorldTransform(GetComponentTransform(),
+			//				false, (FHitResult*)nullptr, ETeleportType::TeleportPhysics);
+			//		}
+			//	});
+			//GetWorld()->GetTimerManager().SetTimerForNextTick(TimerDelegateNextTick);
+		}
+	}
+
+
+}
+
+// Stop the controller
+void UMC6DTarget::Finish(bool bForced)
+{
+	if (bIsFinished)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("%s::%d %s is already finished.."),
+			*FString(__FUNCTION__), __LINE__, *GetName());
+		return;
+	}
+
+	if (!bIsInit && !bIsStarted)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("%s::%d %s is not initialized nor started, cannot finish.."),
+			*FString(__FUNCTION__), __LINE__, *GetName());
+		return;
+	}
+
+	SetComponentTickEnabled(false);
+
+	bIsStarted = false;
+	bIsInit = false;
+	bIsFinished = true;
+	UE_LOG(LogTemp, Warning, TEXT("%s::%d %s succesfully finished.."),
+		*FString(__FUNCTION__), __LINE__, *GetName());
+}
+
+// Start controller after delay
+void UMC6DTarget::StartDelayCallback()
+{
+	//UE_LOG(LogTemp, Log, TEXT("%s::%d::%.4f %s calling start after delay.. "),
+	//	*FString(__FUNCTION__), __LINE__, GetWorld()->GetTimeSeconds(), *GetName());
+	Start();
 }

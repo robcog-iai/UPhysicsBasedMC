@@ -63,6 +63,9 @@ public:
 		float PRot, float IRot, float DRot, float MaxRot,
 		FTransform InOffset);
 
+	// Clear the update function
+	void Clear();
+
 	// Overwrite the update function to use bone location as target
 	void OverwriteToUseBoneForTargetLocation(USkeletalMeshComponent* TargetSkeletalMeshComponent, FName TargetBoneName);
 
