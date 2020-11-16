@@ -319,11 +319,12 @@ void UMC6DTarget::Start()
 	}
 
 	if (bUseSkeletalMesh && SkeletalMeshActor)
-	{
+	{		
 		if (USkeletalMeshComponent* SkelMeshComp = SkeletalMeshActor->GetSkeletalMeshComponent())
 		{
 			// Check if any external manager disabled physics on the world
-			if (SkelMeshComp->IsSimulatingPhysics())
+			if (SkelMeshComp->IsSimulatingPhysics() 
+				&& (SkelMeshComp->GetCollisionEnabled() != ECollisionEnabled::NoCollision))
 			{
 				SkelMeshComp->SetPhysicsLinearVelocity(FVector(0.f));
 				SkelMeshComp->SetPhysicsAngularVelocityInRadians(FVector(0.f));
@@ -333,8 +334,9 @@ void UMC6DTarget::Start()
 				SetComponentTickEnabled(true);
 
 				bIsStarted = true;
-				UE_LOG(LogTemp, Warning, TEXT("%s::%d %s succesfully started.."),
-					*FString(__FUNCTION__), __LINE__, *GetName());
+				UE_LOG(LogTemp, Warning, TEXT("%s::%d::%.4f %s succesfully started.."),
+					*FString(__FUNCTION__), __LINE__, GetWorld()->GetTimeSeconds(), *GetName());
+				return;
 			}
 
 			//// Bind lambda function on the next tick to teleport the mesh to the target location
@@ -370,7 +372,8 @@ void UMC6DTarget::Start()
 		if (UStaticMeshComponent* StaticMeshComp = StaticMeshActor->GetStaticMeshComponent())
 		{
 			// Check if any external manager disabled physics on the world
-			if (StaticMeshComp->IsSimulatingPhysics())
+			if (StaticMeshComp->IsSimulatingPhysics() 
+				&& (StaticMeshComp->GetCollisionEnabled() != ECollisionEnabled::NoCollision))
 			{
 				StaticMeshComp->SetPhysicsLinearVelocity(FVector(0.f));
 				StaticMeshComp->SetPhysicsAngularVelocityInRadians(FVector(0.f));
@@ -380,8 +383,9 @@ void UMC6DTarget::Start()
 				SetComponentTickEnabled(true);
 
 				bIsStarted = true;
-				UE_LOG(LogTemp, Warning, TEXT("%s::%d %s succesfully started.."),
-					*FString(__FUNCTION__), __LINE__, *GetName());
+				UE_LOG(LogTemp, Warning, TEXT("%s::%d::%.4f %s succesfully started.."),
+					*FString(__FUNCTION__), __LINE__, GetWorld()->GetTimeSeconds(), *GetName());
+				return;
 			}
 
 			//// Bind lambda function on the next tick to teleport the mesh to the target location
@@ -410,8 +414,8 @@ void UMC6DTarget::Start()
 			//GetWorld()->GetTimerManager().SetTimerForNextTick(TimerDelegateNextTick);
 		}
 	}
-
-
+	UE_LOG(LogTemp, Error, TEXT("%s::%d::%.4f %s could not bet started.."),
+		*FString(__FUNCTION__), __LINE__, GetWorld()->GetTimeSeconds(), *GetName());
 }
 
 // Stop the controller
