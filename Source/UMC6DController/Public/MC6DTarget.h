@@ -131,10 +131,6 @@ public:
 	// Get finished state
 	bool IsFinished() const { return bIsFinished; };
 
-private:
-	// Start controller after delay
-	void StartDelayCallback();
-
 public:
 	// Control type location 
 	UPROPERTY(EditAnywhere, Category = "Movement Control|Location")
@@ -185,7 +181,7 @@ private:
 
 	// Start controllers after a delay
 	UPROPERTY(EditAnywhere, Category = "Movement Control")
-	float StartDelay = 0.25f;
+	float StartDelay = 0.45f;
 
 	// Control a skeletal mesh
 	UPROPERTY(EditAnywhere, Category = "Movement Control")
@@ -221,9 +217,6 @@ private:
 
 	// Update fallback function binding
 	FMC6DController Controller;
-
-	// Delay start timer handle
-	FTimerHandle DelayStartTimerHandle;
 
 	/* Constants */
 	// Loc

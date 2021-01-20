@@ -70,8 +70,9 @@ void UMC6DTarget::BeginPlay()
 
 	Init();
 
-
-
+	//Start();
+	FTimerHandle UnusedHandle;
+	GetWorld()->GetTimerManager().SetTimer(UnusedHandle, this, &UMC6DTarget::Start, StartDelay, false);
 }
 
 // Called when actor removed from game or game ended
@@ -259,10 +260,6 @@ void UMC6DTarget::Init()
 			bIsInit = true;
 			UE_LOG(LogTemp, Warning, TEXT("%s::%d %s succesfully initialized.."),
 				*FString(__FUNCTION__), __LINE__, *GetName());
-
-			// Call start with a delay
-			GetWorld()->GetTimerManager().SetTimer(DelayStartTimerHandle,
-				this, &UMC6DTarget::StartDelayCallback, StartDelay, false);
 		}
 	}
 	else if (StaticMeshActor)
@@ -293,11 +290,11 @@ void UMC6DTarget::Init()
 				Controller.OverwriteToUseBoneForTargetLocation(
 					OverwriteSkeletalMeshActor->GetSkeletalMeshComponent(), OverwriteBoneName);
 			}
-
-			// Call start with a delay
-			GetWorld()->GetTimerManager().SetTimer(DelayStartTimerHandle,
-				this, &UMC6DTarget::StartDelayCallback, StartDelay, false);
 		}
+
+		bIsInit = true;
+		UE_LOG(LogTemp, Warning, TEXT("%s::%d %s succesfully initialized.."),
+			*FString(__FUNCTION__), __LINE__, *GetName());
 	}
 }
 
@@ -444,10 +441,3 @@ void UMC6DTarget::Finish(bool bForced)
 		*FString(__FUNCTION__), __LINE__, *GetName());
 }
 
-// Start controller after delay
-void UMC6DTarget::StartDelayCallback()
-{
-	//UE_LOG(LogTemp, Log, TEXT("%s::%d::%.4f %s calling start after delay.. "),
-	//	*FString(__FUNCTION__), __LINE__, GetWorld()->GetTimeSeconds(), *GetName());
-	Start();
-}
