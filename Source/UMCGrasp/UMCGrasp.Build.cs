@@ -46,6 +46,7 @@ public class UMCGrasp : ModuleRules
 				"Engine",
 				"Slate",
 				"SlateCore",
+				"UMCPIDController", // grasp helper object tracking	
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);

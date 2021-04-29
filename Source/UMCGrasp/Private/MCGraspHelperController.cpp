@@ -35,7 +35,22 @@ UMCGraspHelperController::UMCGraspHelperController()
 	InputActionName = "LeftGraspHelper";
 
 	bUseAttractionForce = false;
-	ForceMultiplicator = 1000.f;
+	AttractionForceFactor = 1000.f;
+
+	bUsePID = false;
+
+	// PID values (acc)
+	LocControlType = EMCGraspHelp6DControlType::Acceleration;
+	PLoc = 10;
+	ILoc = 0;
+	DLoc = 0;
+	MaxLoc = 100;
+
+	RotControlType = EMCGraspHelp6DControlType::Velocity;
+	PRot = 1;
+	IRot = 0;
+	DRot = 0;
+	MaxRot = 10;
 
 	bUseAttachment = false;
 	bUseConstraintComponent = false;
@@ -191,6 +206,13 @@ void UMCGraspHelperController::StartHelp()
 				GraspedObject->AttachToComponent(OwnerSkelMC, FAttachmentTransformRules::KeepWorldTransform, BoneName);
 			}
 		}
+		else if (bUsePID)
+		{
+			Controller6DPID.Init(this, GraspedObjectSMC, LocControlType,
+				PLoc, ILoc, DLoc, MaxLoc, RotControlType, PRot, IRot, DRot, MaxRot,
+				this->GetComponentTransform());
+			SetComponentTickEnabled(true);
+		}
 		else if (bUseAttractionForce)
 		{
 			SetComponentTickEnabled(true);
@@ -218,6 +240,11 @@ void UMCGraspHelperController::StopHelp()
 			GraspedObjectSMC->SetSimulatePhysics(true);
 		}
 	}
+	else if (bUsePID)
+	{		
+		Controller6DPID.Clear();
+		SetComponentTickEnabled(false);
+	}
 	else if(bUseAttractionForce)
 	{
 		SetComponentTickEnabled(false);
@@ -244,9 +271,16 @@ void UMCGraspHelperController::UpdateHelp(float DeltaTime)
 {
 	if (GraspedObjectSMC)
 	{
-		FVector Out = GetComponentLocation() - GraspedObject->GetActorLocation();
-		Out *= DeltaTime * ForceMultiplicator;
-		GraspedObjectSMC->AddForce(Out, NAME_None, true);
+		if (bUsePID)
+		{
+			Controller6DPID.UpdateController(DeltaTime);
+		}
+		else if (bUseAttractionForce)
+		{
+			FVector Out = GetComponentLocation() - GraspedObject->GetActorLocation();
+			Out *= DeltaTime * AttractionForceFactor;
+			GraspedObjectSMC->AddForce(Out, NAME_None, true);
+		}
 	}
 }
 

@@ -6,6 +6,7 @@
 #include "UMCGrasp.h"
 #include "Components/SphereComponent.h"
 #include "MCStructs.h"
+#include "MCGraspHelper6DPIDController.h"
 #include "MCGraspHelperController.generated.h"
 
 // Forward declaration
@@ -101,40 +102,79 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Grasp Helper")
 	FName InputActionName;
 
-	// Attach bodies (meshes) on grasp
-	UPROPERTY(EditAnywhere, Category = "Grasp Helper")
+	// Attract bodies (meshes) on grasp
+	UPROPERTY(EditAnywhere, Category = "Grasp Helper|AttractionForce")
 	bool bUseAttractionForce;
 
 	// Force multiplicator
-	UPROPERTY(EditAnywhere, Category = "Grasp Helper", meta = (editcondition = "bUseAttractionForce"))
-	float ForceMultiplicator;
+	UPROPERTY(EditAnywhere, Category = "Grasp Helper|AttractionForce", meta = (editcondition = "bUseAttractionForce"))
+	float AttractionForceFactor;
+
+	// Maintain relative pose of the graped meshes
+	UPROPERTY(EditAnywhere, Category = "Grasp Helper|PID")
+	bool bUsePID;
+
+	UPROPERTY(EditAnywhere, Category = "Grasp Helper|PID")
+	EMCGraspHelp6DControlType LocControlType;
+
+	// Location PID controller values
+	UPROPERTY(EditAnywhere, Category = "Grasp Helper|PID", meta = (editcondition = "bUsePID", ClampMin = 0))
+	float PLoc;
+
+	UPROPERTY(EditAnywhere, Category = "Grasp Helper|PID", meta = (editcondition = "bUsePID", ClampMin = 0))
+	float ILoc;
+
+	UPROPERTY(EditAnywhere, Category = "Grasp Helper|PID", meta = (editcondition = "bUsePID", ClampMin = 0))
+	float DLoc;
+
+	UPROPERTY(EditAnywhere, Category = "Grasp Helper|PID", meta = (editcondition = "bUsePID", ClampMin = 0))
+	float MaxLoc;
+
+	UPROPERTY(EditAnywhere, Category = "Grasp Helper|PID")
+	EMCGraspHelp6DControlType RotControlType;
+
+	// Rot PID controller values
+	UPROPERTY(EditAnywhere, Category = "Grasp Helper|PID", meta = (editcondition = "bUsePID", ClampMin = 0))
+	float PRot;
+
+	UPROPERTY(EditAnywhere, Category = "Grasp Helper|PID", meta = (editcondition = "bUsePID", ClampMin = 0))
+	float IRot;
+
+	UPROPERTY(EditAnywhere, Category = "Grasp Helper|PID", meta = (editcondition = "bUsePID", ClampMin = 0))
+	float DRot;
+
+	UPROPERTY(EditAnywhere, Category = "Grasp Helper|PID", meta = (editcondition = "bUsePID", ClampMin = 0))
+	float MaxRot;
+
+	// Rot/loc PID controller
+	FMCGraspHelper6DPIDController Controller6DPID;
 
 	// Attach bodies (meshes) on grasp
-	UPROPERTY(EditAnywhere, Category = "Grasp Helper")
+	UPROPERTY(EditAnywhere, Category = "Grasp Helper|Attachment")
 	bool bUseAttachment;
 
 	// Weld bodies (meshes) on grasp
-	UPROPERTY(EditAnywhere, Category = "Grasp Helper", meta = (editcondition = "bUseAttachment"))
+	UPROPERTY(EditAnywhere, Category = "Grasp Helper|Attachment", meta = (editcondition = "bUseAttachment"))
 	bool bUseConstraintComponent;
 
 	// Constraint properties
-	UPROPERTY(EditAnywhere, Category = "Grasp Helper", meta = (editcondition = "bUseConstraintComponent"))
+	UPROPERTY(EditAnywhere, Category = "Grasp Helper|Attachment", meta = (editcondition = "bUseConstraintComponent"))
 	float ConstraintStiffness;
 
 	// Constraint properties
-	UPROPERTY(EditAnywhere, Category = "Grasp Helper", meta = (editcondition = "bUseConstraintComponent"))
+	UPROPERTY(EditAnywhere, Category = "Grasp Helper|Attachment", meta = (editcondition = "bUseConstraintComponent"))
 	float ConstraintDamping;
 
 	// Constraint properties
-	UPROPERTY(EditAnywhere, Category = "Grasp Helper", meta = (editcondition = "bUseConstraintComponent"))
+	UPROPERTY(EditAnywhere, Category = "Grasp Helper|Attachment", meta = (editcondition = "bUseConstraintComponent"))
 	float ConstraintContactDistance;
 
 	// Constraint properties
-	UPROPERTY(EditAnywhere, Category = "Grasp Helper", meta = (editcondition = "bUseConstraintComponent"))
+	UPROPERTY(EditAnywhere, Category = "Grasp Helper|Attachment", meta = (editcondition = "bUseConstraintComponent"))
 	bool bConstraintParentDominates;
 
 	// Weld bodies (meshes) on grasp
-	UPROPERTY(EditAnywhere, Category = "Grasp Helper", meta = (editcondition = "bUseAttachment"))
+	UPROPERTY(EditAnywhere, Category = "Grasp Helper|Attachment", meta = (editcondition = "bUseAttachment"))
 	FName BoneName;
 
 	// Disable gravity on grasp
