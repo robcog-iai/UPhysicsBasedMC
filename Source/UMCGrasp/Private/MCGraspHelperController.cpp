@@ -362,6 +362,17 @@ bool UMCGraspHelperController::ResetGraspedObjectProperties()
 // Check if the object can should be helped with grasping
 bool UMCGraspHelperController::IsAGoodCandidate(AStaticMeshActor* InObject)
 {
+#if ENGINE_MINOR_VERSION > 23 || ENGINE_MAJOR_VERSION > 4
+	TArray<UActorComponent*> Components;
+	InObject->GetComponents(UShapeComponent::StaticClass(), Components);
+	for (const auto C : Components)
+	{
+		if (C->GetName().StartsWith("SLContactMonitor"))
+		{
+			return true;
+		}
+	}
+#else
 	// Check if object has a contact area
 	for (const auto& C : InObject->GetComponentsByClass(UShapeComponent::StaticClass()))
 	{
@@ -370,7 +381,7 @@ bool UMCGraspHelperController::IsAGoodCandidate(AStaticMeshActor* InObject)
 			return true;
 		}
 	}
-
+#endif
 	//// Check if the object is movable
 	//if (!InObject->IsRootComponentMovable())
 	//{
