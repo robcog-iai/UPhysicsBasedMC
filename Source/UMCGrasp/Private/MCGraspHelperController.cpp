@@ -1,4 +1,4 @@
-// Copyright 2017-2020, Institute for Artificial Intelligence - University of Bremen
+// Copyright 2017-present, Institute for Artificial Intelligence - University of Bremen
 // Author: Andrei Haidu (http://haidu.eu)
 
 #include "MCGraspHelperController.h"
@@ -35,7 +35,22 @@ UMCGraspHelperController::UMCGraspHelperController()
 	InputActionName = "LeftGraspHelper";
 
 	bUseAttractionForce = false;
-	ForceMultiplicator = 1000.f;
+	AttractionForceFactor = 1000.f;
+
+	bUsePID = false;
+
+	// PID values (acc)
+	LocControlType = EMCGraspHelp6DControlType::Acceleration;
+	PLoc = 10;
+	ILoc = 0;
+	DLoc = 0;
+	MaxLoc = 100;
+
+	RotControlType = EMCGraspHelp6DControlType::Velocity;
+	PRot = 1;
+	IRot = 0;
+	DRot = 0;
+	MaxRot = 10;
 
 	bUseAttachment = false;
 	bUseConstraintComponent = false;
@@ -191,6 +206,13 @@ void UMCGraspHelperController::StartHelp()
 				GraspedObject->AttachToComponent(OwnerSkelMC, FAttachmentTransformRules::KeepWorldTransform, BoneName);
 			}
 		}
+		else if (bUsePID)
+		{
+			Controller6DPID.Init(this, GraspedObjectSMC, LocControlType,
+				PLoc, ILoc, DLoc, MaxLoc, RotControlType, PRot, IRot, DRot, MaxRot,
+				this->GetComponentTransform());
+			SetComponentTickEnabled(true);
+		}
 		else if (bUseAttractionForce)
 		{
 			SetComponentTickEnabled(true);
@@ -218,6 +240,11 @@ void UMCGraspHelperController::StopHelp()
 			GraspedObjectSMC->SetSimulatePhysics(true);
 		}
 	}
+	else if (bUsePID)
+	{		
+		Controller6DPID.Clear();
+		SetComponentTickEnabled(false);
+	}
 	else if(bUseAttractionForce)
 	{
 		SetComponentTickEnabled(false);
@@ -244,9 +271,16 @@ void UMCGraspHelperController::UpdateHelp(float DeltaTime)
 {
 	if (GraspedObjectSMC)
 	{
-		FVector Out = GetComponentLocation() - GraspedObject->GetActorLocation();
-		Out *= DeltaTime * ForceMultiplicator;
-		GraspedObjectSMC->AddForce(Out, NAME_None, true);
+		if (bUsePID)
+		{
+			Controller6DPID.UpdateController(DeltaTime);
+		}
+		else if (bUseAttractionForce)
+		{
+			FVector Out = GetComponentLocation() - GraspedObject->GetActorLocation();
+			Out *= DeltaTime * AttractionForceFactor;
+			GraspedObjectSMC->AddForce(Out, NAME_None, true);
+		}
 	}
 }
 
@@ -328,6 +362,17 @@ bool UMCGraspHelperController::ResetGraspedObjectProperties()
 // Check if the object can should be helped with grasping
 bool UMCGraspHelperController::IsAGoodCandidate(AStaticMeshActor* InObject)
 {
+#if ENGINE_MINOR_VERSION > 23 || ENGINE_MAJOR_VERSION > 4
+	TArray<UActorComponent*> Components;
+	InObject->GetComponents(UShapeComponent::StaticClass(), Components);
+	for (const auto C : Components)
+	{
+		if (C->GetName().StartsWith("SLContactMonitor"))
+		{
+			return true;
+		}
+	}
+#else
 	// Check if object has a contact area
 	for (const auto& C : InObject->GetComponentsByClass(UShapeComponent::StaticClass()))
 	{
@@ -336,7 +381,7 @@ bool UMCGraspHelperController::IsAGoodCandidate(AStaticMeshActor* InObject)
 			return true;
 		}
 	}
-
+#endif
 	//// Check if the object is movable
 	//if (!InObject->IsRootComponentMovable())
 	//{

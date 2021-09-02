@@ -1,4 +1,4 @@
-// Copyright 2017-2020, Institute for Artificial Intelligence - University of Bremen
+// Copyright 2017-present, Institute for Artificial Intelligence - University of Bremen
 // Author: Andrei Haidu (http://haidu.eu)
 
 using System.IO;
@@ -46,6 +46,7 @@ public class UMCGrasp : ModuleRules
 				"Engine",
 				"Slate",
 				"SlateCore",
+				"UMCPIDController", // grasp helper object tracking	
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);

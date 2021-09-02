@@ -1,4 +1,4 @@
-// Copyright 2017-2020, Institute for Artificial Intelligence - University of Bremen
+// Copyright 2017-present, Institute for Artificial Intelligence - University of Bremen
 // Author: Andrei Haidu (http://haidu.eu)
 
 #pragma once
@@ -131,6 +131,11 @@ public:
 	// Get finished state
 	bool IsFinished() const { return bIsFinished; };
 
+private:
+	// Initial teleport the hands to the motion controller location, 
+	// has to be called after a delay since at begin play the controller is not tracked yet
+	void TeleportToInitialPose();
+
 public:
 	// Control type location 
 	UPROPERTY(EditAnywhere, Category = "Movement Control|Location")
@@ -215,7 +220,7 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Movement Control", meta = (editcondition = "bOverwriteTargetLocation"))
 	bool bUpdateLocationButtonHack;
 
-	// Update fallback function binding
+	// Update callback function binding
 	FMC6DController Controller;
 
 	/* Constants */

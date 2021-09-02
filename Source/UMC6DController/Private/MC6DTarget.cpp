@@ -1,10 +1,8 @@
-// Copyright 2017-2020, Institute for Artificial Intelligence - University of Bremen
+// Copyright 2017-present, Institute for Artificial Intelligence - University of Bremen
 // Author: Andrei Haidu (http://haidu.eu)
 
 #include "MC6DTarget.h"
 #include "MC6DOffset.h"
-#include "MC6DController.h"
-#include "MC6DControlType.h"
 #if WITH_EDITOR
 #include "XRMotionControllerBase.h"
 #endif // WITH_EDITOR
@@ -323,12 +321,14 @@ void UMC6DTarget::Start()
 			if (SkelMeshComp->IsSimulatingPhysics() 
 				&& (SkelMeshComp->GetCollisionEnabled() != ECollisionEnabled::NoCollision))
 			{
-				SkelMeshComp->SetPhysicsLinearVelocity(FVector(0.f));
-				SkelMeshComp->SetPhysicsAngularVelocityInRadians(FVector(0.f));
-				SkelMeshComp->SetWorldTransform(GetComponentTransform(),
-					false, (FHitResult*)nullptr, ETeleportType::TeleportPhysics);
+				// Teleport hands to MC pose, it might not work since at the beginning the tracking is off
+				TeleportToInitialPose();
 
 				SetComponentTickEnabled(true);
+
+				// Teleport again using a delay
+				FTimerHandle DummyHandle;
+				GetWorld()->GetTimerManager().SetTimer(DummyHandle, this, &UMC6DTarget::TeleportToInitialPose, 0.5f, false);
 
 				bIsStarted = true;
 				UE_LOG(LogTemp, Warning, TEXT("%s::%d::%.4f %s succesfully started.."),
@@ -372,12 +372,14 @@ void UMC6DTarget::Start()
 			if (StaticMeshComp->IsSimulatingPhysics() 
 				&& (StaticMeshComp->GetCollisionEnabled() != ECollisionEnabled::NoCollision))
 			{
-				StaticMeshComp->SetPhysicsLinearVelocity(FVector(0.f));
-				StaticMeshComp->SetPhysicsAngularVelocityInRadians(FVector(0.f));
-				StaticMeshComp->SetWorldTransform(GetComponentTransform(),
-					false, (FHitResult*)nullptr, ETeleportType::TeleportPhysics);
+				// Teleport hands to MC pose, it might not work since at the beginning the tracking is off
+				TeleportToInitialPose();
 
 				SetComponentTickEnabled(true);
+
+				// Teleport again using a delay
+				FTimerHandle DummyHandle;
+				GetWorld()->GetTimerManager().SetTimer(DummyHandle, this, &UMC6DTarget::TeleportToInitialPose, 0.5f, false);
 
 				bIsStarted = true;
 				UE_LOG(LogTemp, Warning, TEXT("%s::%d::%.4f %s succesfully started.."),
@@ -439,5 +441,42 @@ void UMC6DTarget::Finish(bool bForced)
 	bIsFinished = true;
 	UE_LOG(LogTemp, Warning, TEXT("%s::%d %s succesfully finished.."),
 		*FString(__FUNCTION__), __LINE__, *GetName());
+}
+
+// Initial teleport the hands to the motion controller location, 
+// has to be called after a delay since at begin play the controller is not tracked yet
+void UMC6DTarget::TeleportToInitialPose()
+{
+	UE_LOG(LogTemp, Warning, TEXT("%s::%d::%.4fs"), *FString(__FUNCTION__), __LINE__, GetWorld()->GetTimeSeconds());
+	if (bUseSkeletalMesh && SkeletalMeshActor)
+	{
+		if (USkeletalMeshComponent* SkelMeshComp = SkeletalMeshActor->GetSkeletalMeshComponent())
+		{
+			// Check if any external manager disabled physics on the world
+			if (SkelMeshComp->IsSimulatingPhysics()
+				&& (SkelMeshComp->GetCollisionEnabled() != ECollisionEnabled::NoCollision))
+			{
+				SkelMeshComp->SetPhysicsLinearVelocity(FVector(0.f));
+				SkelMeshComp->SetPhysicsAngularVelocityInRadians(FVector(0.f));
+				SkelMeshComp->SetWorldTransform(GetComponentTransform(),
+					false, (FHitResult*)nullptr, ETeleportType::TeleportPhysics);
+			}
+		}
+	}
+	else if (StaticMeshActor)
+	{
+		if (UStaticMeshComponent* StaticMeshComp = StaticMeshActor->GetStaticMeshComponent())
+		{
+			// Check if any external manager disabled physics on the world
+			if (StaticMeshComp->IsSimulatingPhysics()
+				&& (StaticMeshComp->GetCollisionEnabled() != ECollisionEnabled::NoCollision))
+			{
+				StaticMeshComp->SetPhysicsLinearVelocity(FVector(0.f));
+				StaticMeshComp->SetPhysicsAngularVelocityInRadians(FVector(0.f));
+				StaticMeshComp->SetWorldTransform(GetComponentTransform(),
+					false, (FHitResult*)nullptr, ETeleportType::TeleportPhysics);
+			}
+		}
+	}
 }
 
