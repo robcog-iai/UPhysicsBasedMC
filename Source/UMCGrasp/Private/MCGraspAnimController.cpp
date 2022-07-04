@@ -2,6 +2,11 @@
 // Author: Andrei Haidu (http://haidu.eu)
 
 #include "MCGraspAnimController.h"
+#include "ManusBlueprintLibrary.h"
+#include "Manus.h"
+#include "ManusLiveLinkSource.h"
+#include "Engine/StaticMeshActor.h"
+#include "EngineUtils.h" 
 #include "Animation/SkeletalMeshActor.h"
 #include "GameFramework/PlayerController.h"
 
@@ -10,8 +15,8 @@ UMCGraspAnimController::UMCGraspAnimController()
 {
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
-	PrimaryComponentTick.bCanEverTick = false;
-	
+	PrimaryComponentTick.bCanEverTick = true;
+
 	bIgnore = false;
 	bLogDebug = false;
 
@@ -23,7 +28,7 @@ UMCGraspAnimController::UMCGraspAnimController()
 	InputAxisName = "LeftGrasp";
 	InputNextAnimAction = "LeftNextGraspAnim";
 	InputPrevAnimAction = "LeftPrevGraspAnim";
-	
+
 	SpringIdle = 1000000000.f;
 	TriggerStrength = 5.f;
 	bDecreaseStrength = false;
@@ -32,13 +37,19 @@ UMCGraspAnimController::UMCGraspAnimController()
 	ActiveAnimIdx = INDEX_NONE;
 	bIsIdle = true;
 	bIsMax = false;
+
+	PositionStrengh = 100000.0;
+	PositionDamping = 1000.0;
+	OrientationStrengh = 1000000.0;
+	OrientationDamping = 10000.0;
+
 }
 
 // Called when the game starts
 void UMCGraspAnimController::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
 	Init();
 }
 
@@ -84,7 +95,7 @@ void UMCGraspAnimController::Init()
 		return;
 	}
 
-	if (!LoadAnimationData())
+	if (!LoadAnimationData() && !bUseManus)
 	{
 		return;
 	}
@@ -92,12 +103,16 @@ void UMCGraspAnimController::Init()
 	// The active spring value is at least the value of idle (this increases when the trigger is pressed)
 	SpringActive = SpringIdle;
 
-	// Go to the first animations
-	ActiveAnimIdx = 0;
-	ActiveAnimation = Animations[0];
-	ActiveAnimStepSize = 1.f / static_cast<float>(ActiveAnimation.Num() - 1);
+	if (!bUseManus) {
+		// Go to the first animations
+		ActiveAnimIdx = 0;
+		ActiveAnimation = Animations[0];
+		ActiveAnimStepSize = 1.f / static_cast<float>(ActiveAnimation.Num() - 1);
 
-	OnGraspType.Broadcast(AnimationNames[ActiveAnimIdx]);
+		OnGraspType.Broadcast(AnimationNames[ActiveAnimIdx]);
+
+		DriveToFirstFrame();
+	}
 
 	//if (HandType == EMCGraspAnimHandType::Left)
 	//{
@@ -111,10 +126,160 @@ void UMCGraspAnimController::Init()
 	//}
 
 	// Set and drive to idle
-	DriveToFirstFrame();
+
+	if (bUseManus) {
+		WorldConstraint = Cast<UPhysicsConstraintComponent>(GetOwner()->GetComponentByClass(UPhysicsConstraintComponent::StaticClass()));
+		if (WorldConstraint) {
+			if (WorldConstraint->ConstraintActor1 != GetOwner()) {
+				// The first constrained actor has to be the hand 
+				AActor* tmp = WorldConstraint->ConstraintActor1;
+				WorldConstraint->ConstraintActor1 = WorldConstraint->ConstraintActor2;
+				WorldConstraint->ConstraintActor2 = tmp;
+				WorldConstraint->InitComponentConstraint();
+				//WorldConstraint->SetConstrainedComponents()
+				UE_LOG(LogTemp, Warning, TEXT("The Constrained Actors where switched."))
+			}
+			InitWorldConstraint(WorldConstraint);
+
+		}
+		else {
+			GetOwner()->Modify();
+
+			UPhysicsConstraintComponent* NewConstraint = NewObject<UPhysicsConstraintComponent>(GetOwner(), "WorldPhysicsConstraint", RF_Transactional);
+			// Find the static mesh actor for the floor
+			AActor* FloorActor = nullptr;
+			for (TActorIterator<AActor> ActorItr(GetWorld()); ActorItr; ++ActorItr) {
+				if (ActorItr->GetName().ToLower().Contains("cube")) {
+					FloorActor = *ActorItr;
+					break;
+				}
+			}
+			if (FloorActor != nullptr) {
+				UE_LOG(LogTemp, Warning, TEXT("Floor Actor: %s"), *FloorActor->GetName());
+			}
+
+			NewConstraint->ConstraintActor1 = GetOwner();
+			NewConstraint->ConstraintActor2 = FloorActor;
+
+			//NewConstraint->ComponentName1 = GetOwner()->GetRootComponent()->GetName();
+
+			//NewConstraint->SetConstrainedComponents(Cast<UPrimitiveComponent>(GetOwner()), "", Cast<UPrimitiveComponent>(FloorActor), "");
+
+			GetOwner()->AddInstanceComponent(NewConstraint);
+			GetOwner()->AddOwnedComponent(NewConstraint);
+
+			NewConstraint->RegisterComponent();
+
+			GetOwner()->RerunConstructionScripts();
+
+			WorldConstraint = NewConstraint;
+			InitWorldConstraint(NewConstraint);
+			NewConstraint->InitComponentConstraint();
+
+		}
+	}
+
+	//FManusModule::Get().StartupModule();
+	//FManusModule::Get().SetActive(true);
+	//TSharedPtr<ILiveLinkSource> Source = FManusModule::Get().GetLiveLinkSource(EManusLiveLinkSourceType::Local);
+	//FManusLiveLinkSource* Source = new FManusLiveLinkSource(EManusLiveLinkSourceType::Local);
+	//FManusLiveLinkSource::GetManusLiveLinkUserLiveLinkSubjectName(0);
 
 	// Bind the user input to the callbacks
 	SetupInputBindings();
+
+}
+
+void UMCGraspAnimController::InitWorldConstraint(UPhysicsConstraintComponent* WorldConstraint) {
+	WorldConstraint->SetLinearPositionDrive(true, true, true);
+	//WorldConstraint->SetLinearVelocityDrive(true, true, true);
+
+	WorldConstraint->SetLinearXLimit(ELinearConstraintMotion::LCM_Free, 0);
+	WorldConstraint->SetLinearYLimit(ELinearConstraintMotion::LCM_Free, 0);
+	WorldConstraint->SetLinearZLimit(ELinearConstraintMotion::LCM_Free, 0);
+
+	WorldConstraint->SetLinearDriveParams(PositionStrengh, PositionDamping, 0);
+
+	WorldConstraint->SetAngularSwing1Limit(ACM_Free, 0);
+	WorldConstraint->SetAngularSwing2Limit(ACM_Free, 0);
+	WorldConstraint->SetAngularTwistLimit(ACM_Free, 0);
+
+	WorldConstraint->SetAngularVelocityDriveTwistAndSwing(false, false);
+
+	WorldConstraint->SetAngularDriveMode(EAngularDriveMode::SLERP);
+	WorldConstraint->SetOrientationDriveSLERP(true);
+	//WorldConstraint->SetAngularVelocityDriveSLERP(true);
+
+	WorldConstraint->SetAngularDriveParams(OrientationStrengh, OrientationDamping, 0);
+}
+
+void UMCGraspAnimController::TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) {
+
+	FManusGlove GloveData;
+	int64 GloveId;
+	EManusHandType Hand = HandType == EMCGraspAnimHandType::Right ? EManusHandType::Right : EManusHandType::Left;
+	int HandCoefficent = HandType == EMCGraspAnimHandType::Right ? -1 : 1;
+
+	//Getting the current data from the glove, meaning the positon of every finger
+	UManusBlueprintLibrary::GetIdOfFirstAvailableGlove(Hand, GloveId);
+	CoreSdk::GetDataForGlove_UsingGloveId(GloveId, GloveData);
+
+	// Getting the Position of the tracker
+	FManusTracker Tracker;
+	UManusBlueprintLibrary::GetTrackerData(0, Hand, Tracker);
+
+	// No Glove Data Recived
+	if (GloveData.Fingers.Num() == 0 || WorldConstraint == nullptr) {
+		return;
+	}
+
+	TArray<float> GloveDataArray = {};
+	TArray<float> FingerSpread = {};
+	for (int i = 0; i < 5; i++) {
+		for (int j = 0; j < 3; j++) {
+			GloveDataArray.Add(GloveData.Fingers[i].Joints[j].Stretch);
+		}
+		FingerSpread.Add(GloveData.Fingers[i].Spread);
+	}
+	int i = 0;
+	int j = 1;
+	for (FConstraintInstance* Constraint : SkelComp->Constraints) {
+		if (Constraint->ConstraintBone1.ToString().Contains("Carpal"))
+		{
+			Constraint->SetAngularDriveParams(OrientationStrengh, OrientationDamping, ForceLimit);
+			continue;
+		}
+		if (Constraint->ConstraintBone1.ToString().Contains("Thumb1")) {
+			SpringActive = SpringIdle * (GloveDataArray[i] + 1);
+			Constraint->SetAngularDriveParams(OrientationStrengh * 1000, OrientationDamping * 1000, ForceLimit);
+			Constraint->SetAngularOrientationTarget(FQuat(0, FingerSpread[0] / 4 * (-1 * HandCoefficent), GloveDataArray[i] * HandCoefficent, 1));
+			i++;
+			continue;
+		}
+		/*
+		else if (Constraint->ConstraintBone1.ToString().Contains("1")) {
+			SpringActive = SpringIdle * (GloveDataArray[i] + 1);
+			Constraint->SetAngularDriveParams(OrientationStrengh * 1000, OrientationDamping * 1000, ForceLimit);
+			Constraint->SetAngularOrientationTarget(FQuat(0, FingerSpread[j] * HandCoefficent / 8, GloveDataArray[i] * HandCoefficent, 1));
+			i++;
+			j++;
+			continue;
+		}*/
+
+		// Setting the Constrains for each finger
+		SpringActive = SpringIdle * (GloveDataArray[i] + 1);
+		Constraint->SetAngularDriveParams(OrientationStrengh * 1000, OrientationDamping * 1000, ForceLimit);
+		Constraint->SetAngularOrientationTarget(FQuat(0, 0, GloveDataArray[i] * HandCoefficent, 1));
+		i++;
+	}
+
+
+	//const TArray<FManusLiveLinkUser>& ManusLiveLinkUsers = FManusModule::Get().ManusLiveLinkUsers;
+	//UE_LOG(LogTemp, Warning, TEXT("%d"), ManusLiveLinkUsers.Num());
+	// Moving the Hand through the world
+	WorldConstraint->SetLinearPositionTarget(Tracker.Transform.GetTranslation());
+	WorldConstraint->SetAngularOrientationTarget(Tracker.Transform.GetRotation().Rotator());
+
 }
 
 // Prepare the skeletal mesh component physics and angular motors
@@ -140,7 +305,9 @@ bool UMCGraspAnimController::LoadSkeletalMesh()
 					Constraint->SetAngularVelocityDriveSLERP(true);
 					Constraint->SetAngularDriveMode(EAngularDriveMode::SLERP);
 					Constraint->SetAngularDriveParams(SpringIdle, Damping, ForceLimit);
+
 				}
+
 				return true;
 			}
 		}
@@ -150,7 +317,7 @@ bool UMCGraspAnimController::LoadSkeletalMesh()
 
 // Load the data from the animation data assets in a more optimized form, return true if at least one animation is loaded
 bool UMCGraspAnimController::LoadAnimationData()
-{	
+{
 	// Remove any unset references in the array
 	AnimationDataAssets.Remove(nullptr);
 
@@ -195,7 +362,7 @@ void UMCGraspAnimController::DriveToLastFrame()
 	//SpringActive = SpringIdle + (SpringIdle * TriggerStrength);
 	const float Strength = bDecreaseStrength ? 1.f / (1.f + TriggerStrength) : 1.f + TriggerStrength;
 	SpringActive = SpringIdle * Strength;
-	DriveTarget = ActiveAnimation[ActiveAnimation.Num()-1];
+	DriveTarget = ActiveAnimation[ActiveAnimation.Num() - 1];
 	DriveToTarget();
 }
 
@@ -270,7 +437,7 @@ void UMCGraspAnimController::GraspUpdateCallback(float Value)
 		//SpringActive = SpringIdle + (SpringIdle * TriggerStrength * Value);
 		const float Strength = bDecreaseStrength ? 1.f / (1.f + (TriggerStrength * Value)) : 1.f + (TriggerStrength * Value);
 		SpringActive = SpringIdle * Strength;
-		
+
 		// Checks in which position we are between the frist frame (0.f) .. () ..  () .. and last frame ((Num()-1).f) 
 		float ValueOnTheFrameAxis = Value / ActiveAnimStepSize;
 
@@ -287,7 +454,7 @@ void UMCGraspAnimController::GraspUpdateCallback(float Value)
 		//UE_LOG(LogTemp, Warning, TEXT("%s::%d \n\t Value=%f; \n\t ValueOnTheFrameAxis=%f; \n\t FrameIndex=%d; \n\t Alpha=%f; \n\t ActiveAnimStepSize=%f; \n\t Num=%d"),
 		//	*FString(__func__), __LINE__, Value, ValueOnTheFrameAxis, FrameIndex, Alpha, ActiveAnimStepSize, ActiveAnimation.Num());
 	}
-	else if(!bIsIdle)
+	else if (!bIsIdle)
 	{
 		bIsIdle = true;
 		bIsMax = false;
@@ -352,7 +519,7 @@ void UMCGraspAnimController::GotoPreviousAnimationCallback()
 		//	GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("R:%s"),
 		//		*AnimationNames[ActiveAnimIdx]), true, FVector2D(1.5f, 1.5f));
 		//}
-		
+
 		OnGraspType.Broadcast(AnimationNames[ActiveAnimIdx]);
 	}
 }

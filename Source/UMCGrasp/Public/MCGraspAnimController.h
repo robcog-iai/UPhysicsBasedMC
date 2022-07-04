@@ -4,6 +4,10 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "ManusBlueprintTypes.h"
+#include "ManusComponent.h"
+#include "CoreSdk.h"
+#include "PhysicsEngine/PhysicsConstraintComponent.h"
 #include "Components/ActorComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "MCGraspAnimDataAsset.h"
@@ -25,14 +29,16 @@ DECLARE_MULTICAST_DELEGATE_OneParam(FMCGraspTypeSignature, const FString& /*Gras
 /**
 * The controller chooses the right animations and sends them to the executor
 */
-UCLASS( ClassGroup=(MC), meta=(BlueprintSpawnableComponent, DisplayName = "MC Grasp Anim Controller") )
+UCLASS(ClassGroup = (MC), meta = (BlueprintSpawnableComponent, DisplayName = "MC Grasp Anim Controller"))
 class UMCGRASP_API UMCGraspAnimController : public UActorComponent
 {
 	GENERATED_BODY()
 
-public:	
+public:
 	// Sets default values for this component's properties
 	UMCGraspAnimController();
+
+	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 protected:
 	// Called when the game starts
@@ -85,60 +91,75 @@ private:
 	// Switch to the previous animation
 	void GotoPreviousAnimationCallback();
 
+	// Set properties for the World constraint
+	void InitWorldConstraint(UPhysicsConstraintComponent* WorldConstraint);
+
 public:
 	// Publishes the current active grasp type
 	FMCGraspTypeSignature OnGraspType;
-	
+
 private:
 	// Skip initialization if true
 	UPROPERTY(EditAnywhere, Category = "Grasp Controller")
-	uint8 bIgnore : 1;
+		uint8 bIgnore : 1;
 
 	// Skip initialization if true
 	UPROPERTY(EditAnywhere, Category = "Semantic Logger")
-	uint8 bLogDebug : 1;
+		uint8 bLogDebug : 1;
 
 #if WITH_EDITORONLY_DATA
 	// Hand type, to listen to the right inputs
 	UPROPERTY(EditAnywhere, Category = "Grasp Controller")
-	EMCGraspAnimHandType HandType;
+		EMCGraspAnimHandType HandType;
 #endif // WITH_EDITOR
 
 	// The input to grasp
 	UPROPERTY(EditAnywhere, Category = "Grasp Controller")
-	FName InputAxisName;
+		FName InputAxisName;
 
 	// The input to select the next grasp
 	UPROPERTY(EditAnywhere, Category = "Grasp Controller")
-	FName InputNextAnimAction;
+		FName InputNextAnimAction;
 
 	// The input to select the previous grasp
 	UPROPERTY(EditAnywhere, Category = "Grasp Controller")
-	FName InputPrevAnimAction;
+		FName InputPrevAnimAction;
 
 	// Idle spring value (used to keep the fingers steady when the trigger is released)
 	UPROPERTY(EditAnywhere, Category = "Grasp Controller")
-	float SpringIdle;
+		float SpringIdle;
 
 	// The value multiplied with the trigger input
 	UPROPERTY(EditAnywhere, Category = "Grasp Controller")
-	float TriggerStrength;
+		float TriggerStrength;
 
 	// Increase or decrease strength the more we press the trigger (TriggerStrength or 1/TriggerStrength)
 	UPROPERTY(EditAnywhere, Category = "Grasp Controller")
-	bool bDecreaseStrength;
+		bool bDecreaseStrength;
 
 	// Damping value
 	UPROPERTY(EditAnywhere, Category = "Grasp Controller")
-	float Damping;
+		float Damping;
 
 	// Force limit, 0 means no limit. 
 	UPROPERTY(EditAnywhere, Category = "Grasp Controller")
-	float ForceLimit;
+		float ForceLimit;
 
 	// An array the user can fill with grasps they want to use
 	UPROPERTY(EditAnywhere, Category = "Grasp Controller")
-	TArray<UMCGraspAnimDataAsset*> AnimationDataAssets;
+		TArray<UMCGraspAnimDataAsset*> AnimationDataAssets;
+
+	UPROPERTY(EditAnywhere, Category = "Grasp Controller")
+		uint8 bIgnoreAnimations : 1;
+
+
+	/** List of bones with their remapped names. */
+	UPROPERTY(Transient)
+		FBoneReference BoneMap[(int)EManusBoneName::Max];
+
+	/** Map bone names to their enum counterparts. */
+	UPROPERTY(Transient)
+		TMap<FName, EManusBoneName> BoneNameToEnum;
 
 	// Spring value during the actual grasp, this increases with the trigger input value
 	float SpringActive;
@@ -164,10 +185,31 @@ private:
 
 	// Selected animation	
 	FAnimation ActiveAnimation;
-	
+
 	// Animation list
 	TArray<FAnimation> Animations;
 
 	// Animation names
 	TArray<FString> AnimationNames;
+
+	UPROPERTY(EditAnywhere, Category = "Manus Hands")
+		bool bUseManus;
+
+	UPROPERTY(EditAnywhere, Category = "Manus Hands")
+		UPhysicsConstraintComponent* WorldConstraint;
+
+	UPROPERTY(EditAnywhere, Category = "Manus Hands")
+		float PositionStrengh;
+
+	UPROPERTY(EditAnywhere, Category = "Manus Hands")
+		float PositionDamping;
+
+	UPROPERTY(EditAnywhere, Category = "Manus Hands")
+		float OrientationStrengh;
+
+	UPROPERTY(EditAnywhere, Category = "Manus Hands")
+		float OrientationDamping;
+
+	UPROPERTY(EditAnywhere, Category = "Manus Hands")
+		class UManusSkeleton* ManusSkeleton;
 };
