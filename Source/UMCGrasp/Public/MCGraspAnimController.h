@@ -149,18 +149,6 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Grasp Controller")
 		TArray<UMCGraspAnimDataAsset*> AnimationDataAssets;
 
-	UPROPERTY(EditAnywhere, Category = "Grasp Controller")
-		uint8 bIgnoreAnimations : 1;
-
-
-	/** List of bones with their remapped names. */
-	UPROPERTY(Transient)
-		FBoneReference BoneMap[(int)EManusBoneName::Max];
-
-	/** Map bone names to their enum counterparts. */
-	UPROPERTY(Transient)
-		TMap<FName, EManusBoneName> BoneNameToEnum;
-
 	// Spring value during the actual grasp, this increases with the trigger input value
 	float SpringActive;
 

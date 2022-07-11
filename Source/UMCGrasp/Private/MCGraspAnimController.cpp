@@ -278,7 +278,8 @@ void UMCGraspAnimController::TickComponent(float DeltaTime, enum ELevelTick Tick
 	//UE_LOG(LogTemp, Warning, TEXT("%d"), ManusLiveLinkUsers.Num());
 	// Moving the Hand through the world
 	WorldConstraint->SetLinearPositionTarget(Tracker.Transform.GetTranslation());
-	WorldConstraint->SetAngularOrientationTarget(Tracker.Transform.GetRotation().Rotator());
+	FQuat CorrectedRotation = Tracker.Transform.GetRotation() * FQuat(FRotator(-90, 0, 0));
+	WorldConstraint->SetAngularOrientationTarget(CorrectedRotation.Rotator());
 
 }
 
