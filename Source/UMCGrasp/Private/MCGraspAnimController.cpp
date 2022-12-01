@@ -5,7 +5,9 @@
 #include "ManusBlueprintLibrary.h"
 #include "Manus.h"
 #include "ManusLiveLinkSource.h"
-#include "Engine/StaticMeshActor.h"
+#include "ManusLiveLinkRemapAsset.h"
+#include "ManusLiveLinkRemapAsset.h"
+#include "Roles/LiveLinkAnimationTypes.h"
 #include "EngineUtils.h" 
 #include "Animation/SkeletalMeshActor.h"
 #include "GameFramework/PlayerController.h"
@@ -179,6 +181,8 @@ void UMCGraspAnimController::Init()
 		}
 	}
 
+	ManusSkel = ManusHand->GetSkeletalMeshComponent();
+
 	//FManusModule::Get().StartupModule();
 	//FManusModule::Get().SetActive(true);
 	//TSharedPtr<ILiveLinkSource> Source = FManusModule::Get().GetLiveLinkSource(EManusLiveLinkSourceType::Local);
@@ -215,71 +219,130 @@ void UMCGraspAnimController::InitWorldConstraint(UPhysicsConstraintComponent* Wo
 
 void UMCGraspAnimController::TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) {
 
-	FManusGlove GloveData;
-	int64 GloveId;
-	EManusHandType Hand = HandType == EMCGraspAnimHandType::Right ? EManusHandType::Right : EManusHandType::Left;
-	int HandCoefficent = HandType == EMCGraspAnimHandType::Right ? -1 : 1;
+	TArray<FName> BoneNames;
+	SkelComp->GetBoneNames(BoneNames);
+	TArray<FQuat> BoneLocations;
+	FTransform W_T_Hand = ManusHand->GetTransform().Inverse();
 
-	//Getting the current data from the glove, meaning the positon of every finger
-	UManusBlueprintLibrary::GetIdOfFirstAvailableGlove(Hand, GloveId);
-	CoreSdk::GetDataForGlove_UsingGloveId(GloveId, GloveData);
-
-	// Getting the Position of the tracker
-	FManusTracker Tracker;
-	UManusBlueprintLibrary::GetTrackerData(0, Hand, Tracker);
-
-	// No Glove Data Recived
-	if (GloveData.Fingers.Num() == 0 || WorldConstraint == nullptr) {
-		return;
-	}
-
-	TArray<float> GloveDataArray = {};
-	TArray<float> FingerSpread = {};
-	for (int i = 0; i < 5; i++) {
-		for (int j = 0; j < 3; j++) {
-			GloveDataArray.Add(GloveData.Fingers[i].Joints[j].Stretch);
-		}
-		FingerSpread.Add(GloveData.Fingers[i].Spread);
-	}
-	int i = 0;
-	int j = 1;
-	for (FConstraintInstance* Constraint : SkelComp->Constraints) {
-		if (Constraint->ConstraintBone1.ToString().Contains("Carpal"))
-		{
-			Constraint->SetAngularDriveParams(OrientationStrengh, OrientationDamping, ForceLimit);
+	for (int i = 0; i < ManusSkel->Constraints.Num(); i++) {
+		if (ManusSkel->Constraints[i]->ConstraintBone1.ToString().Contains("Carpal")) {
 			continue;
 		}
-		if (Constraint->ConstraintBone1.ToString().Contains("Thumb1")) {
-			SpringActive = SpringIdle * (GloveDataArray[i] + 1);
-			Constraint->SetAngularDriveParams(OrientationStrengh * 1000, OrientationDamping * 1000, ForceLimit);
-			Constraint->SetAngularOrientationTarget(FQuat(0, FingerSpread[0] / 4 * (-1 * HandCoefficent), GloveDataArray[i] * HandCoefficent, 1));
-			i++;
-			continue;
-		}
-		/*
-		else if (Constraint->ConstraintBone1.ToString().Contains("1")) {
-			SpringActive = SpringIdle * (GloveDataArray[i] + 1);
-			Constraint->SetAngularDriveParams(OrientationStrengh * 1000, OrientationDamping * 1000, ForceLimit);
-			Constraint->SetAngularOrientationTarget(FQuat(0, FingerSpread[j] * HandCoefficent / 8, GloveDataArray[i] * HandCoefficent, 1));
-			i++;
-			j++;
-			continue;
-		}*/
+		//FTransform B1 = ManusSkel->GetBoneTransform(ManusSkel->GetBoneIndex(ManusSkel->Constraints[i]->ConstraintBone1));
+		FTransform B2_Component = FTransform(ManusSkel->GetBoneQuaternion(ManusSkel->Constraints[i]->ConstraintBone2, EBoneSpaces::WorldSpace),
+			ManusSkel->GetBoneLocation(ManusSkel->Constraints[i]->ConstraintBone2, EBoneSpaces::WorldSpace), FVector(1, 1, 1));
 
-		// Setting the Constrains for each finger
-		SpringActive = SpringIdle * (GloveDataArray[i] + 1);
-		Constraint->SetAngularDriveParams(OrientationStrengh * 1000, OrientationDamping * 1000, ForceLimit);
-		Constraint->SetAngularOrientationTarget(FQuat(0, 0, GloveDataArray[i] * HandCoefficent, 1));
-		i++;
+		//FTransform B2 = ManusSkel->GetBoneTransform(ManusSkel->GetBoneIndex(ManusSkel->Constraints[i]->ConstraintBone2));
+		FTransform B1_Component = FTransform(ManusSkel->GetBoneQuaternion(ManusSkel->Constraints[i]->ConstraintBone1, EBoneSpaces::WorldSpace),
+			ManusSkel->GetBoneLocation(ManusSkel->Constraints[i]->ConstraintBone1, EBoneSpaces::WorldSpace), FVector(1, 1, 1));
+
+		//FTransform B1Inverse = B1.Inverse();
+		FTransform B2_Component_Inverse = B2_Component.Inverse();
+
+		//FTransform B1_T_B2 = B1Inverse * B2;
+		FTransform B1_T_B2_Component = B1_Component *  B2_Component_Inverse;
+
+		//FTransform In_Component = W_T_Hand * B1_T_B2;
+		
+
+		SkelComp->Constraints[i]->SetAngularDriveParams(OrientationStrengh * 1000, OrientationDamping * 1000, ForceLimit);
+		SkelComp->Constraints[i]->SetAngularOrientationTarget(B1_T_B2_Component.GetRotation());
+		
+		//SkelComp->Constraints[i]->SetAngularOrientationTarget(FQuat(ManusSkel->Constraints[i]->AngularRotationOffset));
 	}
 
+	//for (FConstraintInstance* Constraint : SkelComp->Constraints) {
+	//	/*if (Constraint->ConstraintBone1.ToString().Contains("Carpal"))
+	//	{
+	//		Constraint->SetAngularDriveParams(OrientationStrengh, OrientationDamping, ForceLimit);
+	//		continue;
+	//	}*/
+	//	/*if (Constraint->ConstraintBone1.ToString().Contains("Thumb1")) {
+	//		SpringActive = SpringIdle * 1000;
+	//		Constraint->SetAngularDriveParams(OrientationStrengh * 1000, OrientationDamping * 1000, ForceLimit);
+	//		Constraint->SetAngularOrientationTarget(ManusHand->GetBoneQuaternion(Constraint->ConstraintBone1));
+	//		continue;
+	//	}*/
 
-	//const TArray<FManusLiveLinkUser>& ManusLiveLinkUsers = FManusModule::Get().ManusLiveLinkUsers;
-	//UE_LOG(LogTemp, Warning, TEXT("%d"), ManusLiveLinkUsers.Num());
-	// Moving the Hand through the world
-	WorldConstraint->SetLinearPositionTarget(Tracker.Transform.GetTranslation());
-	FQuat CorrectedRotation = Tracker.Transform.GetRotation() * FQuat(FRotator(-90, 0, 0));
-	WorldConstraint->SetAngularOrientationTarget(CorrectedRotation.Rotator());
+	//	SpringActive = SpringIdle * 1000;
+	//	Constraint->SetAngularDriveParams(OrientationStrengh * 1000, OrientationDamping * 1000, ForceLimit);
+	//	FQuat tmp = ManusSkel->GetBoneQuaternion(Constraint->ConstraintBone1);
+	//
+	//	Constraint->SetAngularOrientationTarget(tmp);
+	//	UE_LOG(LogTemp, Warning, TEXT("Mirror Hand: %s"), *SkelComp->GetBoneQuaternion(Constraint->ConstraintBone1, EBoneSpaces::ComponentSpace).ToString());
+	//	UE_LOG(LogTemp, Warning, TEXT("Manus Hand: %s"), *ManusSkel->GetBoneQuaternion(Constraint->ConstraintBone1, EBoneSpaces::ComponentSpace).ToString());
+	//	//UE_LOG(LogTemp, Warning, TEXT("Bone: %s Pose: %s"), *Constraint->ConstraintBone1.ToString(), *ManusSkel->GetBoneQuaternion(Constraint->ConstraintBone1).ToString());
+	//}
+
+	
+
+
+
+	//FManusGlove GloveData;
+	//int64 GloveId;
+	//EManusHandType Hand = HandType == EMCGraspAnimHandType::Right ? EManusHandType::Right : EManusHandType::Left;
+	//int HandCoefficent = HandType == EMCGraspAnimHandType::Right ? -1 : 1;
+
+	////Getting the current data from the glove, meaning the positon of every finger
+	//UManusBlueprintLibrary::GetIdOfFirstAvailableGlove(Hand, GloveId);
+	//CoreSdk::GetDataForGlove_UsingGloveId(GloveId, GloveData);
+
+	//// Getting the Position of the tracker
+	//FManusTracker Tracker;
+	//UManusBlueprintLibrary::GetTrackerData(0, Hand, Tracker);
+
+	//// No Glove Data Recived
+	//if (GloveData.Fingers.Num() == 0 || WorldConstraint == nullptr) {
+	//	return;
+	//}
+
+	//TArray<float> GloveDataArray = {};
+	//TArray<float> FingerSpread = {};
+	//for (int i = 0; i < 5; i++) {
+	//	for (int j = 0; j < 3; j++) {
+	//		GloveDataArray.Add(GloveData.Fingers[i].Joints[j].Stretch);
+	//	}
+	//	FingerSpread.Add(GloveData.Fingers[i].Spread);
+	//}
+	//int i = 0;
+	//int j = 1;
+	//for (FConstraintInstance* Constraint : SkelComp->Constraints) {
+	//	if (Constraint->ConstraintBone1.ToString().Contains("Carpal"))
+	//	{
+	//		Constraint->SetAngularDriveParams(OrientationStrengh, OrientationDamping, ForceLimit);
+	//		continue;
+	//	}
+	//	if (Constraint->ConstraintBone1.ToString().Contains("Thumb1")) {
+	//		SpringActive = SpringIdle * (GloveDataArray[i] + 1);
+	//		Constraint->SetAngularDriveParams(OrientationStrengh * 1000, OrientationDamping * 1000, ForceLimit);
+	//		Constraint->SetAngularOrientationTarget(FQuat(0, FingerSpread[0] / 4 * (-1 * HandCoefficent), GloveDataArray[i] * HandCoefficent, 1));
+	//		i++;
+	//		continue;
+	//	}
+	//	/*
+	//	else if (Constraint->ConstraintBone1.ToString().Contains("1")) {
+	//		SpringActive = SpringIdle * (GloveDataArray[i] + 1);
+	//		Constraint->SetAngularDriveParams(OrientationStrengh * 1000, OrientationDamping * 1000, ForceLimit);
+	//		Constraint->SetAngularOrientationTarget(FQuat(0, FingerSpread[j] * HandCoefficent / 8, GloveDataArray[i] * HandCoefficent, 1));
+	//		i++;
+	//		j++;
+	//		continue;
+	//	}*/
+
+	//	// Setting the Constrains for each finger
+	//	SpringActive = SpringIdle * (GloveDataArray[i] + 1);
+	//	Constraint->SetAngularDriveParams(OrientationStrengh * 1000, OrientationDamping * 1000, ForceLimit);
+	//	Constraint->SetAngularOrientationTarget(FQuat(0, 0, GloveDataArray[i] * HandCoefficent, 1));
+	//	i++;
+	//}
+
+
+	////const TArray<FManusLiveLinkUser>& ManusLiveLinkUsers = FManusModule::Get().ManusLiveLinkUsers;
+	////UE_LOG(LogTemp, Warning, TEXT("%d"), ManusLiveLinkUsers.Num());
+	//// Moving the Hand through the world
+	//WorldConstraint->SetLinearPositionTarget(Tracker.Transform.GetTranslation());
+	//FQuat CorrectedRotation = Tracker.Transform.GetRotation() * FQuat(FRotator(-90, 0, 0));
+	//WorldConstraint->SetAngularOrientationTarget(CorrectedRotation.Rotator());
 
 }
 
@@ -293,7 +356,7 @@ bool UMCGraspAnimController::LoadSkeletalMesh()
 		{
 			SkelComp->SetSimulatePhysics(true);
 			SkelComp->SetEnableGravity(false);
-
+			UE_LOG(LogTemp, Error, TEXT("==================================================================="));
 			if (SkelComp->GetPhysicsAsset())
 			{
 				//sets up the constraints so they can be moved 

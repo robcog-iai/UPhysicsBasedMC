@@ -18,7 +18,7 @@ public class UMCGrasp : ModuleRules
 		PublicIncludePaths.AddRange(
 			new string[] {
 				"Manus/Public",
-				"Manus/Classes"
+				"Manus/Classes", 
 				// ... add public include paths required here ...
 				//EnginePath + "Source/Runtime/Launch/Resources", // #include "Version.h"; #if ENGINE_MINOR_VERSION
 			}
@@ -36,9 +36,11 @@ public class UMCGrasp : ModuleRules
 			new string[]
 			{
 				"Core",
-				"Manus"
+				"Manus",
 				// ... add other public dependencies that you statically link with here ...
-			}
+				 "LiveLink",
+                "LiveLinkInterface",
+            }
 			);
 			
 		
@@ -50,7 +52,7 @@ public class UMCGrasp : ModuleRules
 				"Slate",
 				"SlateCore",
 				"UMCPIDController", // grasp helper object tracking	
-				// ... add private dependencies that you statically link with here ...	
+				// ... add private dependencies that you statically link with here ...
 			}
 			);
 

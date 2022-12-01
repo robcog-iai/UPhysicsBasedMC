@@ -11,6 +11,7 @@
 #include "Components/ActorComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "MCGraspAnimDataAsset.h"
+#include "Animation/SkeletalMeshActor.h"
 #include "MCGraspAnimController.generated.h"
 
 /**
@@ -98,6 +99,8 @@ public:
 	// Publishes the current active grasp type
 	FMCGraspTypeSignature OnGraspType;
 
+	
+
 private:
 	// Skip initialization if true
 	UPROPERTY(EditAnywhere, Category = "Grasp Controller")
@@ -155,6 +158,8 @@ private:
 	// Skeletal mesh to apply the animation on
 	USkeletalMeshComponent* SkelComp;
 
+	USkeletalMeshComponent* ManusSkel;
+
 	// Currently active grasp animation index
 	int32 ActiveAnimIdx;
 
@@ -200,4 +205,7 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "Manus Hands")
 		class UManusSkeleton* ManusSkeleton;
+
+	UPROPERTY(EditAnywhere, Category = "Manus Hands")
+		ASkeletalMeshActor* ManusHand;
 };
