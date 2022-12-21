@@ -17,8 +17,6 @@ public class UMCGrasp : ModuleRules
 
 		PublicIncludePaths.AddRange(
 			new string[] {
-				"Manus/Public",
-				"Manus/Classes", 
 				// ... add public include paths required here ...
 				//EnginePath + "Source/Runtime/Launch/Resources", // #include "Version.h"; #if ENGINE_MINOR_VERSION
 			}
@@ -36,10 +34,7 @@ public class UMCGrasp : ModuleRules
 			new string[]
 			{
 				"Core",
-				"Manus",
 				// ... add other public dependencies that you statically link with here ...
-				 "LiveLink",
-                "LiveLinkInterface",
             }
 			);
 			

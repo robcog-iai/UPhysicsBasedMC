@@ -4,9 +4,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "ManusBlueprintTypes.h"
-#include "ManusComponent.h"
-#include "CoreSdk.h"
 #include "PhysicsEngine/PhysicsConstraintComponent.h"
 #include "Components/ActorComponent.h"
 #include "Components/SkeletalMeshComponent.h"
@@ -202,9 +199,6 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "Manus Hands")
 		float OrientationDamping;
-
-	UPROPERTY(EditAnywhere, Category = "Manus Hands")
-		class UManusSkeleton* ManusSkeleton;
 
 	UPROPERTY(EditAnywhere, Category = "Manus Hands")
 		ASkeletalMeshActor* ManusHand;

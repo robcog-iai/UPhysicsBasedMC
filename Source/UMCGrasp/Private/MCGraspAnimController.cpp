@@ -2,12 +2,6 @@
 // Author: Andrei Haidu (http://haidu.eu)
 
 #include "MCGraspAnimController.h"
-#include "ManusBlueprintLibrary.h"
-#include "Manus.h"
-#include "ManusLiveLinkSource.h"
-#include "ManusLiveLinkRemapAsset.h"
-#include "ManusLiveLinkRemapAsset.h"
-#include "Roles/LiveLinkAnimationTypes.h"
 #include "EngineUtils.h" 
 #include "Animation/SkeletalMeshActor.h"
 #include "GameFramework/PlayerController.h"
@@ -182,7 +176,8 @@ void UMCGraspAnimController::Init()
 	}
 
 	ManusSkel = ManusHand->GetSkeletalMeshComponent();
-
+	UE_LOG(LogTemp, Warning, TEXT("TEST++++++++++++++++++++++++++"));
+	UE_LOG(LogTemp, Warning, TEXT("%s"), *ManusSkel->GetName());
 	//FManusModule::Get().StartupModule();
 	//FManusModule::Get().SetActive(true);
 	//TSharedPtr<ILiveLinkSource> Source = FManusModule::Get().GetLiveLinkSource(EManusLiveLinkSourceType::Local);
@@ -221,9 +216,9 @@ void UMCGraspAnimController::TickComponent(float DeltaTime, enum ELevelTick Tick
 
 	TArray<FName> BoneNames;
 	SkelComp->GetBoneNames(BoneNames);
-	TArray<FQuat> BoneLocations;
+	UE_LOG(LogTemp, Warning, TEXT("%s"), *ManusSkel->GetName());
+	//TArray<FQuat> BoneLocations2;
 	FTransform W_T_Hand = ManusHand->GetTransform().Inverse();
-
 	for (int i = 0; i < ManusSkel->Constraints.Num(); i++) {
 		if (ManusSkel->Constraints[i]->ConstraintBone1.ToString().Contains("Carpal")) {
 			continue;
